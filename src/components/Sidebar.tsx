@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useStore } from '@/store/useStore';
 import { platformConfigs } from '@/data/mockData';
 import type { Platform } from '@/types';
-import { ProxySettings } from './ProxySettings';
 import {
   MessageCircle,
   Send,
@@ -331,7 +330,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   
   const [expandedPlatform, setExpandedPlatform] = useState<Platform | null>(null);
   const [managingPlatform, setManagingPlatform] = useState<Platform | null>(null);
-  const [showProxySettings, setShowProxySettings] = useState(false);
   
   // 计算各平台的未读消息数
   const platformUnreadCounts = conversations.reduce((acc, conv) => {
@@ -349,7 +347,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
   
   const bottomNavItems = [
-    { id: 'proxy', name: '代理IP', icon: Globe, badge: null },
     { id: 'settings', name: '设置', icon: Settings, badge: null },
     { id: 'help', name: '帮助', icon: HelpCircle, badge: null },
   ];
@@ -575,7 +572,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {bottomNavItems.map((item) => (
               <button
                 key={item.id}
-                onClick={() => item.id === 'proxy' ? setShowProxySettings(true) : onSectionChange?.(item.id)}
+                onClick={() => onSectionChange?.(item.id)}
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-gray-600 hover:bg-gray-100",
                   activeSection === item.id && "bg-gray-100 text-gray-900"
@@ -622,13 +619,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         isOpen={!!managingPlatform}
         onClose={() => setManagingPlatform(null)}
         platform={managingPlatform}
-        onOpenProxySettings={() => setShowProxySettings(true)}
-      />
-
-      {/* Proxy Settings Modal */}
-      <ProxySettings
-        isOpen={showProxySettings}
-        onClose={() => setShowProxySettings(false)}
       />
     </>
   );

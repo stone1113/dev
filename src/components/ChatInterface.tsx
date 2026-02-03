@@ -272,56 +272,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
             </div>
           </div>
         </div>
-        
-        {/* AI Mode Switcher */}
-        {userSettings.preferences.ai.enabled && (
-          <div className="flex items-center gap-2">
-            {/* AI Mode Toggle */}
-            <div className="flex items-center bg-gray-100 rounded-lg p-1">
-              <button
-                onClick={() => updateUserSettings({
-                  preferences: {
-                    ...userSettings.preferences,
-                    ai: {
-                      ...userSettings.preferences.ai,
-                      autoReply: false
-                    }
-                  }
-                })}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
-                  !userSettings.preferences.ai.autoReply
-                    ? "bg-white text-[#0059F8] shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                )}
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>AI辅助</span>
-              </button>
-              <button
-                onClick={() => updateUserSettings({
-                  preferences: {
-                    ...userSettings.preferences,
-                    ai: {
-                      ...userSettings.preferences.ai,
-                      autoReply: true
-                    }
-                  }
-                })}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all",
-                  userSettings.preferences.ai.autoReply
-                    ? "bg-amber-500 text-white shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                )}
-              >
-                <Bot className="w-3.5 h-3.5" />
-                <span>AI接管</span>
-              </button>
-            </div>
-          </div>
-        )}
-        
+
         <div className="flex items-center gap-2">
           {/* 平台账号信息 */}
           {platformAccount && (
@@ -522,19 +473,36 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-[#0059F8]" />
-                <span className="text-xs font-medium text-gray-700">AI回复建议</span>
+                <span className="text-xs font-medium text-gray-700">AI辅助模式</span>
               </div>
-              <button
-                onClick={() => setShowAIReplyPanel(!showAIReplyPanel)}
-                className={cn(
-                  "text-xs px-2 py-1 rounded-lg transition-colors",
-                  showAIReplyPanel 
-                    ? "bg-[#0059F8]/10 text-[#0059F8]" 
-                    : "text-gray-500 hover:bg-gray-100"
-                )}
-              >
-                {showAIReplyPanel ? '收起' : '展开'}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowAIReplyPanel(!showAIReplyPanel)}
+                  className={cn(
+                    "text-xs px-2 py-1 rounded-lg transition-colors",
+                    showAIReplyPanel
+                      ? "bg-[#0059F8]/10 text-[#0059F8]"
+                      : "text-gray-500 hover:bg-gray-100"
+                  )}
+                >
+                  {showAIReplyPanel ? '收起建议' : '展开建议'}
+                </button>
+                <button
+                  onClick={() => updateUserSettings({
+                    preferences: {
+                      ...userSettings.preferences,
+                      ai: {
+                        ...userSettings.preferences.ai,
+                        autoReply: true
+                      }
+                    }
+                  })}
+                  className="flex items-center gap-1 text-xs px-2 py-1 text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                >
+                  <Bot className="w-3 h-3" />
+                  <span>切换AI接管</span>
+                </button>
+              </div>
             </div>
             
             {showAIReplyPanel && (
@@ -718,7 +686,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
             <SendHorizonal className="w-5 h-5" />
           </button>
         </div>
-        
+
         {/* Quick Actions */}
         <div className="flex items-center gap-2 mt-3 overflow-x-auto">
           <span className="text-xs text-gray-400 flex-shrink-0">快捷回复:</span>
@@ -726,9 +694,9 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
             <button
               key={i}
               onClick={() => setInputMessage(text)}
-              className="px-3 py-1 text-xs bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-colors flex-shrink-0"
+              className="px-2.5 py-1 text-xs bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-colors flex-shrink-0"
             >
-              {text.length > 10 ? text.slice(0, 10) + '...' : text}
+              {text.length > 8 ? text.slice(0, 8) + '...' : text}
             </button>
           ))}
         </div>
