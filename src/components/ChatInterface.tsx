@@ -2,16 +2,16 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useStore } from '@/store/useStore';
 import { platformConfigs, languageMap } from '@/data/mockData';
 import type { Message } from '@/types';
-import { 
-  MessageCircle, 
-  Send, 
-  MessageSquare, 
-  Instagram, 
-  Facebook, 
-  Mail, 
-  Smartphone, 
-  Music, 
-  Twitter, 
+import {
+  MessageCircle,
+  Send,
+  MessageSquare,
+  Instagram,
+  Facebook,
+  Mail,
+  Smartphone,
+  Music,
+  Twitter,
   ShoppingBag,
   MoreVertical,
   Phone,
@@ -33,7 +33,11 @@ import {
   RefreshCw,
   ThumbsUp,
   ThumbsDown,
-  Copy
+  Copy,
+  ChevronLeft,
+  ChevronRight,
+  AlertCircle,
+  Inbox
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -56,9 +60,9 @@ interface ChatInterfaceProps {
 }
 
 export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
-  const { 
-    getSelectedConversation, 
-    addMessage, 
+  const {
+    getSelectedConversation,
+    addMessage,
     markAsRead,
     userSettings,
     translateMessage,
@@ -67,8 +71,37 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
     getSelectedAccount,
     generateAIReply,
     isGeneratingReply,
-    updateUserSettings
+    updateUserSettings,
+    conversations,
+    setSelectedConversation
   } = useStore();
+
+  // 获取待回复的会话列表（未读或待处理状态）
+  const pendingConversations = conversations.filter(
+    c => c.unreadCount > 0 || c.status === 'pending'
+  );
+
+  // 当前会话在待回复列表中的索引
+  const currentPendingIndex = pendingConversations.findIndex(
+    c => c.id === conversation?.id
+  );
+
+  // 切换到上一个/下一个待回复会话
+  const handlePrevPending = () => {
+    if (pendingConversations.length === 0) return;
+    const newIndex = currentPendingIndex <= 0
+      ? pendingConversations.length - 1
+      : currentPendingIndex - 1;
+    setSelectedConversation(pendingConversations[newIndex].id);
+  };
+
+  const handleNextPending = () => {
+    if (pendingConversations.length === 0) return;
+    const newIndex = currentPendingIndex >= pendingConversations.length - 1
+      ? 0
+      : currentPendingIndex + 1;
+    setSelectedConversation(pendingConversations[newIndex].id);
+  };
   
   const [inputMessage, setInputMessage] = useState('');
   const [translatedMessages, setTranslatedMessages] = useState<Record<string, string>>({});
@@ -235,6 +268,91 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
   
   return (
     <div className="flex flex-col h-full bg-white rounded-xl shadow-sm overflow-hidden">
+      {/* Quick Navigation Bar - 快速切换待回复会话 */}
+      {pendingConversations.length > 0 && (
+        <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100">
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 text-amber-600">
+              <Inbox className="w-4 h-4" />
+              <span className="text-xs font-medium">待处理</span>
+            </div>
+            <span className="px-2 py-0.5 text-xs font-semibold bg-amber-500 text-white rounded-full">
+              {pendingConversations.length}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* 当前位置指示 */}
+            {currentPendingIndex >= 0 && (
+              <span className="text-xs text-amber-600">
+                {currentPendingIndex + 1} / {pendingConversations.length}
+              </span>
+            )}
+
+            {/* 上一个/下一个按钮 */}
+            <div className="flex items-center gap-1">
+              <button
+                onClick={handlePrevPending}
+                className="p-1.5 hover:bg-amber-100 rounded-lg transition-colors"
+                title="上一个待处理 (快捷键: ←)"
+              >
+                <ChevronLeft className="w-4 h-4 text-amber-600" />
+              </button>
+              <button
+                onClick={handleNextPending}
+                className="p-1.5 hover:bg-amber-100 rounded-lg transition-colors"
+                title="下一个待处理 (快捷键: →)"
+              >
+                <ChevronRight className="w-4 h-4 text-amber-600" />
+              </button>
+            </div>
+
+            {/* 快速跳转下拉 */}
+            <div className="relative group">
+              <button className="flex items-center gap-1 px-2 py-1 text-xs text-amber-700 bg-amber-100 hover:bg-amber-200 rounded-lg transition-colors">
+                <AlertCircle className="w-3 h-3" />
+                <span>快速跳转</span>
+              </button>
+              <div className="absolute right-0 top-full mt-1 w-64 bg-white rounded-xl shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50">
+                <div className="p-2 max-h-64 overflow-y-auto">
+                  {pendingConversations.slice(0, 10).map((conv) => (
+                    <button
+                      key={conv.id}
+                      onClick={() => setSelectedConversation(conv.id)}
+                      className={cn(
+                        "w-full flex items-center gap-2 p-2 rounded-lg text-left transition-colors",
+                        conv.id === conversation?.id
+                          ? "bg-amber-100 text-amber-800"
+                          : "hover:bg-gray-50"
+                      )}
+                    >
+                      <img
+                        src={conv.customer.avatar}
+                        alt={conv.customer.name}
+                        className="w-7 h-7 rounded-full object-cover"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-gray-900 truncate">
+                          {conv.customer.name}
+                        </p>
+                        <p className="text-[10px] text-gray-500 truncate">
+                          {conv.lastMessage?.content || '暂无消息'}
+                        </p>
+                      </div>
+                      {conv.unreadCount > 0 && (
+                        <span className="px-1.5 py-0.5 text-[10px] font-medium bg-red-500 text-white rounded-full">
+                          {conv.unreadCount}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
         <div className="flex items-center gap-3">
