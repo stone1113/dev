@@ -5,6 +5,10 @@ import { ConversationList } from '@/components/ConversationList';
 import { ChatInterface } from '@/components/ChatInterface';
 import { CustomerAIProfile } from '@/components/CustomerAIProfile';
 import { FilterPanel } from '@/components/FilterPanel';
+import { RightMenuBar, type RightPanelType } from '@/components/RightMenuBar';
+import { ProxySettings } from '@/components/ProxySettings';
+import { TranslationSettings } from '@/components/TranslationSettings';
+import { ContactList } from '@/components/ContactList';
 import { platformConfigs, languageMap } from '@/data/mockData';
 import { 
   MessageCircle, 
@@ -22,9 +26,7 @@ import {
 import { cn } from '@/lib/utils';
 
 function App() {
-  const { 
-    showProfilePanel,
-    toggleProfilePanel,
+  const {
     searchQuery,
     setSearchQuery,
     getFilteredConversations,
@@ -35,6 +37,7 @@ function App() {
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const [activeRightPanel, setActiveRightPanel] = useState<RightPanelType>(null);
   
   // 检测移动端
   useEffect(() => {
@@ -64,24 +67,40 @@ function App() {
             )}>
               <ConversationList onFilterClick={() => setShowFilterPanel(true)} />
             </div>
-            
+
             {/* Middle: Chat Interface */}
             {!isMobile && (
               <div className="flex-1 min-w-0">
-                <ChatInterface 
-                  onToggleProfile={toggleProfilePanel}
+                <ChatInterface
+                  onToggleProfile={() => setActiveRightPanel(activeRightPanel === 'ai-profile' ? null : 'ai-profile')}
                 />
               </div>
             )}
-            
-            {/* Right: Customer AI Profile Panel */}
-            {!isMobile && (
-              <div className={cn(
-                "transition-all duration-300",
-                showProfilePanel ? "w-80 flex-shrink-0" : "w-0 overflow-hidden"
-              )}>
-                <CustomerAIProfile onClose={toggleProfilePanel} />
+
+            {/* Right: Panels (before menu bar) */}
+            {!isMobile && activeRightPanel && (
+              <div className="w-80 flex-shrink-0 transition-all duration-300">
+                {activeRightPanel === 'ai-profile' && (
+                  <CustomerAIProfile onClose={() => setActiveRightPanel(null)} />
+                )}
+                {activeRightPanel === 'proxy' && (
+                  <ProxySettings onClose={() => setActiveRightPanel(null)} />
+                )}
+                {activeRightPanel === 'translation' && (
+                  <TranslationSettings onClose={() => setActiveRightPanel(null)} />
+                )}
+                {activeRightPanel === 'contact' && (
+                  <ContactList onClose={() => setActiveRightPanel(null)} />
+                )}
               </div>
+            )}
+
+            {/* Right: Menu Bar */}
+            {!isMobile && (
+              <RightMenuBar
+                activePanel={activeRightPanel}
+                onPanelChange={setActiveRightPanel}
+              />
             )}
           </div>
         );
@@ -199,9 +218,9 @@ function App() {
       </div>
       
       {/* Filter Panel */}
-      <FilterPanel 
-        isOpen={showFilterPanel} 
-        onClose={() => setShowFilterPanel(false)} 
+      <FilterPanel
+        isOpen={showFilterPanel}
+        onClose={() => setShowFilterPanel(false)}
       />
     </div>
   );

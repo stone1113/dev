@@ -134,10 +134,28 @@ export interface PlatformAccount {
   name: string;
   avatar?: string;
   accountId: string; // 平台账号ID
-  status: 'online' | 'offline' | 'busy';
+  status: 'online' | 'offline' | 'busy' | 'not_logged_in'; // 新增未登录状态
   isDefault: boolean;
   messageCount: number;
   lastActiveAt?: Date;
+  ip?: string; // 客服当前 IP 地址（可选）
+  proxyRegion?: string; // 代理/节点所在地区（可选）
+  remark?: string; // 备注信息
+  proxyConfigId?: string; // 关联的代理配置ID
+}
+
+// 代理IP配置
+export interface ProxyConfig {
+  id: string;
+  name: string;
+  host: string;
+  port: number;
+  protocol: 'http' | 'https' | 'socks5';
+  username?: string;
+  password?: string;
+  region: string; // 地区
+  isActive: boolean;
+  createdAt: Date;
 }
 
 // 平台配置

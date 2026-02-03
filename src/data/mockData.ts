@@ -1,4 +1,4 @@
-import type { PlatformConfig, Conversation, CustomerProfile, UserSettings, AIReplySuggestion, PlatformAccount } from '@/types';
+import type { PlatformConfig, Conversation, CustomerProfile, UserSettings, AIReplySuggestion, PlatformAccount, ProxyConfig } from '@/types';
 
 // 平台配置
 export const platformConfigs: PlatformConfig[] = [
@@ -15,45 +15,56 @@ export const platformConfigs: PlatformConfig[] = [
   { id: 'shopify', name: 'Shopify', nameEn: 'Shopify', icon: 'ShoppingBag', color: '#96BF48', bgColor: 'bg-[#96BF48]/10', enabled: true },
 ];
 
+// 代理IP配置
+export const mockProxyConfigs: ProxyConfig[] = [
+  { id: 'proxy_001', name: '新加坡节点1', host: '34.125.26.1', port: 1080, protocol: 'socks5', region: '新加坡', isActive: true, createdAt: new Date() },
+  { id: 'proxy_002', name: '香港节点1', host: '198.51.100.45', port: 1080, protocol: 'socks5', region: '香港', isActive: true, createdAt: new Date() },
+  { id: 'proxy_003', name: '日本-东京节点', host: '203.0.113.22', port: 8080, protocol: 'http', region: '日本-东京', isActive: true, createdAt: new Date() },
+  { id: 'proxy_004', name: '日本-大阪节点', host: '203.0.113.23', port: 8080, protocol: 'http', region: '日本-大阪', isActive: true, createdAt: new Date() },
+  { id: 'proxy_005', name: '美国-弗吉尼亚节点', host: '52.58.12.11', port: 3128, protocol: 'https', region: '美国-弗吉尼亚', isActive: true, createdAt: new Date() },
+  { id: 'proxy_006', name: '英国节点', host: '52.58.12.10', port: 3128, protocol: 'https', region: '英国', isActive: false, createdAt: new Date() },
+];
+
 // 平台客服账号
 export const mockPlatformAccounts: PlatformAccount[] = [
   // WhatsApp 账号
-  { id: 'wa_001', platformId: 'whatsapp', name: '客服小美', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cs1', accountId: '+86-138-0000-0001', status: 'online', isDefault: true, messageCount: 156, lastActiveAt: new Date() },
-  { id: 'wa_002', platformId: 'whatsapp', name: '客服小李', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cs2', accountId: '+86-138-0000-0002', status: 'online', isDefault: false, messageCount: 89, lastActiveAt: new Date() },
-  { id: 'wa_003', platformId: 'whatsapp', name: '客服小张', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cs3', accountId: '+86-138-0000-0003', status: 'offline', isDefault: false, messageCount: 234, lastActiveAt: new Date('2024-12-19') },
-  
+  { id: 'wa_001', platformId: 'whatsapp', name: '客服小美', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cs1', accountId: '+86-138-0000-0001', status: 'online', isDefault: true, messageCount: 156, lastActiveAt: new Date(), remark: '主账号' },
+  { id: 'wa_002', platformId: 'whatsapp', name: '客服小李', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cs2', accountId: '+86-138-0000-0002', status: 'online', isDefault: false, messageCount: 89, lastActiveAt: new Date(), ip: '203.0.113.12', proxyRegion: '中国-广东', remark: '备用号' },
+  { id: 'wa_003', platformId: 'whatsapp', name: '客服小张', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cs3', accountId: '+86-138-0000-0003', status: 'offline', isDefault: false, messageCount: 234, lastActiveAt: new Date('2024-12-19'), ip: '198.51.100.45', proxyRegion: '香港', proxyConfigId: 'proxy_002' },
+
   // Telegram 账号
-  { id: 'tg_001', platformId: 'telegram', name: '客服小美', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cs1', accountId: '@chatbiz_cs1', status: 'online', isDefault: true, messageCount: 78, lastActiveAt: new Date() },
-  { id: 'tg_002', platformId: 'telegram', name: '客服小王', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cs4', accountId: '@chatbiz_cs2', status: 'busy', isDefault: false, messageCount: 45, lastActiveAt: new Date() },
-  
+  { id: 'tg_001', platformId: 'telegram', name: '客服小美', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cs1', accountId: '@chatbiz_cs1', status: 'online', isDefault: true, messageCount: 78, lastActiveAt: new Date(), ip: '34.125.26.8', proxyRegion: '新加坡', remark: 'VIP客户专用', proxyConfigId: 'proxy_001' },
+  { id: 'tg_002', platformId: 'telegram', name: '客服小王', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cs4', accountId: '@chatbiz_cs2', status: 'busy', isDefault: false, messageCount: 45, lastActiveAt: new Date(), ip: '34.125.26.9', proxyRegion: '新加坡', proxyConfigId: 'proxy_001' },
+  { id: 'tg_003', platformId: 'telegram', name: '新账号', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=new', accountId: '', status: 'not_logged_in', isDefault: false, messageCount: 0, remark: '待登录' },
+
   // Line 账号
-  { id: 'line_001', platformId: 'line', name: '客服小美', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cs1', accountId: 'chatbiz_jp1', status: 'online', isDefault: true, messageCount: 123, lastActiveAt: new Date() },
-  { id: 'line_002', platformId: 'line', name: '客服小林', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cs5', accountId: 'chatbiz_jp2', status: 'online', isDefault: false, messageCount: 67, lastActiveAt: new Date() },
+  { id: 'line_001', platformId: 'line', name: '客服小美', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cs1', accountId: 'chatbiz_jp1', status: 'online', isDefault: true, messageCount: 123, lastActiveAt: new Date(), ip: '203.0.113.22', proxyRegion: '日本-东京', proxyConfigId: 'proxy_003' },
+  { id: 'line_002', platformId: 'line', name: '客服小林', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cs5', accountId: 'chatbiz_jp2', status: 'online', isDefault: false, messageCount: 67, lastActiveAt: new Date(), ip: '203.0.113.23', proxyRegion: '日本-大阪', proxyConfigId: 'proxy_004' },
   
   // Instagram 账号
-  { id: 'ig_001', platformId: 'instagram', name: 'ChatBiz官方', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=official', accountId: '@chatbiz_official', status: 'online', isDefault: true, messageCount: 234, lastActiveAt: new Date() },
+  { id: 'ig_001', platformId: 'instagram', name: 'ChatBiz官方', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=official', accountId: '@chatbiz_official', status: 'online', isDefault: true, messageCount: 234, lastActiveAt: new Date(), ip: '52.58.12.10', proxyRegion: '英国' },
   
   // Facebook 账号
-  { id: 'fb_001', platformId: 'facebook', name: 'ChatBiz Page', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=official', accountId: 'ChatBizOfficial', status: 'online', isDefault: true, messageCount: 189, lastActiveAt: new Date() },
+  { id: 'fb_001', platformId: 'facebook', name: 'ChatBiz Page', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=official', accountId: 'ChatBizOfficial', status: 'online', isDefault: true, messageCount: 189, lastActiveAt: new Date(), ip: '52.58.12.11', proxyRegion: '美国-弗吉尼亚' },
   
   // 微信 账号
-  { id: 'wx_001', platformId: 'wechat', name: '客服小美', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cs1', accountId: 'chatbiz_cs01', status: 'online', isDefault: true, messageCount: 312, lastActiveAt: new Date() },
-  { id: 'wx_002', platformId: 'wechat', name: '客服小陈', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cs6', accountId: 'chatbiz_cs02', status: 'offline', isDefault: false, messageCount: 156, lastActiveAt: new Date('2024-12-18') },
+  { id: 'wx_001', platformId: 'wechat', name: '客服小美', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cs1', accountId: 'chatbiz_cs01', status: 'online', isDefault: true, messageCount: 312, lastActiveAt: new Date(), ip: '203.0.113.65', proxyRegion: '中国-上海' },
+  { id: 'wx_002', platformId: 'wechat', name: '客服小陈', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=cs6', accountId: 'chatbiz_cs02', status: 'offline', isDefault: false, messageCount: 156, lastActiveAt: new Date('2024-12-18'), ip: '203.0.113.66', proxyRegion: '中国-北京' },
   
   // 邮件 账号
-  { id: 'email_001', platformId: 'email', name: '客服部', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=official', accountId: 'support@chatbiz.com', status: 'online', isDefault: true, messageCount: 89, lastActiveAt: new Date() },
+  { id: 'email_001', platformId: 'email', name: '客服部', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=official', accountId: 'support@chatbiz.com', status: 'online', isDefault: true, messageCount: 89, lastActiveAt: new Date(), ip: '198.51.100.12', proxyRegion: '美国-加州' },
   
   // 短信 账号
-  { id: 'sms_001', platformId: 'sms', name: '短信客服', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=official', accountId: '+86-400-888-8888', status: 'online', isDefault: true, messageCount: 45, lastActiveAt: new Date() },
+  { id: 'sms_001', platformId: 'sms', name: '短信客服', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=official', accountId: '+86-400-888-8888', status: 'online', isDefault: true, messageCount: 45, lastActiveAt: new Date(), ip: '198.51.100.13', proxyRegion: '中国-广州' },
   
   // 抖音 账号
-  { id: 'dy_001', platformId: 'tiktok', name: 'ChatBiz官方', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=official', accountId: '@chatbiz', status: 'online', isDefault: true, messageCount: 178, lastActiveAt: new Date() },
+  { id: 'dy_001', platformId: 'tiktok', name: 'ChatBiz官方', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=official', accountId: '@chatbiz', status: 'online', isDefault: true, messageCount: 178, lastActiveAt: new Date(), ip: '54.223.11.7', proxyRegion: '美国-俄勒冈' },
   
   // Twitter 账号
-  { id: 'tw_001', platformId: 'twitter', name: 'ChatBiz', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=official', accountId: '@chatbiz', status: 'online', isDefault: true, messageCount: 67, lastActiveAt: new Date() },
+  { id: 'tw_001', platformId: 'twitter', name: 'ChatBiz', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=official', accountId: '@chatbiz', status: 'online', isDefault: true, messageCount: 67, lastActiveAt: new Date(), ip: '54.223.11.8', proxyRegion: '美国-俄勒冈' },
   
   // Shopify 账号
-  { id: 'sp_001', platformId: 'shopify', name: 'ChatBiz Store', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=official', accountId: 'chatbiz.myshopify.com', status: 'online', isDefault: true, messageCount: 234, lastActiveAt: new Date() },
+  { id: 'sp_001', platformId: 'shopify', name: 'ChatBiz Store', avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=official', accountId: 'chatbiz.myshopify.com', status: 'online', isDefault: true, messageCount: 234, lastActiveAt: new Date(), ip: '3.120.45.19', proxyRegion: '新加坡' },
 ];
 
 // 模拟客户数据

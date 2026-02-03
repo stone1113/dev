@@ -2,16 +2,17 @@ import React, { useState } from 'react';
 import { useStore } from '@/store/useStore';
 import { platformConfigs } from '@/data/mockData';
 import type { Platform } from '@/types';
-import { 
-  MessageCircle, 
-  Send, 
-  MessageSquare, 
-  Instagram, 
-  Facebook, 
-  Mail, 
-  Smartphone, 
-  Music, 
-  Twitter, 
+import { ProxySettings } from './ProxySettings';
+import {
+  MessageCircle,
+  Send,
+  MessageSquare,
+  Instagram,
+  Facebook,
+  Mail,
+  Smartphone,
+  Music,
+  Twitter,
   ShoppingBag,
   LayoutDashboard,
   MessageSquare as MessagesIcon,
@@ -25,10 +26,13 @@ import {
   ChevronDown,
   Plus,
   Trash2,
-  Edit2,
   X,
   Check,
-  MoreHorizontal
+  MoreHorizontal,
+  QrCode,
+  Globe,
+  LogIn,
+  FileText
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -55,61 +59,62 @@ interface AccountModalProps {
   isOpen: boolean;
   onClose: () => void;
   platform: Platform | null;
+  onOpenProxySettings?: () => void;
 }
 
-const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose, platform }) => {
-  const { 
-    getPlatformAccounts, 
-    addPlatformAccount, 
-    deletePlatformAccount, 
-    updatePlatformAccount,
-    setPlatformAccount 
+const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose, platform, onOpenProxySettings }) => {
+  const {
+    getPlatformAccounts,
+    addPlatformAccount,
+    deletePlatformAccount,
+    updatePlatformAccount
   } = useStore();
-  
+
   const [isAdding, setIsAdding] = useState(false);
-  const [editingAccount, setEditingAccount] = useState<string | null>(null);
+  const [editingRemark, setEditingRemark] = useState<string | null>(null);
   const [newAccountName, setNewAccountName] = useState('');
-  const [newAccountId, setNewAccountId] = useState('');
-  const [editName, setEditName] = useState('');
-  
+  const [remarkValue, setRemarkValue] = useState('');
+  const [showQrCode, setShowQrCode] = useState<string | null>(null);
+
   if (!isOpen || !platform) return null;
-  
+
   const accounts = getPlatformAccounts(platform);
   const platformConfig = platformConfigs.find(p => p.id === platform);
-  
+
   const handleAddAccount = () => {
-    if (newAccountName.trim() && newAccountId.trim()) {
+    if (newAccountName.trim()) {
       addPlatformAccount({
         platformId: platform,
         name: newAccountName.trim(),
-        accountId: newAccountId.trim(),
-        status: 'online',
+        accountId: '',
+        status: 'not_logged_in',
         isDefault: accounts.length === 0,
         messageCount: 0,
         avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${newAccountName.trim()}&backgroundColor=${platformConfig?.color.replace('#', '')}`,
+        remark: '待登录',
       });
       setNewAccountName('');
-      setNewAccountId('');
       setIsAdding(false);
     }
   };
-  
+
   const handleDeleteAccount = (accountId: string) => {
-    if (accounts.length > 1) {
-      deletePlatformAccount(accountId);
-    }
+    deletePlatformAccount(accountId);
   };
-  
-  const handleUpdateAccount = (accountId: string) => {
-    if (editName.trim()) {
-      updatePlatformAccount(accountId, { name: editName.trim() });
-      setEditingAccount(null);
-      setEditName('');
-    }
+
+  const handleUpdateRemark = (accountId: string) => {
+    updatePlatformAccount(accountId, { remark: remarkValue.trim() });
+    setEditingRemark(null);
+    setRemarkValue('');
   };
-  
-  const handleSetDefault = (accountId: string) => {
-    setPlatformAccount(platform, accountId);
+
+  const handleLogin = (accountId: string) => {
+    setShowQrCode(accountId);
+  };
+
+  const handleProxySettings = () => {
+    onClose();
+    onOpenProxySettings?.();
   };
   
   return (
@@ -138,99 +143,124 @@ const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose, platform }
         </div>
         
         {/* Account List */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-2">
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
           {accounts.map((account) => (
-            <div 
+            <div
               key={account.id}
               className={cn(
-                "flex items-center gap-3 p-3 rounded-lg border transition-all",
-                account.isDefault 
-                  ? "bg-[#0059F8]/5 border-[#0059F8]/30" 
-                  : "bg-gray-50 border-transparent hover:bg-gray-100"
+                "p-3 rounded-lg border transition-all",
+                account.status === 'not_logged_in'
+                  ? "bg-amber-50 border-amber-200"
+                  : account.isDefault
+                    ? "bg-[#0059F8]/5 border-[#0059F8]/30"
+                    : "bg-gray-50 border-transparent hover:bg-gray-100"
               )}
             >
-              <img
-                src={account.avatar}
-                alt={account.name}
-                className="w-10 h-10 rounded-full object-cover"
-              />
-              <div className="flex-1 min-w-0">
-                {editingAccount === account.id ? (
-                  <input
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="w-full px-2 py-1 text-sm border border-gray-200 rounded focus:outline-none focus:border-[#0059F8]"
-                    autoFocus
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleUpdateAccount(account.id);
-                      if (e.key === 'Escape') {
-                        setEditingAccount(null);
-                        setEditName('');
-                      }
-                    }}
-                  />
-                ) : (
-                  <>
-                    <p className="text-sm font-medium text-gray-900 truncate">{account.name}</p>
-                    <p className="text-xs text-gray-500 truncate">{account.accountId}</p>
-                  </>
+              {/* 账号信息行 */}
+              <div className="flex items-center gap-3">
+                <div className="relative flex-shrink-0">
+                  <img src={account.avatar} alt={account.name} className="w-10 h-10 rounded-full object-cover" />
+                  <span className={cn(
+                    "absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white",
+                    account.status === 'online' ? "bg-green-500" :
+                    account.status === 'busy' ? "bg-amber-500" :
+                    account.status === 'not_logged_in' ? "bg-gray-400" : "bg-gray-400"
+                  )} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">{account.name}</p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {account.status === 'not_logged_in' ? '未登录' : account.accountId || '未设置'}
+                  </p>
+                </div>
+                {account.isDefault && (
+                  <span className="px-2 py-0.5 text-[10px] font-medium bg-[#0059F8] text-white rounded">默认</span>
                 )}
               </div>
-              <div className="flex items-center gap-1">
-                {editingAccount === account.id ? (
-                  <>
-                    <button
-                      onClick={() => handleUpdateAccount(account.id)}
-                      className="p-1.5 hover:bg-green-100 rounded-lg transition-colors"
-                    >
-                      <Check className="w-4 h-4 text-green-600" />
+
+              {/* 备注编辑行 */}
+              <div className="mt-2 flex items-center gap-2">
+                {editingRemark === account.id ? (
+                  <div className="flex-1 flex items-center gap-1">
+                    <input
+                      type="text"
+                      value={remarkValue}
+                      onChange={(e) => setRemarkValue(e.target.value)}
+                      placeholder="输入备注..."
+                      className="flex-1 px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:border-[#0059F8]"
+                      autoFocus
+                    />
+                    <button onClick={() => handleUpdateRemark(account.id)} className="p-1 hover:bg-green-100 rounded">
+                      <Check className="w-3 h-3 text-green-600" />
                     </button>
-                    <button
-                      onClick={() => {
-                        setEditingAccount(null);
-                        setEditName('');
-                      }}
-                      className="p-1.5 hover:bg-gray-200 rounded-lg transition-colors"
-                    >
-                      <X className="w-4 h-4 text-gray-500" />
+                    <button onClick={() => { setEditingRemark(null); setRemarkValue(''); }} className="p-1 hover:bg-gray-200 rounded">
+                      <X className="w-3 h-3 text-gray-500" />
                     </button>
-                  </>
+                  </div>
                 ) : (
-                  <>
-                    {!account.isDefault && (
-                      <button
-                        onClick={() => handleSetDefault(account.id)}
-                        className="p-1.5 hover:bg-[#0059F8]/10 rounded-lg transition-colors"
-                        title="设为默认"
-                      >
-                        <Check className="w-4 h-4 text-[#0059F8]" />
-                      </button>
-                    )}
-                    <button
-                      onClick={() => {
-                        setEditingAccount(account.id);
-                        setEditName(account.name);
-                      }}
-                      className="p-1.5 hover:bg-gray-200 rounded-lg transition-colors"
-                      title="编辑"
-                    >
-                      <Edit2 className="w-4 h-4 text-gray-500" />
-                    </button>
-                    {accounts.length > 1 && (
-                      <button
-                        onClick={() => handleDeleteAccount(account.id)}
-                        className="p-1.5 hover:bg-red-100 rounded-lg transition-colors"
-                        title="删除"
-                      >
-                        <Trash2 className="w-4 h-4 text-red-500" />
-                      </button>
-                    )}
-                  </>
+                  <button
+                    onClick={() => { setEditingRemark(account.id); setRemarkValue(account.remark || ''); }}
+                    className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-600"
+                  >
+                    <FileText className="w-3 h-3" />
+                    <span>{account.remark || '添加备注'}</span>
+                  </button>
                 )}
+              </div>
+
+              {/* 操作按钮行 */}
+              <div className="mt-3 flex items-center gap-2">
+                {account.status === 'not_logged_in' ? (
+                  <button
+                    onClick={() => handleLogin(account.id)}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[#0059F8] rounded-lg hover:bg-[#0038A3] transition-colors"
+                  >
+                    <QrCode className="w-3.5 h-3.5" />
+                    扫码登录
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleLogin(account.id)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    <LogIn className="w-3.5 h-3.5" />
+                    重新登录
+                  </button>
+                )}
+                <button
+                  onClick={handleProxySettings}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  代理IP
+                </button>
+                <button
+                  onClick={() => handleDeleteAccount(account.id)}
+                  className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                  title="删除账号"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
             </div>
           ))}
+
+          {/* 扫码登录弹窗 */}
+          {showQrCode && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center">
+              <div className="absolute inset-0 bg-black/50" onClick={() => setShowQrCode(null)} />
+              <div className="relative bg-white rounded-xl p-6 shadow-2xl">
+                <button onClick={() => setShowQrCode(null)} className="absolute top-3 right-3 p-1 hover:bg-gray-100 rounded">
+                  <X className="w-4 h-4 text-gray-500" />
+                </button>
+                <h4 className="text-center font-medium text-gray-900 mb-4">扫码登录 {platformConfig?.name}</h4>
+                <div className="w-48 h-48 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <QrCode className="w-32 h-32 text-gray-300" />
+                </div>
+                <p className="text-xs text-gray-500 text-center mt-3">请使用 {platformConfig?.name} 扫描二维码</p>
+              </div>
+            </div>
+          )}
         </div>
         
         {/* Add Account Form */}
@@ -247,30 +277,16 @@ const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose, platform }
                   className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#0059F8] focus:ring-2 focus:ring-[#0059F8]/20"
                 />
               </div>
-              <div>
-                <label className="text-xs font-medium text-gray-600 mb-1 block">平台账号ID</label>
-                <input
-                  type="text"
-                  value={newAccountId}
-                  onChange={(e) => setNewAccountId(e.target.value)}
-                  placeholder="例如：@username"
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#0059F8] focus:ring-2 focus:ring-[#0059F8]/20"
-                />
-              </div>
               <div className="flex gap-2">
                 <button
-                  onClick={() => {
-                    setIsAdding(false);
-                    setNewAccountName('');
-                    setNewAccountId('');
-                  }}
+                  onClick={() => { setIsAdding(false); setNewAccountName(''); }}
                   className="flex-1 px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   取消
                 </button>
                 <button
                   onClick={handleAddAccount}
-                  disabled={!newAccountName.trim() || !newAccountId.trim()}
+                  disabled={!newAccountName.trim()}
                   className="flex-1 px-4 py-2 text-sm font-medium text-white bg-[#0059F8] rounded-lg hover:bg-[#0038A3] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   添加
@@ -315,6 +331,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   
   const [expandedPlatform, setExpandedPlatform] = useState<Platform | null>(null);
   const [managingPlatform, setManagingPlatform] = useState<Platform | null>(null);
+  const [showProxySettings, setShowProxySettings] = useState(false);
   
   // 计算各平台的未读消息数
   const platformUnreadCounts = conversations.reduce((acc, conv) => {
@@ -332,6 +349,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
   
   const bottomNavItems = [
+    { id: 'proxy', name: '代理IP', icon: Globe, badge: null },
     { id: 'settings', name: '设置', icon: Settings, badge: null },
     { id: 'help', name: '帮助', icon: HelpCircle, badge: null },
   ];
@@ -500,7 +518,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                     : "text-gray-500 hover:bg-gray-50"
                                 )}
                               >
-                                <div className="relative">
+                                <div className="relative flex-shrink-0">
                                   <img
                                     src={account.avatar}
                                     alt={account.name}
@@ -512,9 +530,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                     account.status === 'busy' ? "bg-amber-500" : "bg-gray-400"
                                   )} />
                                 </div>
-                                <span className="flex-1 text-left truncate">{account.name}</span>
+                                <div className="flex-1 min-w-0 text-left">
+                                  <div className="flex items-center gap-1">
+                                    <span className="truncate">{account.name}</span>
+                                    {account.remark && (
+                                      <span className="text-[10px] text-gray-400 truncate">({account.remark})</span>
+                                    )}
+                                  </div>
+                                  {(account.ip || account.proxyRegion) && (
+                                    <span className="block text-[10px] text-gray-400 truncate">
+                                      {account.proxyRegion && <span>{account.proxyRegion}</span>}
+                                      {account.ip && account.proxyRegion && <span className="mx-0.5">·</span>}
+                                      {account.ip && <span>{account.ip}</span>}
+                                    </span>
+                                  )}
+                                </div>
                                 {selectedAccount?.id === account.id && (
-                                  <div className="w-1.5 h-1.5 rounded-full bg-[#0059F8]" />
+                                  <div className="w-1.5 h-1.5 rounded-full bg-[#0059F8] flex-shrink-0" />
                                 )}
                               </button>
                             ))}
@@ -543,7 +575,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {bottomNavItems.map((item) => (
               <button
                 key={item.id}
-                onClick={() => onSectionChange?.(item.id)}
+                onClick={() => item.id === 'proxy' ? setShowProxySettings(true) : onSectionChange?.(item.id)}
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-gray-600 hover:bg-gray-100",
                   activeSection === item.id && "bg-gray-100 text-gray-900"
@@ -586,10 +618,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
       
       {/* Account Management Modal */}
-      <AccountModal 
-        isOpen={!!managingPlatform} 
-        onClose={() => setManagingPlatform(null)} 
+      <AccountModal
+        isOpen={!!managingPlatform}
+        onClose={() => setManagingPlatform(null)}
         platform={managingPlatform}
+        onOpenProxySettings={() => setShowProxySettings(true)}
+      />
+
+      {/* Proxy Settings Modal */}
+      <ProxySettings
+        isOpen={showProxySettings}
+        onClose={() => setShowProxySettings(false)}
       />
     </>
   );

@@ -55,9 +55,7 @@ interface ChatInterfaceProps {
   onToggleProfile?: () => void;
 }
 
-export const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
-  onToggleProfile
-}) => {
+export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
   const { 
     getSelectedConversation, 
     addMessage, 
@@ -353,13 +351,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = ({
             </button>
             <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
               <Video className="w-5 h-5 text-gray-500" />
-            </button>
-            <button 
-              onClick={onToggleProfile}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              title="客户画像与AI助手"
-            >
-              <Sparkles className="w-5 h-5 text-[#0059F8]" />
             </button>
             <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
               <MoreVertical className="w-5 h-5 text-gray-500" />
