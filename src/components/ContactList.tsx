@@ -22,18 +22,18 @@ export const ContactList: React.FC<ContactListProps> = ({ onClose }) => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [showBroadcast, setShowBroadcast] = useState(false);
 
-  // 获取所有唯一客户
-  const customers = Array.from(
-    new Map(conversations.map(c => [c.customer.id, {
-      ...c.customer,
-      platform: c.platform,
-      conversationId: c.id,
-      isGroup: c.customer.name.includes('群') || c.customer.name.includes('Group'),
-      isChannel: c.customer.name.includes('Channel') || c.customer.name.includes('频道'),
-      unreadCount: c.unreadCount || 0,
-      isArchived: false
-    }])).values()
-  );
+  // 获取所有唯一客户（包含群聊信息）
+  const customers = conversations.map(c => ({
+    ...c.customer,
+    platform: c.platform,
+    conversationId: c.id,
+    isGroup: c.isGroup === true,
+    isChannel: c.customer.name.includes('Channel') || c.customer.name.includes('频道'),
+    unreadCount: c.unreadCount || 0,
+    isArchived: false,
+    groupName: c.groupName,
+    groupMemberCount: c.groupMemberCount
+  }));
 
   // 搜索和筛选
   const filteredCustomers = customers.filter(customer => {
@@ -199,11 +199,10 @@ export const ContactList: React.FC<ContactListProps> = ({ onClose }) => {
         ) : (
           <div className="divide-y divide-gray-50">
             {filteredCustomers.map((customer) => {
-              const platform = platformConfigs.find(p => p.id === customer.platform);
               const isSelected = selectedIds.has(customer.id);
               return (
                 <div
-                  key={customer.id}
+                  key={customer.conversationId}
                   className={cn(
                     "flex items-center gap-2.5 px-3 py-2 hover:bg-gray-50 transition-colors",
                     isSelected && "bg-[#FFF8F5]"
@@ -225,11 +224,17 @@ export const ContactList: React.FC<ContactListProps> = ({ onClose }) => {
                     className="flex items-center gap-2.5 flex-1 min-w-0 text-left"
                   >
                     <div className="relative flex-shrink-0">
-                      <img
-                        src={customer.avatar}
-                        alt={customer.name}
-                        className="w-9 h-9 rounded-full object-cover"
-                      />
+                      {customer.isGroup ? (
+                        <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center">
+                          <Users className="w-5 h-5 text-white" />
+                        </div>
+                      ) : (
+                        <img
+                          src={customer.avatar}
+                          alt={customer.name}
+                          className="w-9 h-9 rounded-full object-cover"
+                        />
+                      )}
                       {customer.unreadCount > 0 && (
                         <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[10px] font-medium rounded-full flex items-center justify-center">
                           {customer.unreadCount > 99 ? '99+' : customer.unreadCount}
@@ -237,11 +242,18 @@ export const ContactList: React.FC<ContactListProps> = ({ onClose }) => {
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-gray-900 truncate">
-                        {customer.name}
-                      </p>
+                      <div className="flex items-center gap-1">
+                        <p className="text-xs font-medium text-gray-900 truncate">
+                          {customer.isGroup ? customer.groupName : customer.name}
+                        </p>
+                        {customer.isGroup && (
+                          <span className="px-1 py-0.5 text-[9px] bg-blue-100 text-blue-600 rounded">
+                            {customer.groupMemberCount}人
+                          </span>
+                        )}
+                      </div>
                       <p className="text-[11px] text-gray-400 truncate">
-                        {customer.id}
+                        {customer.isGroup ? `群聊 · ${customer.name}` : customer.id}
                       </p>
                     </div>
                   </button>

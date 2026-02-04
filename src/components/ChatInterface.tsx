@@ -81,9 +81,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
   const [inputTranslation, setInputTranslation] = useState<{original: string; translated: string; targetLang: string} | null>(null);
   const [aiSuggestions, setAiSuggestions] = useState<string[]>([]);
   const [showAIReplyPanel, setShowAIReplyPanel] = useState(false);
+  const [autoTranslatingIds, setAutoTranslatingIds] = useState<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const conversation = getSelectedConversation();
+
+  // 获取翻译设置
+  const translationSettings = userSettings.preferences.translation;
+  const isAutoReceiveEnabled = translationSettings.enabled && translationSettings.autoReceive;
 
   // 获取待回复的会话列表（未读或待处理状态）
   const pendingConversations = conversations.filter(
@@ -125,7 +130,48 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
       setInputTranslation(null);
     }
   }, [inputMessage]);
-  
+
+  // 自动翻译消息 - 当开启自动接收翻译时，翻译所有消息到我的母语
+  useEffect(() => {
+    if (!isAutoReceiveEnabled || !conversation) return;
+
+    // 筛选需要翻译的消息（客户消息 + 客服/AI发出的消息）
+    const messagesToTranslate = conversation.messages.filter(
+      msg => !translatedMessages[msg.id] && !autoTranslatingIds.has(msg.id)
+    );
+
+    if (messagesToTranslate.length === 0) return;
+
+    // 批量翻译未翻译的消息
+    messagesToTranslate.forEach(async (message) => {
+      setAutoTranslatingIds(prev => new Set(prev).add(message.id));
+
+      try {
+        // 判断源语言：客户消息用客户语言，客服消息用发送目标语言
+        const sourceLang = message.senderType === 'customer'
+          ? (message.language || conversation.customer.language || 'en')
+          : (translationSettings.sendLanguage || 'en');
+
+        const result = await translateMessage(
+          message.content,
+          sourceLang,
+          translationSettings.receiveLanguage
+        );
+
+        setTranslatedMessages(prev => ({
+          ...prev,
+          [message.id]: result.translatedText
+        }));
+      } finally {
+        setAutoTranslatingIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(message.id);
+          return newSet;
+        });
+      }
+    });
+  }, [isAutoReceiveEnabled, conversation?.messages.length, conversation?.id]);
+
   if (!conversation) {
     return (
       <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-xl">
@@ -196,7 +242,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
   const handleCancelTranslation = () => {
     setInputTranslation(null);
   };
-  
+
   // 翻译消息 - 使用用户的翻译设置
   const handleTranslateMessage = async (message: Message) => {
     if (translatedMessages[message.id]) {
@@ -206,20 +252,37 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
       setTranslatedMessages(newTranslations);
       return;
     }
-    
+
     const translationSettings = userSettings.preferences.translation;
     const result = await translateMessage(
       message.content,
       message.language || 'en',
       translationSettings.enabled ? translationSettings.receiveLanguage : currentLanguage
     );
-    
+
     setTranslatedMessages(prev => ({
       ...prev,
       [message.id]: result.translatedText
     }));
   };
-  
+
+  // 重新翻译消息 - 不收起译文，直接重新翻译
+  const handleRetranslateMessage = async (message: Message) => {
+    if (isTranslating) return;
+
+    const translationSettings = userSettings.preferences.translation;
+    const result = await translateMessage(
+      message.content,
+      message.language || 'en',
+      translationSettings.enabled ? translationSettings.receiveLanguage : currentLanguage
+    );
+
+    setTranslatedMessages(prev => ({
+      ...prev,
+      [message.id]: result.translatedText
+    }));
+  };
+
   // AI回复建议
   const handleGenerateAIReply = async () => {
     if (!conversation) return;
@@ -489,16 +552,30 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
                   {/* Translated Content */}
                   {translatedMessages[message.id] && (
                     <div className={cn(
-                      "mt-2 pt-2 border-t text-xs",
-                      isCustomer ? "border-gray-200 text-gray-600" :
-                      isAI ? "border-[#FF6B35]/20 text-[#FF6B35]/70" :
-                      "border-white/30 text-white/80"
+                      "mt-1.5 pt-1.5 border-t text-xs",
+                      isCustomer ? "border-gray-200/60 text-gray-500" :
+                      isAI ? "border-[#FF6B35]/15 text-gray-600" :
+                      "border-white/20 text-white/70"
                     )}>
-                      <div className="flex items-center gap-1 mb-1">
-                        <Languages className="w-3 h-3" />
-                        <span>翻译</span>
+                      <div className="flex items-center gap-1.5">
+                        <p className="flex-1">{translatedMessages[message.id]}</p>
+                        <button
+                          onClick={() => handleRetranslateMessage(message)}
+                          disabled={isTranslating}
+                          className={cn(
+                            "p-0.5 rounded transition-colors flex-shrink-0",
+                            isCustomer ? "hover:bg-gray-100 text-gray-400 hover:text-gray-600" :
+                            isAI ? "hover:bg-[#FF6B35]/10 text-gray-400 hover:text-[#FF6B35]" :
+                            "hover:bg-white/10 text-white/50 hover:text-white/80"
+                          )}
+                          title="重新翻译"
+                        >
+                          <RefreshCw className={cn(
+                            "w-3 h-3",
+                            isTranslating && "animate-spin"
+                          )} />
+                        </button>
                       </div>
-                      <p>{translatedMessages[message.id]}</p>
                     </div>
                   )}
                   
@@ -550,20 +627,20 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
         
         <div ref={messagesEndRef} />
       </div>
-      
+
       {/* Input Area */}
       <div className="p-4 border-t border-gray-100 bg-white">
         {/* AI Takeover Mode - AI完全接管 */}
         {userSettings.preferences.ai.enabled && userSettings.preferences.ai.autoReply && (
-          <div className="mb-3 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl">
+          <div className="mb-3 p-4 bg-gradient-to-r from-orange-50/80 via-amber-50/60 to-[#FF6B35]/5 border border-[#FF6B35]/20 rounded-xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
-                  <Bot className="w-5 h-5 text-amber-600" />
+                <div className="w-10 h-10 bg-[#FF6B35]/10 rounded-xl flex items-center justify-center">
+                  <Bot className="w-5 h-5 text-[#FF6B35]" />
                 </div>
                 <div>
-                  <p className="font-medium text-amber-800">AI客服接管中</p>
-                  <p className="text-xs text-amber-600">AI将自动回复客户消息，无需人工干预</p>
+                  <p className="font-medium text-[#FF6B35]">AI客服接管中</p>
+                  <p className="text-xs text-[#FF6B35]/70">AI将自动回复客户消息，无需人工干预</p>
                 </div>
               </div>
               <button
@@ -576,14 +653,14 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
                     }
                   }
                 })}
-                className="px-4 py-2 bg-white border border-amber-300 text-amber-700 text-sm font-medium rounded-lg hover:bg-amber-50 transition-colors"
+                className="px-4 py-2 bg-white border border-[#FF6B35] text-[#FF6B35] text-sm font-medium rounded-lg hover:bg-[#FF6B35]/5 transition-colors"
               >
                 切换为AI辅助模式
               </button>
             </div>
           </div>
         )}
-        
+
         {/* AI Assist Mode - AI辅助模式 */}
         {userSettings.preferences.ai.enabled && !userSettings.preferences.ai.autoReply && (
           <div className="mb-3">

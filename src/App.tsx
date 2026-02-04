@@ -9,10 +9,12 @@ import { RightMenuBar, type RightPanelType } from '@/components/RightMenuBar';
 import { ProxySettings } from '@/components/ProxySettings';
 import { TranslationSettings } from '@/components/TranslationSettings';
 import { ContactList } from '@/components/ContactList';
+import { LoginPage } from '@/components/LoginPage';
+import { AdminCenter } from '@/components/AdminCenter';
+import { AdminLoginPage } from '@/components/AdminLoginPage';
 import { platformConfigs } from '@/data/mockData';
 import {
   MessageCircle,
-  Filter,
   Search,
   Bell,
   Menu,
@@ -29,7 +31,8 @@ import {
   AlertTriangle,
   MapPin,
   Bot,
-  CheckCircle2
+  CheckCircle2,
+  SlidersHorizontal
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -40,12 +43,33 @@ function App() {
     getFilteredConversations,
     userSettings
   } = useStore();
-  
+
+  // 登录状态
+  const [isLoggedIn, setIsLoggedIn] = useState(() => {
+    return localStorage.getItem('isLoggedIn') === 'true';
+  });
+
+  // 管理中心状态
+  const [showAdminCenter, setShowAdminCenter] = useState(false);
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+
   const [activeSection, setActiveSection] = useState('conversations');
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [activeRightPanel, setActiveRightPanel] = useState<RightPanelType>(null);
+
+  // 登录处理
+  const handleLogin = () => {
+    localStorage.setItem('isLoggedIn', 'true');
+    setIsLoggedIn(true);
+  };
+
+  // 退出登录处理
+  const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn');
+    setIsLoggedIn(false);
+  };
   
   // 检测移动端
   useEffect(() => {
@@ -59,6 +83,38 @@ function App() {
   
   const conversations = getFilteredConversations();
   const unreadCount = conversations.reduce((sum, conv) => sum + conv.unreadCount, 0);
+
+  // 如果显示管理中心
+  if (showAdminCenter) {
+    // 如果管理端未登录，显示管理端登录页面
+    if (!isAdminLoggedIn) {
+      return (
+        <AdminLoginPage
+          onLoginSuccess={() => setIsAdminLoggedIn(true)}
+          onGoToClient={() => setShowAdminCenter(false)}
+        />
+      );
+    }
+    // 管理端已登录，显示管理中心
+    return (
+      <AdminCenter
+        onBack={() => {
+          setShowAdminCenter(false);
+          setIsAdminLoggedIn(false);
+        }}
+      />
+    );
+  }
+
+  // 如果未登录，显示登录页面
+  if (!isLoggedIn) {
+    return (
+      <LoginPage
+        onLoginSuccess={handleLogin}
+        onGoToAdmin={() => setShowAdminCenter(true)}
+      />
+    );
+  }
   
   // 渲染主内容区
   const renderMainContent = () => {
@@ -142,12 +198,14 @@ function App() {
             : "fixed -left-64 top-0 h-full"
         ) : "relative"
       )}>
-        <Sidebar 
+        <Sidebar
           activeSection={activeSection}
           onSectionChange={(section) => {
             setActiveSection(section);
             setShowMobileSidebar(false);
           }}
+          onLogout={handleLogout}
+          onOpenAdminCenter={() => setShowAdminCenter(true)}
         />
       </div>
       
@@ -188,11 +246,13 @@ function App() {
                     className="pl-9 pr-4 py-2 bg-gray-100 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 w-48"
                   />
                 </div>
-                <button 
+                {/* 全局筛选按钮 */}
+                <button
                   onClick={() => setShowFilterPanel(true)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors relative"
+                  title="全局筛选"
                 >
-                  <Filter className="w-5 h-5 text-gray-500" />
+                  <SlidersHorizontal className="w-5 h-5 text-gray-500" />
                 </button>
               </div>
             )}

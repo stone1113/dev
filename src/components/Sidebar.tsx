@@ -31,7 +31,8 @@ import {
   QrCode,
   Globe,
   LogIn,
-  FileText
+  FileText,
+  Building2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -51,6 +52,8 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 interface SidebarProps {
   activeSection?: string;
   onSectionChange?: (section: string) => void;
+  onLogout?: () => void;
+  onOpenAdminCenter?: () => void;
 }
 
 // 账号管理模态框
@@ -87,7 +90,7 @@ const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose, platform, 
         name: newAccountName.trim(),
         accountId: '',
         status: 'not_logged_in',
-        isDefault: accounts.length === 0,
+        isDefault: false,
         messageCount: 0,
         avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${newAccountName.trim()}&backgroundColor=${platformConfig?.color.replace('#', '')}`,
         remark: '待登录',
@@ -150,9 +153,7 @@ const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose, platform, 
                 "p-3 rounded-lg border transition-all",
                 account.status === 'not_logged_in'
                   ? "bg-amber-50 border-amber-200"
-                  : account.isDefault
-                    ? "bg-[#FF6B35]/5 border-[#FF6B35]/30"
-                    : "bg-gray-50 border-transparent hover:bg-gray-100"
+                  : "bg-gray-50 border-transparent hover:bg-gray-100"
               )}
             >
               {/* 账号信息行 */}
@@ -172,9 +173,6 @@ const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose, platform, 
                     {account.status === 'not_logged_in' ? '未登录' : account.accountId || '未设置'}
                   </p>
                 </div>
-                {account.isDefault && (
-                  <span className="px-2 py-0.5 text-[10px] font-medium bg-[#FF6B35] text-white rounded">默认</span>
-                )}
               </div>
 
               {/* 备注编辑行 */}
@@ -312,9 +310,11 @@ const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose, platform, 
   );
 };
 
-export const Sidebar: React.FC<SidebarProps> = ({ 
+export const Sidebar: React.FC<SidebarProps> = ({
   activeSection = 'conversations',
-  onSectionChange 
+  onSectionChange,
+  onLogout,
+  onOpenAdminCenter
 }) => {
   const { 
     sidebarCollapsed, 
@@ -591,7 +591,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
           
           {/* User Profile */}
           <div className="mt-4 pt-4 border-t border-gray-100">
-            <button className={cn(
+            {/* 管理中心入口 */}
+            {userSettings.role === 'admin' && (
+              <button
+                onClick={onOpenAdminCenter}
+                className={cn(
+                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-gray-600 hover:bg-gray-100 mb-2",
+                  sidebarCollapsed && "justify-center"
+                )}
+              >
+                <Building2 className={cn(
+                  "flex-shrink-0",
+                  sidebarCollapsed ? "w-5 h-5" : "w-5 h-5"
+                )} />
+                {!sidebarCollapsed && (
+                  <span className="text-left text-sm font-medium">管理中心</span>
+                )}
+              </button>
+            )}
+            <button
+              onClick={onLogout}
+              className={cn(
               "w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-gray-100 transition-colors",
               sidebarCollapsed && "justify-center"
             )}>

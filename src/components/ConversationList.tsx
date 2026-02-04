@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useStore } from '@/store/useStore';
 import { platformConfigs } from '@/data/mockData';
 import type { Conversation, Platform } from '@/types';
@@ -14,18 +14,17 @@ import {
   Twitter,
   ShoppingBag,
   Search,
-  Filter,
-  MoreHorizontal,
   CheckCheck,
   Clock,
   AlertCircle,
   Bot,
   Sparkles,
   Users,
-  User
+  SlidersHorizontal
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { AdvancedFilterPanel } from './AdvancedFilterPanel';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   MessageCircle,
@@ -52,13 +51,15 @@ interface ConversationListProps {
   onFilterClick?: () => void;
 }
 
-export const ConversationList: React.FC<ConversationListProps> = ({ 
+export const ConversationList: React.FC<ConversationListProps> = ({
   onSelectConversation,
-  onFilterClick 
+  onFilterClick
 }) => {
-  const { 
-    getFilteredConversations, 
-    selectedConversationId, 
+  const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
+
+  const {
+    getFilteredConversations,
+    selectedConversationId,
     setSelectedConversation,
     searchQuery,
     setSearchQuery,
@@ -66,8 +67,19 @@ export const ConversationList: React.FC<ConversationListProps> = ({
     setFilterCriteria,
     userSettings
   } = useStore();
-  
+
   const conversations = getFilteredConversations();
+
+  // 计算高级筛选激活数量
+  const advancedFilterCount = [
+    filterCriteria.customerLevel,
+    filterCriteria.customerTypes,
+    filterCriteria.categories,
+    filterCriteria.budgetRange,
+    filterCriteria.intentQuantity,
+    filterCriteria.purchasePurpose,
+    filterCriteria.urgency,
+  ].reduce((sum, arr) => sum + (arr?.length || 0), 0);
   
   const handleSelect = (conversation: Conversation) => {
     setSelectedConversation(conversation.id);
@@ -96,23 +108,11 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   };
   
   return (
-    <div className="flex flex-col h-full bg-white rounded-xl shadow-sm overflow-hidden">
+    <div className="relative flex flex-col h-full bg-white rounded-xl shadow-sm overflow-hidden">
       {/* Header */}
       <div className="p-4 border-b border-gray-100">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold">会话列表</h2>
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={onFilterClick}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              title="筛选"
-            >
-              <Filter className="w-4 h-4 text-gray-500" />
-            </button>
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <MoreHorizontal className="w-4 h-4 text-gray-500" />
-            </button>
-          </div>
         </div>
         
         {/* Search */}
@@ -202,6 +202,24 @@ export const ConversationList: React.FC<ConversationListProps> = ({
             )}
           >
             单聊
+          </button>
+          {/* 高级筛选 */}
+          <button
+            onClick={() => setShowAdvancedFilter(true)}
+            className={cn(
+              "flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-full transition-all",
+              advancedFilterCount > 0
+                ? "bg-[#FF6B35] text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            )}
+          >
+            <SlidersHorizontal className="w-3 h-3" />
+            高级筛选
+            {advancedFilterCount > 0 && (
+              <span className="ml-1 px-1.5 py-0.5 text-[10px] bg-white/20 rounded-full">
+                {advancedFilterCount}
+              </span>
+            )}
           </button>
         </div>
       </div>
@@ -350,6 +368,21 @@ export const ConversationList: React.FC<ConversationListProps> = ({
           </span>
         </div>
       </div>
+
+      {/* Advanced Filter Panel */}
+      {showAdvancedFilter && (
+        <div className="absolute inset-0 z-50 flex">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/20"
+            onClick={() => setShowAdvancedFilter(false)}
+          />
+          {/* Panel */}
+          <div className="relative ml-auto w-72 h-full animate-in slide-in-from-right duration-200">
+            <AdvancedFilterPanel onClose={() => setShowAdvancedFilter(false)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -115,12 +115,7 @@ export const PlatformAccountSwitcher: React.FC<PlatformAccountSwitcherProps> = (
                     )} />
                   </div>
                   <div className="flex-1 min-w-0 text-left">
-                    <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-gray-700 truncate">{account.name}</p>
-                      {account.isDefault && (
-                        <span className="px-1.5 py-0.5 text-[9px] bg-[#FF6B35]/10 text-[#FF6B35] rounded-full">默认</span>
-                      )}
-                    </div>
+                    <p className="text-sm font-medium text-gray-700 truncate">{account.name}</p>
                     <p className="text-xs text-gray-400 truncate">{account.accountId}</p>
                   </div>
                   {selectedAccount?.id === account.id && <Check className="w-4 h-4 text-[#FF6B35]" />}

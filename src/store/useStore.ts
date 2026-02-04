@@ -1,15 +1,17 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { 
-  Conversation, 
-  CustomerProfile, 
-  Platform, 
-  FilterCriteria, 
+import type {
+  Conversation,
+  CustomerProfile,
+  Platform,
+  FilterCriteria,
   UserSettings,
   Message,
   AIReplySuggestion,
   TranslationResult,
-  PlatformAccount
+  PlatformAccount,
+  Organization,
+  LoginMode
 } from '@/types';
 import { 
   mockConversations, 
@@ -22,6 +24,11 @@ import {
 
 // 应用状态接口
 interface AppState {
+  // 组织设置
+  organization: Organization;
+  updateOrganization: (updates: Partial<Organization>) => void;
+  setOrganizationLoginMode: (mode: LoginMode) => void;
+
   // 用户设置
   userSettings: UserSettings;
   updateUserSettings: (settings: Partial<UserSettings>) => void;
@@ -93,6 +100,26 @@ interface AppState {
 export const useStore = create<AppState>()(
   persist(
     (set, get) => ({
+      // 组织设置
+      organization: {
+        id: 'org_001',
+        name: '示例企业',
+        activationCode: 'QXMS2024DEMO',
+        loginMode: 'activation_only',
+        memberCount: 15,
+        createdAt: new Date('2024-01-01'),
+        status: 'active',
+        expiresAt: new Date('2025-12-31')
+      },
+      updateOrganization: (updates) =>
+        set((state) => ({
+          organization: { ...state.organization, ...updates }
+        })),
+      setOrganizationLoginMode: (mode) =>
+        set((state) => ({
+          organization: { ...state.organization, loginMode: mode }
+        })),
+
       // 用户设置
       userSettings: mockUserSettings,
       updateUserSettings: (settings) => 
@@ -200,7 +227,7 @@ export const useStore = create<AppState>()(
               : c
           )
         })),
-      
+
       // 筛选
       filterCriteria: {
         platforms: [],
@@ -218,6 +245,16 @@ export const useStore = create<AppState>()(
         customerTags: [],
         messageCountRange: undefined,
         lastActiveRange: undefined,
+        // AI画像标签筛选
+        customerLevel: [],
+        customerTypes: [],
+        categories: [],
+        budgetRange: [],
+        intentQuantity: [],
+        purchasePurpose: [],
+        urgency: [],
+        inquiryStage: [],
+        decisionRole: [],
       },
       setFilterCriteria: (criteria) => 
         set((state) => ({ 
@@ -241,6 +278,16 @@ export const useStore = create<AppState>()(
             customerTags: [],
             messageCountRange: undefined,
             lastActiveRange: undefined,
+            // AI画像标签筛选
+            customerLevel: [],
+            customerTypes: [],
+            categories: [],
+            budgetRange: [],
+            intentQuantity: [],
+            purchasePurpose: [],
+            urgency: [],
+            inquiryStage: [],
+            decisionRole: [],
           },
           searchQuery: '',
           selectedPlatform: 'all',
@@ -387,11 +434,11 @@ export const useStore = create<AppState>()(
       isTranslating: false,
       translateMessage: async (text, sourceLang, targetLang) => {
         set({ isTranslating: true });
-        
+
         // 模拟API调用延迟
         await new Promise(resolve => setTimeout(resolve, 800));
-        
-        // 模拟翻译结果
+
+        // 模拟翻译结果 - 预设翻译
         const translations: Record<string, Record<string, string>> = {
           'en-zh': {
             'Hi, I ordered a wireless earphone last month and I\'m very satisfied with it!': '嗨，我上个月订购了一副无线耳机，非常满意！',
@@ -408,12 +455,18 @@ export const useStore = create<AppState>()(
             'Ciao! I bought a designer lamp last month but it arrived damaged. Can I get a replacement?': '你好！我上个月买了一盏设计师台灯，但到货时损坏了。可以换货吗？',
           },
         };
-        
+
         const key = `${sourceLang}-${targetLang}`;
-        const translatedText = translations[key]?.[text] || `[${targetLang}] ${text}`;
-        
+        let translatedText = translations[key]?.[text];
+
+        // 如果没有预设翻译，根据目标语言生成模拟翻译
+        if (!translatedText) {
+          // 模拟翻译 - 直接返回原文作为译文（实际项目中会调用翻译API）
+          translatedText = text;
+        }
+
         set({ isTranslating: false });
-        
+
         return {
           originalText: text,
           translatedText,
@@ -473,6 +526,7 @@ export const useStore = create<AppState>()(
     {
       name: 'chatbiz-storage',
       partialize: (state) => ({
+        organization: state.organization,
         userSettings: state.userSettings,
         sidebarCollapsed: state.sidebarCollapsed,
         currentLanguage: state.currentLanguage,

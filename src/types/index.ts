@@ -130,6 +130,16 @@ export interface FilterCriteria {
   customerTags: string[]; // 客户标签
   messageCountRange?: { min?: number; max?: number }; // 消息数量范围
   lastActiveRange?: 'today' | 'yesterday' | 'week' | 'month' | 'custom'; // 最后活跃时间
+  // AI画像标签筛选
+  customerLevel?: string[]; // 客户等级: A级/B级/C级/D级
+  customerTypes?: string[]; // 客户类型: 批发/平台卖家等
+  categories?: string[]; // 意向品类
+  budgetRange?: string[]; // 预算区间
+  intentQuantity?: string[]; // 意向数量
+  purchasePurpose?: string[]; // 购买目的
+  urgency?: string[]; // 购买紧迫度
+  inquiryStage?: string[]; // 询盘阶段
+  decisionRole?: string[]; // 决策角色
 }
 
 // 平台客服账号
@@ -190,6 +200,21 @@ export interface AIReplySuggestion {
   tone: 'professional' | 'friendly' | 'concise' | 'empathetic';
   language: string;
   confidence: number;
+}
+
+// 登录模式类型
+export type LoginMode = 'activation_only' | 'activation_with_password';
+
+// 组织信息
+export interface Organization {
+  id: string;
+  name: string;
+  activationCode: string;
+  loginMode: LoginMode;
+  memberCount: number;
+  createdAt: Date;
+  status: 'active' | 'inactive' | 'expired';
+  expiresAt?: Date;
 }
 
 // 用户设置

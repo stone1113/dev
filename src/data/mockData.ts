@@ -611,6 +611,7 @@ export const mockUserSettings: UserSettings = {
     soundEnabled: true,
     translation: {
       enabled: true,
+      autoReceive: true,     // 自动翻译接收的消息
       receiveLanguage: 'zh', // 接收消息翻译为中文
       sendLanguage: 'en',    // 发送消息翻译为英文
     },
