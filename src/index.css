@@ -1,14 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
 :root {
-  /* 主色调 */
-  --primary: #0059F8;
-  --primary-dark: #0038A3;
-  --primary-light: #E6EFFF;
+  /* 主色调 - 柔和橙色 */
+  --primary: #FF6B35;
+  --primary-dark: #E85A2A;
+  --primary-light: #FFF5F0;
   
   /* 中性色 */
   --black: #000000;

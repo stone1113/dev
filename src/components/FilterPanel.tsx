@@ -333,13 +333,13 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({ isOpen, onClose }) => 
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-white">
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-[#0059F8]/10 rounded-lg">
-              <Filter className="w-5 h-5 text-[#0059F8]" />
+            <div className="p-2 bg-[#FF6B35]/10 rounded-lg">
+              <Filter className="w-5 h-5 text-[#FF6B35]" />
             </div>
             <div>
               <h2 className="font-semibold text-gray-900">筛选条件</h2>
               {getActiveFilterCount() > 0 && (
-                <p className="text-xs text-[#0059F8]">{getActiveFilterCount()} 个条件已激活</p>
+                <p className="text-xs text-[#FF6B35]">{getActiveFilterCount()} 个条件已激活</p>
               )}
             </div>
           </div>
@@ -368,7 +368,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({ isOpen, onClose }) => 
                   className={cn(
                     "flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-left",
                     filterCriteria.platforms.includes(platform.id as any)
-                      ? "bg-[#0059F8]/10 border border-[#0059F8]/30"
+                      ? "bg-[#FF6B35]/10 border border-[#FF6B35]/30"
                       : "bg-gray-50 hover:bg-gray-100 border border-transparent"
                   )}
                 >
@@ -380,7 +380,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({ isOpen, onClose }) => 
                   </div>
                   <span className="flex-1 text-xs text-gray-700 truncate">{platform.name}</span>
                   {filterCriteria.platforms.includes(platform.id as any) && (
-                    <Check className="w-3 h-3 text-[#0059F8]" />
+                    <Check className="w-3 h-3 text-[#FF6B35]" />
                   )}
                 </button>
               ))}
@@ -452,14 +452,14 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({ isOpen, onClose }) => 
                   className={cn(
                     "flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all text-left",
                     filterCriteria.countries.includes(country.id)
-                      ? "bg-[#0059F8]/10 border border-[#0059F8]/30"
+                      ? "bg-[#FF6B35]/10 border border-[#FF6B35]/30"
                       : "bg-gray-50 hover:bg-gray-100 border border-transparent"
                   )}
                 >
                   <span className="text-sm">{country.flag}</span>
                   <span className="flex-1 text-xs text-gray-700 truncate">{country.name}</span>
                   {filterCriteria.countries.includes(country.id) && (
-                    <Check className="w-3 h-3 text-[#0059F8]" />
+                    <Check className="w-3 h-3 text-[#FF6B35]" />
                   )}
                 </button>
               ))}
@@ -481,13 +481,13 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({ isOpen, onClose }) => 
                   className={cn(
                     "flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all text-left",
                     filterCriteria.languages.includes(language.id)
-                      ? "bg-[#0059F8]/10 border border-[#0059F8]/30"
+                      ? "bg-[#FF6B35]/10 border border-[#FF6B35]/30"
                       : "bg-gray-50 hover:bg-gray-100 border border-transparent"
                   )}
                 >
                   <span className="flex-1 text-xs text-gray-700">{language.name}</span>
                   {filterCriteria.languages.includes(language.id) && (
-                    <Check className="w-3 h-3 text-[#0059F8]" />
+                    <Check className="w-3 h-3 text-[#FF6B35]" />
                   )}
                 </button>
               ))}
@@ -507,14 +507,14 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({ isOpen, onClose }) => 
                 className={cn(
                   "w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all",
                   filterCriteria.assignedTo.length === 0
-                    ? "bg-[#0059F8]/10 border border-[#0059F8]/30"
+                    ? "bg-[#FF6B35]/10 border border-[#FF6B35]/30"
                     : "bg-gray-50 hover:bg-gray-100 border border-transparent"
                 )}
               >
                 <User className="w-4 h-4 text-gray-400" />
                 <span className="flex-1 text-left text-xs text-gray-700">全部客服</span>
                 {filterCriteria.assignedTo.length === 0 && (
-                  <Check className="w-3 h-3 text-[#0059F8]" />
+                  <Check className="w-3 h-3 text-[#FF6B35]" />
                 )}
               </button>
               {platformAccounts.map((account) => (
@@ -524,7 +524,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({ isOpen, onClose }) => 
                   className={cn(
                     "w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all",
                     filterCriteria.assignedTo.includes(account.id)
-                      ? "bg-[#0059F8]/10 border border-[#0059F8]/30"
+                      ? "bg-[#FF6B35]/10 border border-[#FF6B35]/30"
                       : "bg-gray-50 hover:bg-gray-100 border border-transparent"
                   )}
                 >
@@ -535,7 +535,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({ isOpen, onClose }) => 
                   )} />
                   <span className="flex-1 text-left text-xs text-gray-700">{account.name}</span>
                   {filterCriteria.assignedTo.includes(account.id) && (
-                    <Check className="w-3 h-3 text-[#0059F8]" />
+                    <Check className="w-3 h-3 text-[#FF6B35]" />
                   )}
                 </button>
               ))}
@@ -617,7 +617,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({ isOpen, onClose }) => 
                   className={cn(
                     "px-3 py-1.5 text-xs font-medium rounded-full transition-all",
                     filterCriteria.customerTags.includes(tag)
-                      ? "bg-[#0059F8] text-white"
+                      ? "bg-[#FF6B35] text-white"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                   )}
                 >
@@ -674,14 +674,14 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({ isOpen, onClose }) => 
                   className={cn(
                     "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all",
                     filterCriteria.messageCountRange?.min === option.min
-                      ? "bg-[#0059F8]/10 border border-[#0059F8]/30"
+                      ? "bg-[#FF6B35]/10 border border-[#FF6B35]/30"
                       : "bg-gray-50 hover:bg-gray-100 border border-transparent"
                   )}
                 >
                   <Hash className="w-4 h-4 text-gray-400" />
                   <span className="flex-1 text-left text-xs text-gray-700">{option.name}</span>
                   {filterCriteria.messageCountRange?.min === option.min && (
-                    <Check className="w-3 h-3 text-[#0059F8]" />
+                    <Check className="w-3 h-3 text-[#FF6B35]" />
                   )}
                 </button>
               ))}
@@ -709,14 +709,14 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({ isOpen, onClose }) => 
                   className={cn(
                     "w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all",
                     filterCriteria.lastActiveRange === option.id
-                      ? "bg-[#0059F8]/10 border border-[#0059F8]/30"
+                      ? "bg-[#FF6B35]/10 border border-[#FF6B35]/30"
                       : "bg-gray-50 hover:bg-gray-100 border border-transparent"
                   )}
                 >
                   <Calendar className="w-4 h-4 text-gray-400" />
                   <span className="flex-1 text-left text-xs text-gray-700">{option.name}</span>
                   {filterCriteria.lastActiveRange === option.id && (
-                    <Check className="w-3 h-3 text-[#0059F8]" />
+                    <Check className="w-3 h-3 text-[#FF6B35]" />
                   )}
                 </button>
               ))}
@@ -768,7 +768,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({ isOpen, onClose }) => 
             </button>
             <button
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 bg-[#0059F8] text-white rounded-lg text-sm font-medium hover:bg-[#0038A3] transition-colors shadow-sm hover:shadow"
+              className="flex-1 px-4 py-2.5 bg-[#FF6B35] text-white rounded-lg text-sm font-medium hover:bg-[#E85A2A] transition-colors shadow-sm hover:shadow"
             >
               查看结果 ({filteredCount})
             </button>

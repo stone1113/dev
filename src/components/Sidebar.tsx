@@ -151,7 +151,7 @@ const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose, platform, 
                 account.status === 'not_logged_in'
                   ? "bg-amber-50 border-amber-200"
                   : account.isDefault
-                    ? "bg-[#0059F8]/5 border-[#0059F8]/30"
+                    ? "bg-[#FF6B35]/5 border-[#FF6B35]/30"
                     : "bg-gray-50 border-transparent hover:bg-gray-100"
               )}
             >
@@ -173,7 +173,7 @@ const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose, platform, 
                   </p>
                 </div>
                 {account.isDefault && (
-                  <span className="px-2 py-0.5 text-[10px] font-medium bg-[#0059F8] text-white rounded">默认</span>
+                  <span className="px-2 py-0.5 text-[10px] font-medium bg-[#FF6B35] text-white rounded">默认</span>
                 )}
               </div>
 
@@ -186,7 +186,7 @@ const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose, platform, 
                       value={remarkValue}
                       onChange={(e) => setRemarkValue(e.target.value)}
                       placeholder="输入备注..."
-                      className="flex-1 px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:border-[#0059F8]"
+                      className="flex-1 px-2 py-1 text-xs border border-gray-200 rounded focus:outline-none focus:border-[#FF6B35]"
                       autoFocus
                     />
                     <button onClick={() => handleUpdateRemark(account.id)} className="p-1 hover:bg-green-100 rounded">
@@ -212,7 +212,7 @@ const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose, platform, 
                 {account.status === 'not_logged_in' ? (
                   <button
                     onClick={() => handleLogin(account.id)}
-                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[#0059F8] rounded-lg hover:bg-[#0038A3] transition-colors"
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-[#FF6B35] rounded-lg hover:bg-[#E85A2A] transition-colors"
                   >
                     <QrCode className="w-3.5 h-3.5" />
                     扫码登录
@@ -231,7 +231,7 @@ const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose, platform, 
                   className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   <Globe className="w-3.5 h-3.5" />
-                  代理IP
+                  环境配置
                 </button>
                 <button
                   onClick={() => handleDeleteAccount(account.id)}
@@ -273,7 +273,7 @@ const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose, platform, 
                   value={newAccountName}
                   onChange={(e) => setNewAccountName(e.target.value)}
                   placeholder="例如：客服小王"
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#0059F8] focus:ring-2 focus:ring-[#0059F8]/20"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#FF6B35] focus:ring-2 focus:ring-[#FF6B35]/20"
                 />
               </div>
               <div className="flex gap-2">
@@ -286,7 +286,7 @@ const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose, platform, 
                 <button
                   onClick={handleAddAccount}
                   disabled={!newAccountName.trim()}
-                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-[#0059F8] rounded-lg hover:bg-[#0038A3] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-[#FF6B35] rounded-lg hover:bg-[#E85A2A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   添加
                 </button>
@@ -300,7 +300,7 @@ const AccountModal: React.FC<AccountModalProps> = ({ isOpen, onClose, platform, 
           <div className="p-4 border-t border-gray-100">
             <button
               onClick={() => setIsAdding(true)}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-[#0059F8] bg-[#0059F8]/10 rounded-lg hover:bg-[#0059F8]/20 transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-[#FF6B35] bg-[#FF6B35]/10 rounded-lg hover:bg-[#FF6B35]/20 transition-colors"
             >
               <Plus className="w-4 h-4" />
               添加新账号
@@ -363,14 +363,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <div className="flex items-center justify-between p-4 border-b border-gray-100">
           {!sidebarCollapsed && (
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-[#0059F8] rounded-lg flex items-center justify-center">
+              <div className="w-8 h-8 bg-[#FF6B35] rounded-lg flex items-center justify-center">
                 <MessageCircle className="w-5 h-5 text-white" />
               </div>
               <span className="font-semibold text-gray-900">ChatBiz</span>
             </div>
           )}
           {sidebarCollapsed && (
-            <div className="w-8 h-8 bg-[#0059F8] rounded-lg flex items-center justify-center mx-auto">
+            <div className="w-8 h-8 bg-[#FF6B35] rounded-lg flex items-center justify-center mx-auto">
               <MessageCircle className="w-5 h-5 text-white" />
             </div>
           )}
@@ -402,7 +402,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 className={cn(
                   "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
                   activeSection === item.id
-                    ? "bg-[#0059F8] text-white"
+                    ? "bg-[#FF6B35] text-white"
                     : "text-gray-600 hover:bg-gray-100"
                 )}
               >
@@ -511,7 +511,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                 className={cn(
                                   "w-full flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all text-xs",
                                   selectedAccount?.id === account.id
-                                    ? "bg-[#0059F8]/10 text-[#0059F8]"
+                                    ? "bg-[#FF6B35]/10 text-[#FF6B35]"
                                     : "text-gray-500 hover:bg-gray-50"
                                 )}
                               >
@@ -543,14 +543,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                                   )}
                                 </div>
                                 {selectedAccount?.id === account.id && (
-                                  <div className="w-1.5 h-1.5 rounded-full bg-[#0059F8] flex-shrink-0" />
+                                  <div className="w-1.5 h-1.5 rounded-full bg-[#FF6B35] flex-shrink-0" />
                                 )}
                               </button>
                             ))}
                             {/* 管理账号按钮 */}
                             <button
                               onClick={() => setManagingPlatform(platform.id)}
-                              className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all text-xs text-gray-400 hover:text-[#0059F8] hover:bg-[#0059F8]/5"
+                              className="w-full flex items-center gap-2 px-2 py-1.5 rounded-lg transition-all text-xs text-gray-400 hover:text-[#FF6B35] hover:bg-[#FF6B35]/5"
                             >
                               <MoreHorizontal className="w-4 h-4" />
                               <span className="flex-1 text-left">管理账号</span>

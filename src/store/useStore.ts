@@ -208,6 +208,8 @@ export const useStore = create<AppState>()(
         priority: [],
         tags: [],
         unreadOnly: false,
+        unrepliedOnly: false,
+        chatType: 'all',
         countries: [],
         languages: [],
         assignedTo: [],
@@ -221,7 +223,7 @@ export const useStore = create<AppState>()(
         set((state) => ({ 
           filterCriteria: { ...state.filterCriteria, ...criteria } 
         })),
-      clearFilters: () => 
+      clearFilters: () =>
         set({
           filterCriteria: {
             platforms: [],
@@ -229,6 +231,8 @@ export const useStore = create<AppState>()(
             priority: [],
             tags: [],
             unreadOnly: false,
+            unrepliedOnly: false,
+            chatType: 'all',
             countries: [],
             languages: [],
             assignedTo: [],
@@ -270,7 +274,26 @@ export const useStore = create<AppState>()(
           if (filterCriteria.unreadOnly && conv.unreadCount === 0) {
             return false;
           }
-          
+
+          // 未回复筛选（最后一条消息是客户发的）
+          if (filterCriteria.unrepliedOnly) {
+            const lastMsg = conv.lastMessage;
+            if (!lastMsg || lastMsg.senderType !== 'customer') {
+              return false;
+            }
+          }
+
+          // 会话类型筛选（单聊/群聊）
+          if (filterCriteria.chatType && filterCriteria.chatType !== 'all') {
+            const isGroup = conv.isGroup === true;
+            if (filterCriteria.chatType === 'single' && isGroup) {
+              return false;
+            }
+            if (filterCriteria.chatType === 'group' && !isGroup) {
+              return false;
+            }
+          }
+
           // 国家筛选
           if (filterCriteria.countries.length > 0 && !filterCriteria.countries.includes(conv.customer.country)) {
             return false;

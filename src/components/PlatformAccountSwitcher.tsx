@@ -103,7 +103,7 @@ export const PlatformAccountSwitcher: React.FC<PlatformAccountSwitcherProps> = (
                   }}
                   className={cn(
                     "w-full flex items-center gap-2 px-3 py-2 hover:bg-gray-50 transition-colors",
-                    selectedAccount?.id === account.id && "bg-[#0059F8]/5"
+                    selectedAccount?.id === account.id && "bg-[#FF6B35]/5"
                   )}
                 >
                   <div className="relative">
@@ -118,12 +118,12 @@ export const PlatformAccountSwitcher: React.FC<PlatformAccountSwitcherProps> = (
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-medium text-gray-700 truncate">{account.name}</p>
                       {account.isDefault && (
-                        <span className="px-1.5 py-0.5 text-[9px] bg-[#0059F8]/10 text-[#0059F8] rounded-full">默认</span>
+                        <span className="px-1.5 py-0.5 text-[9px] bg-[#FF6B35]/10 text-[#FF6B35] rounded-full">默认</span>
                       )}
                     </div>
                     <p className="text-xs text-gray-400 truncate">{account.accountId}</p>
                   </div>
-                  {selectedAccount?.id === account.id && <Check className="w-4 h-4 text-[#0059F8]" />}
+                  {selectedAccount?.id === account.id && <Check className="w-4 h-4 text-[#FF6B35]" />}
                 </button>
               ))}
             </div>

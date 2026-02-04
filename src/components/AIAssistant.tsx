@@ -122,8 +122,8 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onClose }) => {
   if (!conversation) {
     return (
       <div className="flex flex-col items-center justify-center h-full bg-white rounded-xl p-6">
-        <div className="w-16 h-16 bg-[#0059F8]/10 rounded-full flex items-center justify-center mb-3">
-          <Sparkles className="w-8 h-8 text-[#0059F8]" />
+        <div className="w-16 h-16 bg-[#FF6B35]/10 rounded-full flex items-center justify-center mb-3">
+          <Sparkles className="w-8 h-8 text-[#FF6B35]" />
         </div>
         <p className="text-gray-500 text-sm">选择一个会话使用AI助手</p>
       </div>
@@ -133,9 +133,9 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onClose }) => {
   return (
     <div className="flex flex-col h-full bg-white rounded-xl shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-[#0059F8]/5 to-transparent">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 bg-gradient-to-r from-[#FF6B35]/5 to-transparent">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-[#0059F8] rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-[#FF6B35] rounded-lg flex items-center justify-center">
             <Sparkles className="w-4 h-4 text-white" />
           </div>
           <div>
@@ -175,7 +175,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onClose }) => {
             className={cn(
               "flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all",
               activeTab === tab.id
-                ? "bg-white text-[#0059F8] shadow-sm"
+                ? "bg-white text-[#FF6B35] shadow-sm"
                 : "text-gray-600 hover:bg-gray-100"
             )}
           >
@@ -232,7 +232,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onClose }) => {
                     className={cn(
                       "flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all",
                       selectedTone === tone.id
-                        ? "bg-[#0059F8] text-white"
+                        ? "bg-[#FF6B35] text-white"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                     )}
                   >
@@ -251,7 +251,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onClose }) => {
                 "w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all",
                 isGeneratingReply
                   ? "bg-gray-100 text-gray-400"
-                  : "bg-[#0059F8] text-white hover:bg-[#0038A3] shadow-md hover:shadow-lg"
+                  : "bg-[#FF6B35] text-white hover:bg-[#E85A2A] shadow-md hover:shadow-lg"
               )}
             >
               {isGeneratingReply ? (
@@ -274,7 +274,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onClose }) => {
                   <span className="text-xs font-medium text-gray-500">回复建议</span>
                   <button 
                     onClick={handleGenerateReply}
-                    className="text-xs text-[#0059F8] hover:underline"
+                    className="text-xs text-[#FF6B35] hover:underline"
                   >
                     重新生成
                   </button>
@@ -283,7 +283,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onClose }) => {
                 {aiSuggestions.map((suggestion, index) => (
                   <div
                     key={index}
-                    className="group p-3 bg-gray-50 rounded-xl hover:bg-[#0059F8]/5 border border-transparent hover:border-[#0059F8]/20 transition-all"
+                    className="group p-3 bg-gray-50 rounded-xl hover:bg-[#FF6B35]/5 border border-transparent hover:border-[#FF6B35]/20 transition-all"
                   >
                     <p className="text-sm text-gray-700 mb-3 leading-relaxed">
                       {suggestion}
@@ -313,7 +313,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onClose }) => {
                         </button>
                         <button
                           onClick={() => handleUseSuggestion(suggestion)}
-                          className="flex items-center gap-1 px-3 py-1.5 bg-[#0059F8] text-white text-xs font-medium rounded-lg hover:bg-[#0038A3] transition-colors"
+                          className="flex items-center gap-1 px-3 py-1.5 bg-[#FF6B35] text-white text-xs font-medium rounded-lg hover:bg-[#E85A2A] transition-colors"
                         >
                           <Send className="w-3 h-3" />
                           <span>使用</span>
@@ -390,7 +390,7 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onClose }) => {
                 "w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-medium transition-all",
                 isSummarizing
                   ? "bg-gray-100 text-gray-400"
-                  : "bg-[#0059F8] text-white hover:bg-[#0038A3] shadow-md"
+                  : "bg-[#FF6B35] text-white hover:bg-[#E85A2A] shadow-md"
               )}
             >
               {isSummarizing ? (
@@ -473,15 +473,15 @@ export const AIAssistant: React.FC<AIAssistantProps> = ({ onClose }) => {
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-start gap-2 p-2 bg-white/50 rounded-lg">
-                      <span className="w-5 h-5 flex items-center justify-center bg-[#0059F8] text-white text-xs rounded-full">1</span>
+                      <span className="w-5 h-5 flex items-center justify-center bg-[#FF6B35] text-white text-xs rounded-full">1</span>
                       <p className="text-sm text-purple-800">提供详细的产品对比和优势说明</p>
                     </div>
                     <div className="flex items-start gap-2 p-2 bg-white/50 rounded-lg">
-                      <span className="w-5 h-5 flex items-center justify-center bg-[#0059F8] text-white text-xs rounded-full">2</span>
+                      <span className="w-5 h-5 flex items-center justify-center bg-[#FF6B35] text-white text-xs rounded-full">2</span>
                       <p className="text-sm text-purple-800">给出明确的配送时间表</p>
                     </div>
                     <div className="flex items-start gap-2 p-2 bg-white/50 rounded-lg">
-                      <span className="w-5 h-5 flex items-center justify-center bg-[#0059F8] text-white text-xs rounded-full">3</span>
+                      <span className="w-5 h-5 flex items-center justify-center bg-[#FF6B35] text-white text-xs rounded-full">3</span>
                       <p className="text-sm text-purple-800">提供批量采购的阶梯报价</p>
                     </div>
                   </div>

@@ -56,7 +56,7 @@ export const PlatformSwitcher: React.FC<PlatformSwitcherProps> = ({
             className={cn(
               "flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300",
               selectedPlatform === 'all'
-                ? "bg-[#0059F8] text-white shadow-md"
+                ? "bg-[#FF6B35] text-white shadow-md"
                 : "hover:bg-gray-100 text-gray-600"
             )}
           >
@@ -94,7 +94,7 @@ export const PlatformSwitcher: React.FC<PlatformSwitcherProps> = ({
   if (variant === 'dropdown') {
     return (
       <div className="relative group">
-        <button className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200 hover:border-[#0059F8] transition-colors">
+        <button className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200 hover:border-[#FF6B35] transition-colors">
           {selectedPlatform === 'all' ? (
             <>
               <MessageCircle className="w-4 h-4 text-gray-500" />
@@ -120,7 +120,7 @@ export const PlatformSwitcher: React.FC<PlatformSwitcherProps> = ({
               onClick={() => handlePlatformClick('all')}
               className={cn(
                 "w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors first:rounded-t-xl",
-                selectedPlatform === 'all' && "bg-[#0059F8]/5 text-[#0059F8]"
+                selectedPlatform === 'all' && "bg-[#FF6B35]/5 text-[#FF6B35]"
               )}
             >
               <MessageCircle className="w-4 h-4" />
@@ -147,7 +147,7 @@ export const PlatformSwitcher: React.FC<PlatformSwitcherProps> = ({
                   <Icon className="w-4 h-4" />
                 </div>
                 <span className="text-sm">{platform.name}</span>
-                {isActive && <Check className="w-4 h-4 ml-auto text-[#0059F8]" />}
+                {isActive && <Check className="w-4 h-4 ml-auto text-[#FF6B35]" />}
               </button>
             );
           })}
@@ -165,7 +165,7 @@ export const PlatformSwitcher: React.FC<PlatformSwitcherProps> = ({
           className={cn(
             "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300",
             selectedPlatform === 'all'
-              ? "bg-[#0059F8] text-white shadow-md"
+              ? "bg-[#FF6B35] text-white shadow-md"
               : "hover:bg-gray-100 text-gray-600"
           )}
         >

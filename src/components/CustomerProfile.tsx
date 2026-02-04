@@ -150,7 +150,7 @@ export const CustomerProfilePanel: React.FC<CustomerProfilePanelProps> = () => {
               {customer.tags.map((tag, i) => (
                 <span 
                   key={i}
-                  className="px-2.5 py-1 text-xs font-medium bg-[#0059F8]/10 text-[#0059F8] rounded-full"
+                  className="px-2.5 py-1 text-xs font-medium bg-[#FF6B35]/10 text-[#FF6B35] rounded-full"
                 >
                   {tag}
                 </span>
@@ -166,11 +166,11 @@ export const CustomerProfilePanel: React.FC<CustomerProfilePanelProps> = () => {
         {customer.behaviorAnalysis && (
           <div className="p-4 border-b border-gray-100">
             <div className="flex items-center gap-2 mb-3">
-              <Sparkles className="w-4 h-4 text-[#0059F8]" />
+              <Sparkles className="w-4 h-4 text-[#FF6B35]" />
               <h4 className="font-medium text-gray-900">AI洞察</h4>
             </div>
             
-            <div className="bg-gradient-to-r from-[#0059F8]/5 to-[#0059F8]/10 rounded-xl p-4">
+            <div className="bg-gradient-to-r from-[#FF6B35]/5 to-[#FF6B35]/10 rounded-xl p-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs text-gray-500 mb-1">总消费</p>
@@ -204,7 +204,7 @@ export const CustomerProfilePanel: React.FC<CustomerProfilePanelProps> = () => {
               </div>
               
               {customer.behaviorAnalysis.favoriteCategories.length > 0 && (
-                <div className="mt-4 pt-4 border-t border-[#0059F8]/10">
+                <div className="mt-4 pt-4 border-t border-[#FF6B35]/10">
                   <p className="text-xs text-gray-500 mb-2">偏好品类</p>
                   <div className="flex items-center gap-2 flex-wrap">
                     {customer.behaviorAnalysis.favoriteCategories.map((cat, i) => (
@@ -237,7 +237,7 @@ export const CustomerProfilePanel: React.FC<CustomerProfilePanelProps> = () => {
                 <ShoppingBag className="w-4 h-4 text-gray-500" />
                 <h4 className="font-medium text-gray-900">订单历史</h4>
               </div>
-              <button className="text-xs text-[#0059F8] hover:underline">
+              <button className="text-xs text-[#FF6B35] hover:underline">
                 查看全部
               </button>
             </div>

@@ -105,6 +105,9 @@ export interface Conversation {
   updatedAt: Date;
   aiSummary?: string; // AI总结
   aiSuggestions?: string[]; // AI回复建议
+  isGroup?: boolean; // 是否群聊
+  groupName?: string; // 群聊名称
+  groupMemberCount?: number; // 群成员数量
 }
 
 // 筛选条件
@@ -116,6 +119,8 @@ export interface FilterCriteria {
   dateRange?: { start: Date; end: Date };
   searchQuery?: string;
   unreadOnly?: boolean;
+  unrepliedOnly?: boolean; // 未回复筛选
+  chatType?: 'all' | 'single' | 'group'; // 会话类型：全部/单聊/群聊
   // 新增筛选条件
   countries: string[]; // 按国家筛选
   languages: string[]; // 按语言筛选
@@ -202,8 +207,17 @@ export interface UserSettings {
     // 翻译设置
     translation: {
       enabled: boolean;
-      receiveLanguage: string; // 接收译文的目标语言
-      sendLanguage: string;    // 发送消息的目标语言
+      receiveLanguage: string;    // 我的母语/目标显示语
+      sendLanguage: string;       // 客户语种/输出目标语
+      sourceLanguage?: string;    // 源语言（对方语种）
+      receiveEngine?: string;     // 接收翻译线路
+      sendEngine?: string;        // 发送翻译线路
+      autoReceive?: boolean;      // 自动翻译接收的消息
+      autoSend?: boolean;         // 将发送的消息翻译成对方语言
+      realtimeTranslate?: boolean;  // 实时翻译
+      groupAutoTranslate?: boolean; // 群组自动翻译
+      blockChinese?: boolean;       // 禁发中文
+      confirmTranslation?: boolean; // 翻译确认
     };
     // AI设置
     ai: {

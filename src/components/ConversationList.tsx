@@ -2,16 +2,16 @@ import React from 'react';
 import { useStore } from '@/store/useStore';
 import { platformConfigs } from '@/data/mockData';
 import type { Conversation, Platform } from '@/types';
-import { 
-  MessageCircle, 
-  Send, 
-  MessageSquare, 
-  Instagram, 
-  Facebook, 
-  Mail, 
-  Smartphone, 
-  Music, 
-  Twitter, 
+import {
+  MessageCircle,
+  Send,
+  MessageSquare,
+  Instagram,
+  Facebook,
+  Mail,
+  Smartphone,
+  Music,
+  Twitter,
   ShoppingBag,
   Search,
   Filter,
@@ -20,7 +20,9 @@ import {
   Clock,
   AlertCircle,
   Bot,
-  Sparkles
+  Sparkles,
+  Users,
+  User
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -121,52 +123,85 @@ export const ConversationList: React.FC<ConversationListProps> = ({
             placeholder="搜索客户或消息..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0059F8]/20 focus:border-[#0059F8] transition-all"
+            className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-all"
           />
         </div>
         
         {/* Quick Filters */}
-        <div className="flex items-center gap-2 mt-3">
+        <div className="flex items-center gap-2 mt-3 flex-wrap">
+          {/* 全部 */}
           <button
-            onClick={() => setFilterCriteria({ 
-              status: filterCriteria.status.includes('active') 
-                ? filterCriteria.status.filter(s => s !== 'active')
-                : [...filterCriteria.status, 'active']
+            onClick={() => setFilterCriteria({
+              chatType: 'all',
+              unreadOnly: false,
+              unrepliedOnly: false
             })}
             className={cn(
               "px-3 py-1.5 text-xs font-medium rounded-full transition-all",
-              filterCriteria.status.includes('active')
-                ? "bg-green-100 text-green-700"
+              !filterCriteria.unreadOnly && !filterCriteria.unrepliedOnly && filterCriteria.chatType === 'all'
+                ? "bg-[#FF6B35] text-white"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             )}
           >
-            进行中
+            全部
           </button>
+          {/* 未读 */}
           <button
-            onClick={() => setFilterCriteria({ 
-              status: filterCriteria.status.includes('pending')
-                ? filterCriteria.status.filter(s => s !== 'pending')
-                : [...filterCriteria.status, 'pending']
+            onClick={() => setFilterCriteria({
+              unreadOnly: !filterCriteria.unreadOnly,
+              unrepliedOnly: false
             })}
-            className={cn(
-              "px-3 py-1.5 text-xs font-medium rounded-full transition-all",
-              filterCriteria.status.includes('pending')
-                ? "bg-amber-100 text-amber-700"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            )}
-          >
-            待处理
-          </button>
-          <button
-            onClick={() => setFilterCriteria({ unreadOnly: !filterCriteria.unreadOnly })}
             className={cn(
               "px-3 py-1.5 text-xs font-medium rounded-full transition-all",
               filterCriteria.unreadOnly
-                ? "bg-red-100 text-red-700"
+                ? "bg-[#FF6B35] text-white"
                 : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             )}
           >
             未读
+          </button>
+          {/* 未回 */}
+          <button
+            onClick={() => setFilterCriteria({
+              unrepliedOnly: !filterCriteria.unrepliedOnly,
+              unreadOnly: false
+            })}
+            className={cn(
+              "px-3 py-1.5 text-xs font-medium rounded-full transition-all",
+              filterCriteria.unrepliedOnly
+                ? "bg-[#FF6B35] text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            )}
+          >
+            未回
+          </button>
+          {/* 群聊 */}
+          <button
+            onClick={() => setFilterCriteria({
+              chatType: filterCriteria.chatType === 'group' ? 'all' : 'group'
+            })}
+            className={cn(
+              "px-3 py-1.5 text-xs font-medium rounded-full transition-all",
+              filterCriteria.chatType === 'group'
+                ? "bg-[#FF6B35] text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            )}
+          >
+            群聊
+          </button>
+          {/* 单聊 */}
+          <button
+            onClick={() => setFilterCriteria({
+              chatType: filterCriteria.chatType === 'single' ? 'all' : 'single'
+            })}
+            className={cn(
+              "px-3 py-1.5 text-xs font-medium rounded-full transition-all",
+              filterCriteria.chatType === 'single'
+                ? "bg-[#FF6B35] text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            )}
+          >
+            单聊
           </button>
         </div>
       </div>
@@ -191,7 +226,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                   onClick={() => handleSelect(conversation)}
                   className={cn(
                     "w-full p-4 text-left transition-all duration-200 hover:bg-gray-50",
-                    isSelected && "bg-[#0059F8]/5 hover:bg-[#0059F8]/10",
+                    isSelected && "bg-[#FF6B35]/5 hover:bg-[#FF6B35]/10",
                     hasUnread && !isSelected && "bg-blue-50/50"
                   )}
                   style={{
@@ -201,12 +236,18 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                   <div className="flex items-start gap-3">
                     {/* Avatar */}
                     <div className="relative flex-shrink-0">
-                      <img
-                        src={conversation.customer.avatar}
-                        alt={conversation.customer.name}
-                        className="w-12 h-12 rounded-full object-cover bg-gray-100"
-                      />
-                      <div 
+                      {conversation.isGroup ? (
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center">
+                          <Users className="w-6 h-6 text-blue-500" />
+                        </div>
+                      ) : (
+                        <img
+                          src={conversation.customer.avatar}
+                          alt={conversation.customer.name}
+                          className="w-12 h-12 rounded-full object-cover bg-gray-100"
+                        />
+                      )}
+                      <div
                         className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full flex items-center justify-center border-2 border-white"
                         style={{ backgroundColor: color }}
                       >
@@ -217,13 +258,23 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                     {/* Content */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between mb-1">
-                        <h3 className={cn(
-                          "font-medium truncate",
-                          hasUnread ? "text-gray-900" : "text-gray-700"
-                        )}>
-                          {conversation.customer.name}
-                        </h3>
-                        <span className="text-xs text-gray-400 flex-shrink-0">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          {conversation.isGroup && (
+                            <Users className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                          )}
+                          <h3 className={cn(
+                            "font-medium truncate",
+                            hasUnread ? "text-gray-900" : "text-gray-700"
+                          )}>
+                            {conversation.isGroup ? conversation.groupName : conversation.customer.name}
+                          </h3>
+                          {conversation.isGroup && conversation.groupMemberCount && (
+                            <span className="text-xs text-gray-400 flex-shrink-0">
+                              ({conversation.groupMemberCount})
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-xs text-gray-400 flex-shrink-0 ml-2">
                           {conversation.lastMessage && formatTime(conversation.lastMessage.timestamp)}
                         </span>
                       </div>
@@ -249,7 +300,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                         {/* AI Assist Badge - 仅图标，hover显示tooltip */}
                         {userSettings.preferences.ai.enabled && !userSettings.preferences.ai.autoReply && (
                           <span
-                            className="flex items-center justify-center w-5 h-5 bg-[#0059F8]/10 text-[#0059F8] rounded-full"
+                            className="flex items-center justify-center w-5 h-5 bg-[#FF6B35]/10 text-[#FF6B35] rounded-full"
                             title="AI辅助"
                           >
                             <Sparkles className="w-3 h-3" />
