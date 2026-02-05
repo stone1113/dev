@@ -131,11 +131,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
     }
   }, [inputMessage]);
 
-  // 自动翻译消息 - 当开启自动接收翻译时，翻译所有消息到我的母语
+  // 自动翻译消息 - 当开启自动接收翻译时，翻译所有消息到用户母语
   useEffect(() => {
     if (!isAutoReceiveEnabled || !conversation) return;
 
-    // 筛选需要翻译的消息（客户消息 + 客服/AI发出的消息）
+    // 筛选需要翻译的消息（所有消息都翻译成用户母语，包括客户、用户、AI、客服发送的）
     const messagesToTranslate = conversation.messages.filter(
       msg => !translatedMessages[msg.id] && !autoTranslatingIds.has(msg.id)
     );
@@ -147,7 +147,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
       setAutoTranslatingIds(prev => new Set(prev).add(message.id));
 
       try {
-        // 判断源语言：客户消息用客户语言，客服消息用发送目标语言
+        // 判断源语言：客户消息用客户语言，客服/AI消息用发送目标语言
         const sourceLang = message.senderType === 'customer'
           ? (message.language || conversation.customer.language || 'en')
           : (translationSettings.sendLanguage || 'en');
@@ -540,22 +540,22 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
                 {/* Message Bubble */}
                 <div className={cn(
                   "relative group px-4 py-2.5 rounded-2xl text-sm",
-                  isCustomer 
+                  isCustomer
                     ? "bg-white border border-gray-200 rounded-tl-sm"
                     : isAI
                     ? "bg-[#E6EFFF] border border-[#FF6B35]/10 rounded-tr-sm"
                     : "bg-[#FF6B35] text-white rounded-tr-sm"
                 )}>
-                  {/* Original Content */}
+                  {/* Primary Content */}
                   <p>{message.content}</p>
-                  
-                  {/* Translated Content */}
+
+                  {/* Secondary Content - Translation */}
+                  {/* 显示所有消息的翻译结果（接收翻译：翻译整个消息流到用户母语） */}
                   {translatedMessages[message.id] && (
                     <div className={cn(
                       "mt-1.5 pt-1.5 border-t text-xs",
                       isCustomer ? "border-gray-200/60 text-gray-500" :
-                      isAI ? "border-[#FF6B35]/15 text-gray-600" :
-                      "border-white/20 text-white/70"
+                      isAI ? "border-[#FF6B35]/15 text-gray-600" : "border-white/20 text-white/70"
                     )}>
                       <div className="flex items-center gap-1.5">
                         <p className="flex-1">{translatedMessages[message.id]}</p>
@@ -570,15 +570,21 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
                           )}
                           title="重新翻译"
                         >
-                          <RefreshCw className={cn(
-                            "w-3 h-3",
-                            isTranslating && "animate-spin"
-                          )} />
+                          <RefreshCw className={cn("w-3 h-3", isTranslating && "animate-spin")} />
                         </button>
                       </div>
                     </div>
                   )}
-                  
+                  {/* For agent/AI messages: show translatedContent (发送时的原文) if no receive translation */}
+                  {!isCustomer && !translatedMessages[message.id] && message.translatedContent && message.translatedContent !== message.content && (
+                    <div className={cn(
+                      "mt-1.5 pt-1.5 border-t text-xs",
+                      isAI ? "border-[#FF6B35]/15 text-gray-600" : "border-white/20 text-white/70"
+                    )}>
+                      <p className="flex-1">{message.translatedContent}</p>
+                    </div>
+                  )}
+
                   {/* Message Actions */}
                   <div className={cn(
                     "absolute top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity",
