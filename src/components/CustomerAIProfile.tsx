@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useStore } from '@/store/useStore';
 import { languageMap } from '@/data/mockData';
 import {
@@ -33,7 +33,11 @@ import {
   Pencil,
   Check,
   Plus,
-  Loader2
+  Loader2,
+  ChevronDown,
+  ChevronUp,
+  Brain,
+  ArrowRight
 } from 'lucide-react';
 
 interface CustomerAIProfileProps {
@@ -83,7 +87,8 @@ export const CustomerAIProfile: React.FC<CustomerAIProfileProps> = ({ onClose })
     getSelectedConversation,
     generateAIReply,
     addMessage,
-    userSettings
+    userSettings,
+    updateConversation
   } = useStore();
 
   const conversation = getSelectedConversation();
@@ -94,9 +99,37 @@ export const CustomerAIProfile: React.FC<CustomerAIProfileProps> = ({ onClose })
   const [editingContact, setEditingContact] = useState(false);
   const [editingCompany, setEditingCompany] = useState(false);
 
-  // AI会话总结生成状态
-  const [aiSummaryGenerated, setAiSummaryGenerated] = useState(false);
+  // AI会话总结加载状态（仅用于加载动画）
   const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
+
+  // AI智能分析面板展开状态
+  const [aiAnalysisExpanded, setAiAnalysisExpanded] = useState(true);
+  const [aiAnalysisTab, setAiAnalysisTab] = useState<'summary' | 'prediction'>('summary');
+
+  // 从会话数据获取AI分析生成状态
+  const aiSummaryGenerated = conversation?.aiAnalysisGenerated || false;
+
+  // 滚动容器引用和当前激活的导航tab
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [activeNavTab, setActiveNavTab] = useState<string>('ai-analysis');
+
+  // 导航tab配置
+  const navTabs = [
+    { id: 'ai-analysis', label: 'AI分析' },
+    { id: 'ai-profile', label: 'AI画像' },
+    { id: 'contact-info', label: '联系人' },
+    { id: 'company-info', label: '公司' },
+    { id: 'interaction-stats', label: '互动' },
+  ];
+
+  // 滚动到指定区域
+  const scrollToSection = (sectionId: string) => {
+    setActiveNavTab(sectionId);
+    const element = document.getElementById(sectionId);
+    if (element && scrollContainerRef.current) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   // AI画像表单数据
   const [profileData, setProfileData] = useState<ProfileFormData>({
@@ -218,18 +251,206 @@ export const CustomerAIProfile: React.FC<CustomerAIProfileProps> = ({ onClose })
             </div>
           </div>
         </div>
-        <button 
+        <button
           onClick={onClose}
           className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
         >
           <X className="w-4 h-4 text-gray-500" />
         </button>
       </div>
-      
+
+      {/* Tab Navigation */}
+      <div className="flex items-center gap-1 px-4 py-2 border-b border-gray-100 bg-gray-50/50">
+        {navTabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => scrollToSection(tab.id)}
+            className={`px-3 py-1.5 text-xs font-medium rounded-full whitespace-nowrap transition-colors ${
+              activeNavTab === tab.id
+                ? 'bg-[#FF6B35] text-white'
+                : 'text-gray-500 hover:bg-gray-100'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       {/* Content */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+        {/* AI智能分析入口 - 合并AI会话总结和AI行为预测 */}
+        <div id="ai-analysis" className="bg-gradient-to-r from-violet-500 via-purple-500 to-fuchsia-500 rounded-xl p-[1px] shadow-lg shadow-purple-200/50">
+          <div className="bg-white rounded-xl overflow-hidden">
+            {/* 入口头部 */}
+            <div className="w-full px-4 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-md">
+                  <Brain className="w-5 h-5 text-white" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-sm font-semibold text-gray-900">AI智能分析</h3>
+                  <p className="text-xs text-gray-500">会话总结 · 行为预测</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                {!aiSummaryGenerated && (
+                  <span className="px-2 py-0.5 text-[10px] font-medium bg-amber-100 text-amber-700 rounded-full">
+                    待生成
+                  </span>
+                )}
+                {aiSummaryGenerated && (
+                  <span className="px-2 py-0.5 text-[10px] font-medium bg-green-100 text-green-700 rounded-full">
+                    已分析
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* 内容区域 */}
+            <div className="border-t border-gray-100">
+                {/* Tab 切换 */}
+                <div className="flex border-b border-gray-100">
+                  <button
+                    onClick={() => setAiAnalysisTab('summary')}
+                    className={`flex-1 px-4 py-2.5 text-xs font-medium transition-colors ${
+                      aiAnalysisTab === 'summary'
+                        ? 'text-purple-600 border-b-2 border-purple-500 bg-purple-50/50'
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-1.5">
+                      <FileText className="w-3.5 h-3.5" />
+                      会话总结
+                    </div>
+                  </button>
+                  <button
+                    onClick={() => setAiAnalysisTab('prediction')}
+                    className={`flex-1 px-4 py-2.5 text-xs font-medium transition-colors ${
+                      aiAnalysisTab === 'prediction'
+                        ? 'text-purple-600 border-b-2 border-purple-500 bg-purple-50/50'
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center gap-1.5">
+                      <TrendingUp className="w-3.5 h-3.5" />
+                      行为预测
+                    </div>
+                  </button>
+                </div>
+
+                {/* Tab 内容 - 增加高度 */}
+                <div className="p-4 min-h-[280px]">
+                  {aiAnalysisTab === 'summary' ? (
+                    /* 会话总结内容 */
+                    <div className="space-y-4">
+                      {!aiSummaryGenerated ? (
+                        <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+                          <Sparkles className="w-10 h-10 mb-3 opacity-30" />
+                          <p className="text-xs mb-4">点击生成，AI将分析会话内容</p>
+                          <button
+                            onClick={() => {
+                              if (!conversation) return;
+                              setAiSummaryLoading(true);
+                              setTimeout(() => {
+                                setAiSummaryLoading(false);
+                                // 持久化到会话数据
+                                updateConversation(conversation.id, { aiAnalysisGenerated: true });
+                              }, 1500);
+                            }}
+                            disabled={aiSummaryLoading}
+                            className="px-5 py-2.5 text-xs font-medium bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1.5 disabled:opacity-70"
+                          >
+                            {aiSummaryLoading ? (
+                              <>
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                生成中...
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="w-3.5 h-3.5" />
+                                生成总结
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {/* 会话摘要 */}
+                          <div>
+                            <h4 className="text-xs font-medium text-gray-500 mb-2">会话摘要</h4>
+                            <p className="text-sm text-gray-700 leading-relaxed">
+                              B级高意向批发客户，主要关注Nike Air Max 270等鞋类产品，预算$50-$200，计划中批量采购用于转售。价格敏感度高，本周内有明确采购意向。
+                            </p>
+                          </div>
+
+                          {/* 核心诉求 */}
+                          <div className="flex items-center gap-2 py-2 px-3 bg-purple-50 rounded-lg">
+                            <Target className="w-4 h-4 text-purple-500" />
+                            <span className="text-xs text-purple-700 font-medium">核心诉求：批发价格优惠、快速物流</span>
+                          </div>
+
+                          {/* 下一步行动建议 */}
+                          <div className="pt-2 border-t border-gray-100">
+                            <h4 className="text-xs font-medium text-gray-500 mb-3 flex items-center gap-1.5">
+                              <Zap className="w-3.5 h-3.5 text-amber-500" />
+                              下一步行动建议
+                            </h4>
+                            <div className="space-y-2">
+                              <div className="flex items-start gap-2 p-2.5 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg border border-amber-100/60">
+                                <ArrowRight className="w-3.5 h-3.5 text-amber-600 mt-0.5 flex-shrink-0" />
+                                <span className="text-xs text-gray-700">发送批发价格表和MOQ优惠政策</span>
+                              </div>
+                              <div className="flex items-start gap-2 p-2.5 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-100/60">
+                                <ArrowRight className="w-3.5 h-3.5 text-green-600 mt-0.5 flex-shrink-0" />
+                                <span className="text-xs text-gray-700">推荐热销款式组合，提供样品试单方案</span>
+                              </div>
+                              <div className="flex items-start gap-2 p-2.5 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100/60">
+                                <ArrowRight className="w-3.5 h-3.5 text-blue-600 mt-0.5 flex-shrink-0" />
+                                <span className="text-xs text-gray-700">强调物流时效优势，提供运费优惠</span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    /* 行为预测内容 */
+                    <div className="space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-600">成交概率</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                            <div className="w-[75%] h-full bg-green-500 rounded-full" />
+                          </div>
+                          <span className="text-xs font-medium text-green-600">75%</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-600">预计成交</span>
+                        <span className="text-xs font-medium text-purple-600">3-5天内</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-600">预计金额</span>
+                        <span className="text-xs font-medium text-emerald-600">$1,500-$3,000</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-gray-600">复购可能</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                            <div className="w-[80%] h-full bg-blue-500 rounded-full" />
+                          </div>
+                          <span className="text-xs font-medium text-blue-600">80%</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+          </div>
+        </div>
+
         {/* AI画像标签 */}
-        <div className="p-4 bg-gradient-to-br from-orange-50/80 to-amber-50/50 rounded-xl border border-orange-100/60">
+        <div id="ai-profile" className="p-4 bg-gradient-to-br from-orange-50/80 to-amber-50/50 rounded-xl border border-orange-100/60">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Tag className="w-4 h-4 text-[#FF6B35]" />
@@ -656,7 +877,7 @@ export const CustomerAIProfile: React.FC<CustomerAIProfileProps> = ({ onClose })
         </div>
 
         {/* 联系人信息 */}
-        <div className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border border-blue-100">
+        <div id="contact-info" className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border border-blue-100">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <User className="w-4 h-4 text-blue-500" />
@@ -814,7 +1035,7 @@ export const CustomerAIProfile: React.FC<CustomerAIProfileProps> = ({ onClose })
         </div>
 
         {/* 公司信息 */}
-        <div className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-100">
+        <div id="company-info" className="p-4 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-100">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <Building2 className="w-4 h-4 text-emerald-500" />
@@ -912,299 +1133,8 @@ export const CustomerAIProfile: React.FC<CustomerAIProfileProps> = ({ onClose })
           </div>
         </div>
 
-        {/* AI会话总结与洞察 */}
-        <div className="p-4 bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl border border-amber-100">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-amber-500" />
-              <span className="text-sm font-medium text-amber-700">AI会话总结</span>
-            </div>
-            {!aiSummaryGenerated && (
-              <button
-                onClick={() => {
-                  setAiSummaryLoading(true);
-                  setTimeout(() => {
-                    setAiSummaryLoading(false);
-                    setAiSummaryGenerated(true);
-                  }, 1500);
-                }}
-                disabled={aiSummaryLoading}
-                className="px-3 py-1.5 text-xs font-medium bg-[#FF6B35] text-white rounded-lg hover:bg-[#FF6B35]/90 transition-colors flex items-center gap-1.5 disabled:opacity-70"
-              >
-                {aiSummaryLoading ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    生成中...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-3.5 h-3.5" />
-                    生成总结
-                  </>
-                )}
-              </button>
-            )}
-          </div>
-
-          {!aiSummaryGenerated ? (
-            <div className="flex flex-col items-center justify-center py-8 text-gray-400">
-              <Sparkles className="w-10 h-10 mb-3 opacity-30" />
-              <p className="text-sm">点击"生成总结"按钮，AI将分析会话内容</p>
-            </div>
-          ) : conversation?.isGroup ? (
-            /* 群聊 AI 总结 */
-            <>
-              <p className="text-sm text-amber-800 leading-relaxed mb-4">
-                {conversation.groupName || '群聊'}共{conversation.groupMemberCount || 0}名成员，近期讨论焦点为新品询价和批量采购优惠政策。群内活跃度较高，3名核心成员贡献了80%的互动量，整体采购意向明确。
-              </p>
-
-              {/* 群聊洞察分析 */}
-              <div className="pt-3 border-t border-amber-200">
-                <div className="flex items-center gap-2 mb-3">
-                  <Lightbulb className="w-4 h-4 text-amber-500" />
-                  <span className="text-sm font-medium text-amber-700">群聊洞察</span>
-                </div>
-
-                <div className="space-y-3">
-                  {/* 群体画像 */}
-                  <div className="flex items-start gap-2">
-                    <Users className="w-3.5 h-3.5 text-amber-400 mt-0.5" />
-                    <div>
-                      <span className="text-xs text-amber-600">群体画像</span>
-                      <p className="text-sm text-amber-800">批发商/代理商为主，地域分布：亚太60%、欧美30%、其他10%</p>
-                    </div>
-                  </div>
-
-                  {/* 讨论热点 */}
-                  <div className="flex items-start gap-2">
-                    <MessageSquare className="w-3.5 h-3.5 text-amber-400 mt-0.5" />
-                    <div>
-                      <span className="text-xs text-amber-600">讨论热点</span>
-                      <div className="flex flex-wrap gap-1.5 mt-1">
-                        <span className="px-2 py-0.5 text-xs bg-amber-100 text-amber-700 rounded-full">新品价格</span>
-                        <span className="px-2 py-0.5 text-xs bg-amber-100 text-amber-700 rounded-full">批量折扣</span>
-                        <span className="px-2 py-0.5 text-xs bg-amber-100 text-amber-700 rounded-full">物流时效</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 群活跃度 */}
-                  <div className="flex items-start gap-2">
-                    <TrendingUp className="w-3.5 h-3.5 text-amber-400 mt-0.5" />
-                    <div className="flex-1">
-                      <span className="text-xs text-amber-600">群活跃度</span>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="flex-1 h-2 bg-amber-200 rounded-full overflow-hidden">
-                          <div className="w-[72%] h-full bg-green-500 rounded-full" />
-                        </div>
-                        <span className="text-xs font-medium text-green-600">活跃 72%</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 关键成员 */}
-                  <div className="flex items-start gap-2">
-                    <Star className="w-3.5 h-3.5 text-amber-400 mt-0.5" />
-                    <div>
-                      <span className="text-xs text-amber-600">关键成员</span>
-                      <ul className="text-sm text-amber-800 space-y-0.5 mt-1">
-                        <li>• <span className="font-medium">@张经理</span> - 决策者，关注价格</li>
-                        <li>• <span className="font-medium">@李采购</span> - 执行者，关注物流</li>
-                        <li>• <span className="font-medium">@王总</span> - 潜在大客户，观望中</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 群运营建议 */}
-              <div className="pt-3 border-t border-amber-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="w-4 h-4 text-amber-500" />
-                  <span className="text-sm font-medium text-amber-700">群运营建议</span>
-                </div>
-                <div className="space-y-1.5">
-                  <div className="flex items-start gap-2 p-2 bg-white/50 rounded-lg">
-                    <span className="w-5 h-5 flex items-center justify-center bg-red-500 text-white text-xs rounded-full flex-shrink-0">!</span>
-                    <p className="text-sm text-amber-800">及时回复@张经理的价格询问，避免流失</p>
-                  </div>
-                  <div className="flex items-start gap-2 p-2 bg-white/50 rounded-lg">
-                    <span className="w-5 h-5 flex items-center justify-center bg-[#FF6B35] text-white text-xs rounded-full flex-shrink-0">1</span>
-                    <p className="text-sm text-amber-800">发布本周限时团购优惠，激活沉默成员</p>
-                  </div>
-                  <div className="flex items-start gap-2 p-2 bg-white/50 rounded-lg">
-                    <span className="w-5 h-5 flex items-center justify-center bg-[#FF6B35] text-white text-xs rounded-full flex-shrink-0">2</span>
-                    <p className="text-sm text-amber-800">私聊@王总了解具体需求，促进转化</p>
-                  </div>
-                </div>
-              </div>
-            </>
-          ) : (
-            /* 单聊 AI 总结 */
-            <>
-              <p className="text-sm text-amber-800 leading-relaxed mb-4">
-                B级高意向批发客户，主要关注Nike Air Max 270、Adidas Yeezy 350等鞋类产品，预算$50-$200，计划中批量(10-99件)采购用于转售。客户价格敏感度高，物流时效要求严格，本周内有明确采购意向，需优先跟进。
-              </p>
-
-              {/* AI洞察分析 */}
-              <div className="pt-3 border-t border-amber-200">
-                <div className="flex items-center gap-2 mb-3">
-                  <Lightbulb className="w-4 h-4 text-amber-500" />
-                  <span className="text-sm font-medium text-amber-700">AI洞察分析</span>
-                </div>
-
-                <div className="space-y-3">
-                  {/* 客户核心诉求 */}
-                  <div className="flex items-start gap-2">
-                    <Target className="w-3.5 h-3.5 text-amber-400 mt-0.5" />
-                    <div>
-                      <span className="text-xs text-amber-600">客户核心诉求</span>
-                      <p className="text-sm text-amber-800">批发价格优惠、稳定货源供应、快速物流配送，关注Nike/Adidas热门款式的利润空间。</p>
-                    </div>
-                  </div>
-
-                  {/* 情绪状态 */}
-                  <div className="flex items-start gap-2">
-                    <TrendingUp className="w-3.5 h-3.5 text-amber-400 mt-0.5" />
-                    <div className="flex-1">
-                      <span className="text-xs text-amber-600">购买意愿</span>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="flex-1 h-2 bg-amber-200 rounded-full overflow-hidden">
-                          <div className="w-[85%] h-full bg-green-500 rounded-full" />
-                        </div>
-                        <span className="text-xs font-medium text-green-600">强烈 85%</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* 需关注的问题 */}
-                  <div className="flex items-start gap-2">
-                    <AlertTriangle className="w-3.5 h-3.5 text-amber-400 mt-0.5" />
-                    <div>
-                      <span className="text-xs text-amber-600">需关注的风险</span>
-                      <ul className="text-sm text-amber-800 space-y-0.5 mt-1">
-                        <li>• 价格敏感度高，需提供有竞争力的批发价</li>
-                        <li>• 物流时效要求严格，需确认发货周期</li>
-                        <li>• 信任等级中等，建议分批付款降低风险</li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* AI建议行动 */}
-              <div className="pt-3 border-t border-amber-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="w-4 h-4 text-amber-500" />
-                  <span className="text-sm font-medium text-amber-700">AI建议行动</span>
-                </div>
-                <div className="space-y-1.5">
-                  <div className="flex items-start gap-2 p-2 bg-white/50 rounded-lg">
-                    <span className="w-5 h-5 flex items-center justify-center bg-red-500 text-white text-xs rounded-full flex-shrink-0">!</span>
-                    <p className="text-sm text-amber-800">立即发送Nike Air Max 270批发报价单(10-99件阶梯价)</p>
-                  </div>
-                  <div className="flex items-start gap-2 p-2 bg-white/50 rounded-lg">
-                    <span className="w-5 h-5 flex items-center justify-center bg-[#FF6B35] text-white text-xs rounded-full flex-shrink-0">1</span>
-                    <p className="text-sm text-amber-800">确认库存并提供3-5天快速发货方案</p>
-                  </div>
-                  <div className="flex items-start gap-2 p-2 bg-white/50 rounded-lg">
-                    <span className="w-5 h-5 flex items-center justify-center bg-[#FF6B35] text-white text-xs rounded-full flex-shrink-0">2</span>
-                    <p className="text-sm text-amber-800">推荐PayPal分批付款(30%定金+70%发货前)</p>
-                  </div>
-                  <div className="flex items-start gap-2 p-2 bg-white/50 rounded-lg">
-                    <span className="w-5 h-5 flex items-center justify-center bg-[#FF6B35] text-white text-xs rounded-full flex-shrink-0">3</span>
-                    <p className="text-sm text-amber-800">附赠Yeezy 350样品图促进追加订单</p>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* AI行为预测 */}
-        <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
-          <div className="flex items-center gap-2 mb-3">
-            <TrendingUp className="w-4 h-4 text-blue-500" />
-            <span className="text-sm font-medium text-blue-700">AI行为预测</span>
-          </div>
-          {conversation?.isGroup ? (
-            /* 群聊预测 */
-            <div className="space-y-2.5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-600">群转化率</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-20 h-1.5 bg-blue-200 rounded-full overflow-hidden">
-                    <div className="w-[45%] h-full bg-green-500 rounded-full" />
-                  </div>
-                  <span className="text-xs font-medium text-green-600">45%</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-600">预计群订单数</span>
-                <span className="text-xs font-medium text-blue-600">3-5单/周</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-600">预计群GMV</span>
-                <span className="text-xs font-medium text-emerald-600">$5,000-$8,000</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-600">成员活跃趋势</span>
-                <div className="flex items-center gap-2">
-                  <div className="w-20 h-1.5 bg-blue-200 rounded-full overflow-hidden">
-                    <div className="w-[68%] h-full bg-blue-500 rounded-full" />
-                  </div>
-                  <span className="text-xs font-medium text-blue-600">上升 68%</span>
-                </div>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-600">流失风险成员</span>
-                <span className="text-xs font-medium text-amber-600">2人需关注</span>
-              </div>
-            </div>
-          ) : (
-            /* 单聊预测 */
-            <div className="space-y-2.5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-600">成交概率</span>
-              <div className="flex items-center gap-2">
-                <div className="w-20 h-1.5 bg-blue-200 rounded-full overflow-hidden">
-                  <div className="w-[75%] h-full bg-green-500 rounded-full" />
-                </div>
-                <span className="text-xs font-medium text-green-600">75%</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-600">预计成交时间</span>
-              <span className="text-xs font-medium text-blue-600">3-5天内</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-600">预计订单金额</span>
-              <span className="text-xs font-medium text-emerald-600">$1,500-$3,000</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-600">复购可能性</span>
-              <div className="flex items-center gap-2">
-                <div className="w-20 h-1.5 bg-blue-200 rounded-full overflow-hidden">
-                  <div className="w-[80%] h-full bg-blue-500 rounded-full" />
-                </div>
-                <span className="text-xs font-medium text-blue-600">80%</span>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-gray-600">升级为A级客户</span>
-              <div className="flex items-center gap-2">
-                <div className="w-20 h-1.5 bg-blue-200 rounded-full overflow-hidden">
-                  <div className="w-[60%] h-full bg-amber-500 rounded-full" />
-                </div>
-                <span className="text-xs font-medium text-amber-600">60%</span>
-              </div>
-            </div>
-          </div>
-          )}
-        </div>
-
         {/* 互动统计 */}
-        <div className="p-4 bg-white rounded-xl border border-gray-100">
+        <div id="interaction-stats" className="p-4 bg-white rounded-xl border border-gray-100">
           <div className="flex items-center gap-2 mb-3">
             <MessageSquare className="w-4 h-4 text-gray-500" />
             <span className="text-sm font-medium text-gray-900">互动统计</span>

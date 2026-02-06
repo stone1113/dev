@@ -105,6 +105,7 @@ export interface Conversation {
   updatedAt: Date;
   aiSummary?: string; // AI总结
   aiSuggestions?: string[]; // AI回复建议
+  aiAnalysisGenerated?: boolean; // AI分析是否已生成
   isGroup?: boolean; // 是否群聊
   groupName?: string; // 群聊名称
   groupMemberCount?: number; // 群成员数量
@@ -149,14 +150,16 @@ export interface PlatformAccount {
   name: string;
   avatar?: string;
   accountId: string; // 平台账号ID
-  status: 'online' | 'offline' | 'busy' | 'not_logged_in'; // 新增未登录状态
+  phone?: string; // 手机号
+  status: 'online' | 'offline' | 'busy' | 'not_logged_in'; // 账号状态
   isDefault: boolean;
   messageCount: number;
   lastActiveAt?: Date;
-  ip?: string; // 客服当前 IP 地址（可选）
-  proxyRegion?: string; // 代理/节点所在地区（可选）
+  ip?: string; // 客服当前 IP 地址
+  proxyRegion?: string; // 代理/节点所在地区
   remark?: string; // 备注信息
   proxyConfigId?: string; // 关联的代理配置ID
+  aiEnabled?: boolean; // 是否绑定AI
 }
 
 // 代理IP配置
@@ -205,6 +208,16 @@ export interface AIReplySuggestion {
 // 登录模式类型
 export type LoginMode = 'activation_only' | 'activation_with_password';
 
+// 绑定账号（用于激活码绑定模式）
+export interface BoundAccount {
+  id: string;
+  username: string;
+  displayName: string;
+  avatar?: string;
+  role: 'admin' | 'agent' | 'manager';
+  status: 'active' | 'disabled';
+}
+
 // 组织信息
 export interface Organization {
   id: string;
@@ -215,6 +228,7 @@ export interface Organization {
   createdAt: Date;
   status: 'active' | 'inactive' | 'expired';
   expiresAt?: Date;
+  boundAccounts?: BoundAccount[];
 }
 
 // 用户设置

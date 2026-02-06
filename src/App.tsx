@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useStore } from '@/store/useStore';
 import { Sidebar } from '@/components/Sidebar';
 import { ConversationList } from '@/components/ConversationList';
@@ -12,6 +12,7 @@ import { ContactList } from '@/components/ContactList';
 import { LoginPage } from '@/components/LoginPage';
 import { AdminCenter } from '@/components/AdminCenter';
 import { AdminLoginPage } from '@/components/AdminLoginPage';
+import { SettingsPage } from '@/components/SettingsPage';
 import { platformConfigs } from '@/data/mockData';
 import {
   MessageCircle,
@@ -32,7 +33,19 @@ import {
   MapPin,
   Bot,
   CheckCircle2,
-  SlidersHorizontal
+  SlidersHorizontal,
+  ChevronDown,
+  Inbox,
+  ChevronLeft,
+  ChevronRight,
+  QrCode,
+  X,
+  Send,
+  Crown,
+  Calendar,
+  Key,
+  Server,
+  Building2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -41,7 +54,13 @@ function App() {
     searchQuery,
     setSearchQuery,
     getFilteredConversations,
-    userSettings
+    conversations: allConversations,
+    selectedConversationId,
+    setSelectedConversation,
+    loginAccountId,
+    setLoginAccountId,
+    getLoginAccount,
+    updatePlatformAccount
   } = useStore();
 
   // 登录状态
@@ -58,6 +77,7 @@ function App() {
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [activeRightPanel, setActiveRightPanel] = useState<RightPanelType>(null);
+  const [showMorePending, setShowMorePending] = useState(false);
 
   // 登录处理
   const handleLogin = () => {
@@ -122,6 +142,27 @@ function App() {
       case 'dashboard':
         return <DashboardView />;
       case 'conversations':
+        // 如果正在登录客服账号，只显示扫码页面
+        if (loginAccountId) {
+          return (
+            <div className="flex h-full items-center justify-center">
+              <div className="w-full max-w-md">
+                <QrCodeLoginPanel
+                  account={getLoginAccount()}
+                  onClose={() => setLoginAccountId(null)}
+                  onLoginSuccess={() => {
+                    const account = getLoginAccount();
+                    if (account) {
+                      updatePlatformAccount(account.id, { status: 'online' });
+                    }
+                    setLoginAccountId(null);
+                  }}
+                />
+              </div>
+            </div>
+          );
+        }
+
         return (
           <div className="flex h-full gap-4">
             {/* Left: Conversation List */}
@@ -173,7 +214,7 @@ function App() {
       case 'analytics':
         return <AnalyticsView />;
       case 'settings':
-        return <SettingsView />;
+        return <SettingsPage />;
       default:
         return null;
     }
@@ -222,19 +263,156 @@ function App() {
                 <Menu className="w-5 h-5 text-gray-600" />
               </button>
             )}
-            
-            <h1 className="text-lg font-semibold text-gray-900">
+
+            <h1 className="text-lg font-semibold text-gray-900 flex-shrink-0">
               {activeSection === 'dashboard' && '概览'}
               {activeSection === 'conversations' && '会话管理'}
               {activeSection === 'customers' && '客户管理'}
               {activeSection === 'analytics' && '数据分析'}
               {activeSection === 'settings' && '设置'}
             </h1>
+
+            {/* 待处理会话快速切换 - 仅在会话管理页面显示，登录时隐藏 */}
+            {activeSection === 'conversations' && !loginAccountId && (() => {
+              const pendingConversations = allConversations.filter(
+                c => c.unreadCount > 0 || c.status === 'pending'
+              );
+              const currentIndex = pendingConversations.findIndex(c => c.id === selectedConversationId);
+
+              const handlePrev = () => {
+                if (pendingConversations.length === 0) return;
+                const newIndex = currentIndex <= 0 ? pendingConversations.length - 1 : currentIndex - 1;
+                setSelectedConversation(pendingConversations[newIndex].id);
+              };
+
+              const handleNext = () => {
+                if (pendingConversations.length === 0) return;
+                const newIndex = currentIndex >= pendingConversations.length - 1 ? 0 : currentIndex + 1;
+                setSelectedConversation(pendingConversations[newIndex].id);
+              };
+
+              if (pendingConversations.length === 0) return null;
+
+              return (
+                <div className="hidden md:flex items-center gap-3 ml-4 pl-4 border-l border-gray-200">
+                  <div className="flex items-center gap-2">
+                    <Inbox className="w-4 h-4 text-amber-600" />
+                    <span className="text-xs font-medium text-amber-600">待处理</span>
+                    <span className="px-1.5 py-0.5 text-xs font-semibold bg-amber-500 text-white rounded-full">
+                      {pendingConversations.length}
+                    </span>
+                  </div>
+
+                  {/* 头像列表 - 重叠显示 */}
+                  <div className="flex items-center overflow-x-auto scrollbar-hide">
+                    {pendingConversations.slice(0, 33).map((conv, index) => (
+                      <button
+                        key={conv.id}
+                        onClick={() => setSelectedConversation(conv.id)}
+                        className="relative flex-shrink-0 transition-all duration-200 hover:scale-110 hover:z-10"
+                        style={{ marginLeft: index === 0 ? 0 : '-6px', zIndex: 33 - index }}
+                        title={conv.customer.name}
+                      >
+                        <img
+                          src={conv.customer.avatar}
+                          alt={conv.customer.name}
+                          className={cn(
+                            "w-7 h-7 rounded-full object-cover border-2 border-white hover:border-amber-300 transition-all shadow-sm",
+                            index >= 30 && "opacity-60"
+                          )}
+                        />
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* 超过33个时显示更多数量 - 移到overflow容器外 */}
+                  {pendingConversations.length > 33 && (
+                    <div className="relative flex-shrink-0">
+                      <button
+                        onClick={() => setShowMorePending(!showMorePending)}
+                        className="w-7 h-7 rounded-full bg-amber-100 border-2 border-amber-300 flex items-center justify-center hover:bg-amber-200 hover:border-amber-400 transition-colors cursor-pointer"
+                        title={`还有 ${pendingConversations.length - 33} 个待处理会话`}
+                      >
+                        <span className="text-[10px] font-bold text-amber-700">
+                          +{pendingConversations.length - 33}
+                        </span>
+                      </button>
+                      {/* 下拉列表 */}
+                      {showMorePending && (
+                        <>
+                          {/* 点击外部关闭 */}
+                          <div
+                            className="fixed inset-0 z-40"
+                            onClick={() => setShowMorePending(false)}
+                          />
+                          <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 max-h-80 overflow-y-auto">
+                            <div className="px-3 py-2 border-b border-gray-100">
+                              <span className="text-xs font-medium text-gray-500">
+                                更多待处理会话 ({pendingConversations.length - 33})
+                              </span>
+                            </div>
+                            {pendingConversations.slice(33).map((conv) => (
+                              <button
+                                key={conv.id}
+                                onClick={() => {
+                                  setSelectedConversation(conv.id);
+                                  setShowMorePending(false);
+                                }}
+                                className="w-full px-3 py-2 flex items-center gap-3 hover:bg-gray-50 transition-colors"
+                              >
+                                <div className="relative flex-shrink-0">
+                                  <img
+                                    src={conv.customer.avatar}
+                                    alt={conv.customer.name}
+                                    className="w-8 h-8 rounded-full object-cover"
+                                  />
+                                  {conv.unreadCount > 0 && (
+                                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 text-[10px] font-bold bg-red-500 text-white rounded-full flex items-center justify-center">
+                                      {conv.unreadCount > 9 ? '9+' : conv.unreadCount}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0 text-left">
+                                  <p className="text-sm font-medium text-gray-900 truncate">
+                                    {conv.customer.name}
+                                  </p>
+                                  <p className="text-xs text-gray-500 truncate">
+                                    {conv.lastMessage?.content || '暂无消息'}
+                                  </p>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 导航按钮 */}
+                  <div className="flex items-center gap-0.5">
+                    <button
+                      onClick={handlePrev}
+                      className="p-1 hover:bg-amber-100 rounded transition-colors"
+                      title="上一个"
+                    >
+                      <ChevronLeft className="w-4 h-4 text-amber-600" />
+                    </button>
+                    <button
+                      onClick={handleNext}
+                      className="p-1 hover:bg-amber-100 rounded transition-colors"
+                      title="下一个"
+                    >
+                      <ChevronRight className="w-4 h-4 text-amber-600" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
           
           <div className="flex items-center gap-2">
-            {/* Search */}
-            {activeSection === 'conversations' && (
+            {/* Search - 登录时隐藏 */}
+            {activeSection === 'conversations' && !loginAccountId && (
               <div className="hidden sm:flex items-center gap-2">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -266,16 +444,6 @@ function App() {
                 </span>
               )}
             </button>
-            
-            {/* User */}
-            <div className="flex items-center gap-2 pl-2 border-l border-gray-200">
-              <img
-                src={userSettings.avatar}
-                alt={userSettings.name}
-                className="w-8 h-8 rounded-full object-cover bg-gray-100"
-              />
-              <span className="hidden sm:text-sm font-medium text-gray-700">{userSettings.name}</span>
-            </div>
           </div>
         </header>
         
@@ -294,9 +462,132 @@ function App() {
   );
 }
 
+// QR Code Login Panel - 扫码登录界面
+function QrCodeLoginPanel({
+  account,
+  onClose,
+  onLoginSuccess
+}: {
+  account: ReturnType<typeof useStore.getState>['platformAccounts'][0] | undefined;
+  onClose: () => void;
+  onLoginSuccess: () => void;
+}) {
+  if (!account) return null;
+
+  const platformConfig = platformConfigs.find(p => p.id === account.platformId);
+  const PlatformIcon = platformConfig?.icon || 'MessageCircle';
+
+  // 获取平台图标组件
+  const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+    MessageCircle,
+    Send,
+  };
+  const Icon = iconMap[PlatformIcon] || MessageCircle;
+
+  return (
+    <div className="h-full bg-white flex flex-col">
+      {/* 头部 */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-medium text-gray-500">未登录</span>
+        </div>
+        <button
+          onClick={onClose}
+          className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+          title="关闭"
+        >
+          <X className="w-4 h-4 text-gray-500" />
+        </button>
+      </div>
+
+      {/* 账号信息卡片 */}
+      <div className="px-4 py-3 border-b border-gray-100">
+        <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+          <img
+            src={account.avatar}
+            alt={account.name}
+            className="w-10 h-10 rounded-full object-cover"
+          />
+          <div className="flex-1 min-w-0">
+            <div className="font-medium text-gray-900">{account.name}</div>
+            <div className="text-xs text-gray-500 flex items-center gap-1">
+              <span style={{ color: platformConfig?.color }}>{platformConfig?.name}</span>
+              <span>-</span>
+              <span>(本机)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 扫码区域 */}
+      <div className="flex-1 flex flex-col items-center justify-center p-8">
+        {/* 二维码 */}
+        <div className="relative mb-6">
+          <div className="w-64 h-64 bg-white border-2 border-gray-200 rounded-xl p-4 shadow-sm">
+            <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center relative">
+              <QrCode className="w-48 h-48 text-gray-800" />
+              {/* 平台图标在中间 */}
+              <div
+                className="absolute w-12 h-12 rounded-full flex items-center justify-center"
+                style={{ backgroundColor: platformConfig?.color || '#FF6B35' }}
+              >
+                <Icon className="w-6 h-6 text-white" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 标题 */}
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">
+          扫码登录 {platformConfig?.name}
+        </h2>
+
+        {/* 步骤说明 */}
+        <div className="space-y-4 text-left max-w-sm">
+          <div className="flex items-start gap-3">
+            <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-medium flex-shrink-0">
+              1
+            </span>
+            <span className="text-gray-700">在您的手机上打开 {platformConfig?.name}</span>
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-medium flex-shrink-0">
+              2
+            </span>
+            <span className="text-gray-700">
+              Go to <span className="font-medium">Settings</span> {'>'} <span className="font-medium">Devices</span> {'>'} <span className="font-medium">Link Desktop Device</span>
+            </span>
+          </div>
+          <div className="flex items-start gap-3">
+            <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-medium flex-shrink-0">
+              3
+            </span>
+            <span className="text-gray-700">点击手机屏幕确认登录</span>
+          </div>
+        </div>
+
+        {/* 底部链接 */}
+        <div className="mt-8 space-y-3 text-center">
+          <button className="text-blue-500 hover:text-blue-600 text-sm font-medium">
+            手机号登录
+          </button>
+          <div>
+            <button
+              onClick={onLoginSuccess}
+              className="text-blue-500 hover:text-blue-600 text-sm font-medium uppercase tracking-wide"
+            >
+              模拟登录成功
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // Dashboard View
 function DashboardView() {
-  const { conversations, getFilteredConversations, aiStats } = useStore();
+  const { conversations, getFilteredConversations, aiStats, organization, platformAccounts } = useStore();
   const stats = {
     total: conversations.length,
     active: conversations.filter(c => c.status === 'active').length,
@@ -318,6 +609,80 @@ function DashboardView() {
   
   return (
     <div className="h-full overflow-y-auto space-y-6">
+      {/* 订阅套餐信息 */}
+      <div className="bg-white rounded-xl shadow-sm p-4">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-semibold text-gray-900">订阅信息</h3>
+          <button className="px-3 py-1.5 text-xs font-medium bg-[#FF6B35] text-white rounded-lg hover:bg-[#E85A2A] transition-colors">
+            续费套餐
+          </button>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+          {/* 当前套餐 */}
+          <div className="p-3 bg-gradient-to-br from-[#FF6B35]/10 to-orange-50 rounded-xl">
+            <div className="flex items-center gap-2 mb-1">
+              <Crown className="w-4 h-4 text-[#FF6B35]" />
+              <span className="text-xs text-gray-500">当前套餐</span>
+            </div>
+            <p className="text-sm font-bold text-gray-900">专业版</p>
+          </div>
+          {/* 到期时间 */}
+          <div className="p-3 bg-gray-50 rounded-xl">
+            <div className="flex items-center gap-2 mb-1">
+              <Calendar className="w-4 h-4 text-gray-500" />
+              <span className="text-xs text-gray-500">到期时间</span>
+            </div>
+            <p className="text-sm font-bold text-gray-900">
+              {organization.expiresAt instanceof Date
+                ? organization.expiresAt.toLocaleDateString('zh-CN')
+                : organization.expiresAt || '2026-12-31'}
+            </p>
+          </div>
+          {/* 激活码 */}
+          <div className="p-3 bg-gray-50 rounded-xl">
+            <div className="flex items-center gap-2 mb-1">
+              <Key className="w-4 h-4 text-gray-500" />
+              <span className="text-xs text-gray-500">激活码</span>
+            </div>
+            <p className="text-sm font-bold text-gray-900 truncate" title={organization.activationCode}>
+              {organization.activationCode}
+            </p>
+          </div>
+          {/* 会话端口 */}
+          <div className="p-3 bg-gray-50 rounded-xl">
+            <div className="flex items-center gap-2 mb-1">
+              <Server className="w-4 h-4 text-gray-500" />
+              <span className="text-xs text-gray-500">会话端口</span>
+            </div>
+            <p className="text-sm font-bold text-gray-900">
+              <span className="text-[#FF6B35]">{platformAccounts.filter(a => a.status === 'online').length}</span>
+              <span className="text-gray-400 mx-0.5">/</span>
+              <span>10</span>
+            </p>
+          </div>
+          {/* AI绑定账号 */}
+          <div className="p-3 bg-purple-50 rounded-xl">
+            <div className="flex items-center gap-2 mb-1">
+              <Bot className="w-4 h-4 text-purple-500" />
+              <span className="text-xs text-gray-500">AI绑定</span>
+            </div>
+            <p className="text-sm font-bold text-purple-700">
+              {platformAccounts.filter(a => a.aiEnabled).length} 个账号
+            </p>
+          </div>
+          {/* 组织名称 */}
+          <div className="p-3 bg-gray-50 rounded-xl">
+            <div className="flex items-center gap-2 mb-1">
+              <Building2 className="w-4 h-4 text-gray-500" />
+              <span className="text-xs text-gray-500">组织</span>
+            </div>
+            <p className="text-sm font-bold text-gray-900 truncate" title={organization.name}>
+              {organization.name}
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* AI客服状态卡片 */}
       <div className="bg-gradient-to-r from-[#FF6B35] to-[#E85A2A] rounded-xl p-5 text-white shadow-lg">
         <div className="flex items-center justify-between">
@@ -360,26 +725,62 @@ function DashboardView() {
         </div>
       </div>
       
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { name: '总会话', value: stats.total, icon: MessageCircle, color: 'bg-blue-500' },
-          { name: '进行中', value: stats.active, icon: MessageCircle, color: 'bg-green-500' },
-          { name: '待处理', value: stats.pending, icon: MessageCircle, color: 'bg-amber-500' },
-          { name: '未读消息', value: stats.unread, icon: MessageCircle, color: 'bg-red-500' },
-        ].map((stat, i) => (
-          <div key={i} className="bg-white rounded-xl p-4 shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">{stat.name}</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
-              </div>
-              <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", stat.color)}>
-                <stat.icon className="w-5 h-5 text-white" />
-              </div>
+      {/* Stats Cards - 今日数据统计 */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* 今日总会话 - 带历史对比 */}
+        <div className="bg-white rounded-xl p-5 shadow-sm border-l-4 border-[#FF6B35]">
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <p className="text-sm text-gray-500">今日总会话</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{stats.total}</p>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-[#FF6B35]/10 flex items-center justify-center">
+              <MessageCircle className="w-6 h-6 text-[#FF6B35]" />
             </div>
           </div>
-        ))}
+          <div className="flex items-center gap-4 text-xs">
+            <div className="flex items-center gap-1">
+              <span className="text-gray-400">昨日</span>
+              <span className="font-medium text-gray-600">28</span>
+            </div>
+            <div className="w-px h-3 bg-gray-200" />
+            <div className="flex items-center gap-1">
+              <span className="text-gray-400">近7日</span>
+              <span className="font-medium text-gray-600">186</span>
+            </div>
+            <div className="w-px h-3 bg-gray-200" />
+            <div className="flex items-center gap-1">
+              <span className="text-gray-400">近30日</span>
+              <span className="font-medium text-gray-600">742</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 今日未读 */}
+        <div className="bg-white rounded-xl p-5 shadow-sm border-l-4 border-amber-500">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500">今日未读</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{stats.unread}</p>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
+              <MessageCircle className="w-6 h-6 text-amber-500" />
+            </div>
+          </div>
+        </div>
+
+        {/* 今日未回复 */}
+        <div className="bg-white rounded-xl p-5 shadow-sm border-l-4 border-red-500">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-gray-500">今日未回复</p>
+              <p className="text-3xl font-bold text-gray-900 mt-1">{stats.pending}</p>
+            </div>
+            <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center">
+              <MessageCircle className="w-6 h-6 text-red-500" />
+            </div>
+          </div>
+        </div>
       </div>
       
       {/* AI今日数据 */}
@@ -479,7 +880,7 @@ function DashboardView() {
           </div>
         </div>
       </div>
-      
+
       {/* Platform Stats */}
       <div className="bg-white rounded-xl shadow-sm p-4">
         <h3 className="font-semibold text-gray-900 mb-4">平台分布</h3>
@@ -507,41 +908,280 @@ function DashboardView() {
   );
 }
 
-// Customers View
+// Customers View - 客户明细
 function CustomersView() {
   const { conversations } = useStore();
-  const customers = Array.from(new Map(conversations.map(c => [c.customer.id, c.customer])).values());
-  
+  const [selectedPlatform, setSelectedPlatform] = useState('all');
+  const [selectedAccount, setSelectedAccount] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchType, setSearchType] = useState<'account' | 'nickname' | 'tag' | 'remark'>('nickname');
+  const [showSearchTypeDropdown, setShowSearchTypeDropdown] = useState(false);
+  const [dateRange, setDateRange] = useState({ start: '2026-01-05', end: '2026-02-05' });
+  const [showPlatformDropdown, setShowPlatformDropdown] = useState(false);
+
+  // 从会话中提取客户并关联平台信息 - 使用 useMemo 缓存避免重复生成随机数据
+  const customers = useMemo(() => conversations.map((c, index) => ({
+    ...c.customer,
+    platform: c.platform,
+    accountId: c.accountId || '5726930093',
+    fanId: (1000000000 + index * 123456789 % 9000000000).toString(),
+    addedAt: c.lastMessageAt || new Date(),
+    remark: '',
+  })), [conversations]);
+
+  // 搜索类型选项
+  const searchTypeOptions = [
+    { value: 'account' as const, label: '客户账号' },
+    { value: 'nickname' as const, label: '客户昵称' },
+    { value: 'tag' as const, label: '客户标签' },
+    { value: 'remark' as const, label: '客户备注' },
+  ];
+
+  // 筛选客户 - 支持按类型搜索，多值用逗号分隔
+  const filteredCustomers = customers.filter(c => {
+    if (selectedPlatform !== 'all' && c.platform !== selectedPlatform) return false;
+    if (searchQuery) {
+      // 支持逗号分隔的多值搜索
+      const queries = searchQuery.split(',').map(q => q.trim().toLowerCase()).filter(q => q);
+      if (queries.length === 0) return true;
+
+      // 根据搜索类型匹配
+      const matchAny = queries.some(query => {
+        switch (searchType) {
+          case 'account':
+            return c.fanId?.toLowerCase().includes(query) || c.accountId?.toLowerCase().includes(query);
+          case 'nickname':
+            return c.name.toLowerCase().includes(query);
+          case 'tag':
+            return c.tags?.some(tag => tag.toLowerCase().includes(query));
+          case 'remark':
+            return c.remark?.toLowerCase().includes(query);
+          default:
+            return false;
+        }
+      });
+      if (!matchAny) return false;
+    }
+    return true;
+  });
+
+  const platformOptions = [
+    { value: 'all', label: '全部平台' },
+    { value: 'telegram', label: 'Telegram', color: '#0088CC' },
+    { value: 'whatsapp', label: 'WhatsApp', color: '#25D366' },
+    { value: 'line', label: 'Line', color: '#06C755' },
+    { value: 'instagram', label: 'Instagram', color: '#E4405F' },
+    { value: 'facebook', label: 'Facebook', color: '#1877F2' },
+    { value: 'wechat', label: '微信', color: '#07C160' },
+  ];
+
+  const getPlatformIcon = (platform: string) => {
+    const config = platformConfigs.find(p => p.id === platform);
+    return config?.color || '#666';
+  };
+
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-          <h3 className="font-semibold text-gray-900">客户列表</h3>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-500">共 {customers.length} 位客户</span>
+    <div className="h-full overflow-y-auto space-y-4">
+      {/* 页面标题 */}
+      <div className="bg-white rounded-xl shadow-sm p-5">
+        <h2 className="text-lg font-semibold text-gray-900">客户明细</h2>
+      </div>
+
+      {/* 筛选区域 */}
+      <div className="bg-white rounded-xl shadow-sm p-5">
+        <div className="grid grid-cols-4 gap-6">
+          {/* 社交渠道 */}
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-gray-600 whitespace-nowrap">社交渠道</span>
+            <div className="relative flex-1">
+              <button
+                onClick={() => setShowPlatformDropdown(!showPlatformDropdown)}
+                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-left flex items-center justify-between hover:border-gray-300"
+              >
+                <span>{platformOptions.find(p => p.value === selectedPlatform)?.label}</span>
+                <ChevronDown className="w-4 h-4 text-gray-400" />
+              </button>
+              {showPlatformDropdown && (
+                <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-20">
+                  {platformOptions.map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => { setSelectedPlatform(opt.value); setShowPlatformDropdown(false); }}
+                      className={cn(
+                        "w-full px-3 py-2 text-sm text-left hover:bg-gray-50",
+                        selectedPlatform === opt.value && "bg-[#FF6B35]/5 text-[#FF6B35]"
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* 社交账号 */}
+          <div className="flex items-center gap-3">
+            <span className="text-sm text-gray-600 whitespace-nowrap">社交账号</span>
+            <select
+              value={selectedAccount}
+              onChange={(e) => setSelectedAccount(e.target.value)}
+              className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20"
+            >
+              <option value="">请选择社交账号</option>
+              <option value="5726930093">5726930093</option>
+            </select>
+          </div>
+
+          {/* 客户搜索 - 先选类型再输入 */}
+          <div className="flex items-center gap-2 col-span-2">
+            <div className="relative flex-shrink-0">
+              <button
+                onClick={() => setShowSearchTypeDropdown(!showSearchTypeDropdown)}
+                className="w-28 px-3 py-2 border border-gray-200 rounded-lg text-sm text-left flex items-center justify-between hover:border-gray-300 whitespace-nowrap"
+              >
+                <span>{searchTypeOptions.find(t => t.value === searchType)?.label}</span>
+                <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0 ml-1" />
+              </button>
+              {showSearchTypeDropdown && (
+                <div className="absolute top-full left-0 mt-1 w-28 bg-white border border-gray-200 rounded-lg shadow-lg z-20">
+                  {searchTypeOptions.map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => { setSearchType(opt.value); setShowSearchTypeDropdown(false); }}
+                      className={cn(
+                        "w-full px-3 py-2 text-sm text-left hover:bg-gray-50 whitespace-nowrap",
+                        searchType === opt.value && "bg-[#FF6B35]/5 text-[#FF6B35]"
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="多个用英文逗号隔开"
+              className="w-48 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20"
+            />
           </div>
         </div>
-        <div className="divide-y divide-gray-50">
-          {customers.map((customer) => (
-            <div key={customer.id} className="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
-              <img
-                src={customer.avatar}
-                alt={customer.name}
-                className="w-12 h-12 rounded-full object-cover"
-              />
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900">{customer.name}</p>
-                <p className="text-sm text-gray-500">{customer.country} · {customer.email}</p>
-              </div>
-              <div className="flex items-center gap-2">
-                {customer.tags.slice(0, 2).map((tag, i) => (
-                  <span key={i} className="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ))}
+
+        {/* 第二行筛选 */}
+        <div className="flex items-center gap-4 mt-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600 whitespace-nowrap">添加时间</span>
+            <input
+              type="date"
+              value={dateRange.start}
+              onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+              className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20"
+            />
+            <span className="text-gray-400">~</span>
+            <input
+              type="date"
+              value={dateRange.end}
+              onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+              className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20"
+            />
+          </div>
+
+          <button className="px-6 py-2 bg-[#FF6B35] text-white text-sm font-medium rounded-lg hover:bg-[#E85A2A] transition-colors">
+            查询
+          </button>
+          <button className="px-6 py-2 border border-gray-200 text-sm text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
+            重置
+          </button>
+        </div>
+      </div>
+
+      {/* 客户列表表格 */}
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">#</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">社交账号</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">客户信息</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">客户手机号</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">国家/地区</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">昵称备注</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">客户标签</th>
+                <th className="px-4 py-3 text-left text-xs font-medium text-gray-500">添加时间</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {filteredCustomers.map((customer, index) => (
+                <tr key={customer.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-4 text-sm text-gray-600">{index + 1}</td>
+                  <td className="px-4 py-4">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-8 h-8 rounded-full flex items-center justify-center"
+                        style={{ backgroundColor: `${getPlatformIcon(customer.platform)}20` }}
+                      >
+                        <User className="w-4 h-4" style={{ color: getPlatformIcon(customer.platform) }} />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-900">{customer.name}</p>
+                        <p className="text-xs text-gray-500">{customer.accountId}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={customer.avatar}
+                        alt={customer.name}
+                        className="w-8 h-8 rounded-full object-cover"
+                      />
+                      <div>
+                        <p className="text-sm text-gray-900">{customer.name}</p>
+                        <p className="text-xs text-gray-500">{customer.fanId}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 text-sm text-gray-600">{customer.phone || '-'}</td>
+                  <td className="px-4 py-4">
+                    <span className="text-sm text-gray-900">{customer.country || '-'}</span>
+                  </td>
+                  <td className="px-4 py-4 text-sm text-gray-600">-</td>
+                  <td className="px-4 py-4">
+                    <div className="flex flex-wrap gap-1">
+                      {customer.tags?.slice(0, 2).map((tag, i) => (
+                        <span key={i} className="px-2 py-0.5 text-xs bg-[#FF6B35]/10 text-[#FF6B35] rounded">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 text-sm text-gray-600">
+                    {customer.addedAt instanceof Date
+                      ? customer.addedAt.toLocaleString('zh-CN', {
+                          year: 'numeric', month: '2-digit', day: '2-digit',
+                          hour: '2-digit', minute: '2-digit', second: '2-digit'
+                        })
+                      : '-'
+                    }
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* 分页 */}
+        <div className="px-4 py-3 border-t border-gray-100 flex items-center justify-between">
+          <span className="text-sm text-gray-500">共 {filteredCustomers.length} 条记录</span>
+          <div className="flex items-center gap-2">
+            <button className="px-3 py-1.5 border border-gray-200 rounded text-sm text-gray-600 hover:bg-gray-50">上一页</button>
+            <button className="px-3 py-1.5 bg-[#FF6B35] text-white rounded text-sm">1</button>
+            <button className="px-3 py-1.5 border border-gray-200 rounded text-sm text-gray-600 hover:bg-gray-50">下一页</button>
+          </div>
         </div>
       </div>
     </div>

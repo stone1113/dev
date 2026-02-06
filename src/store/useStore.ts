@@ -11,7 +11,8 @@ import type {
   TranslationResult,
   PlatformAccount,
   Organization,
-  LoginMode
+  LoginMode,
+  BoundAccount
 } from '@/types';
 import { 
   mockConversations, 
@@ -28,6 +29,12 @@ interface AppState {
   organization: Organization;
   updateOrganization: (updates: Partial<Organization>) => void;
   setOrganizationLoginMode: (mode: LoginMode) => void;
+
+  // 绑定账号管理
+  addBoundAccount: (account: Omit<BoundAccount, 'id'>) => void;
+  updateBoundAccount: (accountId: string, updates: Partial<BoundAccount>) => void;
+  deleteBoundAccount: (accountId: string) => void;
+  toggleBoundAccountStatus: (accountId: string) => void;
 
   // 用户设置
   userSettings: UserSettings;
@@ -48,6 +55,11 @@ interface AppState {
   addPlatformAccount: (account: Omit<PlatformAccount, 'id'>) => void;
   deletePlatformAccount: (accountId: string) => void;
   updatePlatformAccount: (accountId: string, updates: Partial<PlatformAccount>) => void;
+
+  // 账号登录状态
+  loginAccountId: string | null; // 当前需要登录的账号ID
+  setLoginAccountId: (accountId: string | null) => void;
+  getLoginAccount: () => PlatformAccount | undefined;
   
   // 会话
   conversations: Conversation[];
@@ -109,7 +121,13 @@ export const useStore = create<AppState>()(
         memberCount: 15,
         createdAt: new Date('2024-01-01'),
         status: 'active',
-        expiresAt: new Date('2025-12-31')
+        expiresAt: new Date('2025-12-31'),
+        boundAccounts: [
+          { id: 'acc_001', username: 'admin', displayName: '管理员', role: 'admin', status: 'active' },
+          { id: 'acc_002', username: 'zhangsan', displayName: '张三', role: 'agent', status: 'active' },
+          { id: 'acc_003', username: 'lisi', displayName: '李四', role: 'agent', status: 'active' },
+          { id: 'acc_004', username: 'wangwu', displayName: '王五', role: 'manager', status: 'disabled' },
+        ]
       },
       updateOrganization: (updates) =>
         set((state) => ({
@@ -118,6 +136,47 @@ export const useStore = create<AppState>()(
       setOrganizationLoginMode: (mode) =>
         set((state) => ({
           organization: { ...state.organization, loginMode: mode }
+        })),
+
+      // 绑定账号管理
+      addBoundAccount: (account) =>
+        set((state) => ({
+          organization: {
+            ...state.organization,
+            boundAccounts: [
+              ...(state.organization.boundAccounts || []),
+              { ...account, id: `acc_${Date.now()}` }
+            ]
+          }
+        })),
+      updateBoundAccount: (accountId, updates) =>
+        set((state) => ({
+          organization: {
+            ...state.organization,
+            boundAccounts: (state.organization.boundAccounts || []).map(acc =>
+              acc.id === accountId ? { ...acc, ...updates } : acc
+            )
+          }
+        })),
+      deleteBoundAccount: (accountId) =>
+        set((state) => ({
+          organization: {
+            ...state.organization,
+            boundAccounts: (state.organization.boundAccounts || []).filter(
+              acc => acc.id !== accountId
+            )
+          }
+        })),
+      toggleBoundAccountStatus: (accountId) =>
+        set((state) => ({
+          organization: {
+            ...state.organization,
+            boundAccounts: (state.organization.boundAccounts || []).map(acc =>
+              acc.id === accountId
+                ? { ...acc, status: acc.status === 'active' ? 'disabled' : 'active' }
+                : acc
+            )
+          }
         })),
 
       // 用户设置
@@ -186,12 +245,20 @@ export const useStore = create<AppState>()(
       },
       updatePlatformAccount: (accountId, updates) => {
         set((state) => ({
-          platformAccounts: state.platformAccounts.map(a => 
+          platformAccounts: state.platformAccounts.map(a =>
             a.id === accountId ? { ...a, ...updates } : a
           )
         }));
       },
-      
+
+      // 账号登录状态
+      loginAccountId: null,
+      setLoginAccountId: (accountId) => set({ loginAccountId: accountId }),
+      getLoginAccount: () => {
+        const { platformAccounts, loginAccountId } = get();
+        return platformAccounts.find(a => a.id === loginAccountId);
+      },
+
       // 会话
       conversations: mockConversations,
       selectedConversationId: null,
@@ -531,6 +598,23 @@ export const useStore = create<AppState>()(
         sidebarCollapsed: state.sidebarCollapsed,
         currentLanguage: state.currentLanguage,
       }),
+      merge: (persistedState, currentState) => {
+        const persisted = persistedState as Partial<AppState>;
+        // 如果持久化数据中没有 boundAccounts 或为空数组，使用默认值
+        const boundAccounts =
+          persisted.organization?.boundAccounts && persisted.organization.boundAccounts.length > 0
+            ? persisted.organization.boundAccounts
+            : currentState.organization.boundAccounts;
+        return {
+          ...currentState,
+          ...persisted,
+          organization: {
+            ...currentState.organization,
+            ...persisted.organization,
+            boundAccounts,
+          },
+        };
+      },
     }
   )
 );
