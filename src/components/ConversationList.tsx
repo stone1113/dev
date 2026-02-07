@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useStore } from '@/store/useStore';
 import { platformConfigs } from '@/data/mockData';
 import type { Conversation, Platform } from '@/types';
@@ -19,12 +19,10 @@ import {
   AlertCircle,
   Bot,
   Sparkles,
-  Users,
-  SlidersHorizontal
+  Users
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
-import { AdvancedFilterPanel } from './AdvancedFilterPanel';
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   MessageCircle,
@@ -55,8 +53,6 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   onSelectConversation,
   onFilterClick
 }) => {
-  const [showAdvancedFilter, setShowAdvancedFilter] = useState(false);
-
   const {
     getFilteredConversations,
     selectedConversationId,
@@ -70,17 +66,6 @@ export const ConversationList: React.FC<ConversationListProps> = ({
 
   const conversations = getFilteredConversations();
 
-  // 计算高级筛选激活数量
-  const advancedFilterCount = [
-    filterCriteria.customerLevel,
-    filterCriteria.customerTypes,
-    filterCriteria.categories,
-    filterCriteria.budgetRange,
-    filterCriteria.intentQuantity,
-    filterCriteria.purchasePurpose,
-    filterCriteria.urgency,
-  ].reduce((sum, arr) => sum + (arr?.length || 0), 0);
-  
   const handleSelect = (conversation: Conversation) => {
     setSelectedConversation(conversation.id);
     onSelectConversation?.(conversation);
@@ -203,24 +188,6 @@ export const ConversationList: React.FC<ConversationListProps> = ({
           >
             单聊
           </button>
-          {/* 高级筛选 */}
-          <button
-            onClick={() => setShowAdvancedFilter(true)}
-            className={cn(
-              "flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-full transition-all",
-              advancedFilterCount > 0
-                ? "bg-[#FF6B35] text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-            )}
-          >
-            <SlidersHorizontal className="w-3 h-3" />
-            高级筛选
-            {advancedFilterCount > 0 && (
-              <span className="ml-1 px-1.5 py-0.5 text-[10px] bg-white/20 rounded-full">
-                {advancedFilterCount}
-              </span>
-            )}
-          </button>
         </div>
       </div>
       
@@ -243,9 +210,10 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                   key={conversation.id}
                   onClick={() => handleSelect(conversation)}
                   className={cn(
-                    "w-full p-4 text-left transition-all duration-200 hover:bg-gray-50",
-                    isSelected && "bg-[#FF6B35]/5 hover:bg-[#FF6B35]/10",
-                    hasUnread && !isSelected && "bg-blue-50/50"
+                    "w-full p-4 text-left transition-all duration-200 hover:bg-gray-50 border-l-3",
+                    isSelected
+                      ? "bg-[#FF6B35]/10 hover:bg-[#FF6B35]/15 border-l-[#FF6B35]"
+                      : "border-l-transparent"
                   )}
                   style={{
                     animationDelay: `${index * 50}ms`,
@@ -324,20 +292,30 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                             <Sparkles className="w-3 h-3" />
                           </span>
                         )}
-                        
-                        {/* Tags */}
-                        {conversation.tags.slice(0, 2).map((tag, i) => (
-                          <span 
-                            key={i}
+
+                        {/* Customer Tags - 客户画像标签（蓝色） */}
+                        {conversation.customer.tags.slice(0, 1).map((tag, i) => (
+                          <span
+                            key={`customer-${i}`}
+                            className="px-2 py-0.5 text-xs bg-blue-50 text-blue-600 rounded-full"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+
+                        {/* Conversation Tags - 会话标签（灰色），只显示筛选条件中的标签类型 */}
+                        {conversation.tags
+                          .filter(tag => ['售后', '询价', '投诉', '物流', '退款', '技术支持', '产品咨询', '支付问题'].includes(tag))
+                          .slice(0, 1)
+                          .map((tag, i) => (
+                          <span
+                            key={`conv-${i}`}
                             className="px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded-full"
                           >
                             {tag}
                           </span>
                         ))}
-                        
-                        {/* Priority */}
-                        {priorityIcons[conversation.priority]}
-                        
+
                         {/* Unread Count */}
                         {hasUnread && (
                           <span className="ml-auto px-2 py-0.5 text-xs font-medium bg-red-500 text-white rounded-full">
@@ -368,21 +346,6 @@ export const ConversationList: React.FC<ConversationListProps> = ({
           </span>
         </div>
       </div>
-
-      {/* Advanced Filter Panel */}
-      {showAdvancedFilter && (
-        <div className="absolute inset-0 z-50 flex">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/20"
-            onClick={() => setShowAdvancedFilter(false)}
-          />
-          {/* Panel */}
-          <div className="relative ml-auto w-72 h-full animate-in slide-in-from-right duration-200">
-            <AdvancedFilterPanel onClose={() => setShowAdvancedFilter(false)} />
-          </div>
-        </div>
-      )}
     </div>
   );
 };

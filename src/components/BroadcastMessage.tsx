@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, RefreshCw, Search, Check, ChevronDown, Image, Video, FileText, Link2, Clock, Send, Sparkles, Wand2, Globe, Calendar, Loader2, BookOpen, Languages, Eye, ChevronRight, Database, MessageSquare, Package, Users, Target, Zap, TrendingUp, Tag, UserCheck, AlertCircle, Mic, Trash2, Plus, Shuffle, FileEdit, ClipboardList } from 'lucide-react';
+import { X, RefreshCw, Search, Check, ChevronDown, Image, Video, FileText, Clock, Send, Sparkles, Wand2, Calendar, Loader2, BookOpen, Languages, Database, MessageSquare, Package, Target, Zap, TrendingUp, Tag, UserCheck, AlertCircle, Mic, Trash2, Plus, Shuffle, FileEdit, ClipboardList } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { generateMessage, optimizeMessage } from '@/lib/aiService';
 import { suggestSendTime } from '@/lib/scheduler';
@@ -156,7 +156,7 @@ export const BroadcastMessage: React.FC<BroadcastMessageProps> = ({ onClose, sel
   const [sendPattern, setSendPattern] = useState<SendPattern>('all');
   const [messageContent, setMessageContent] = useState('');
   const [messageItems, setMessageItems] = useState<MessageItem[]>([]);
-  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [_editingItemId, setEditingItemId] = useState<string | null>(null);
   const [messageInterval, setMessageInterval] = useState({ min: 2, max: 26 });
   const [contactInterval, setContactInterval] = useState({ min: 2, max: 6 });
 

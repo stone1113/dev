@@ -152,7 +152,7 @@ export const ContactList: React.FC<ContactListProps> = ({ onClose }) => {
         {/* 类型筛选 */}
         <div className="flex items-center gap-1.5">
           <FilterTag label="全部" active={chatType === 'all'} onClick={() => setChatType('all')} />
-          <FilterTag label="私聊" active={chatType === 'private'} onClick={() => setChatType('private')} />
+          <FilterTag label="单聊" active={chatType === 'private'} onClick={() => setChatType('private')} />
           <FilterTag label="群聊" active={chatType === 'group'} onClick={() => setChatType('group')} />
           <FilterTag label="频道" active={chatType === 'channel'} onClick={() => setChatType('channel')} />
         </div>

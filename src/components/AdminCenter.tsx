@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import {
-  ArrowLeft,
   ChevronRight,
   ChevronDown,
   Building2,
@@ -11,19 +10,15 @@ import {
   Plus,
   Search,
   Filter,
-  MoreHorizontal,
   Users,
   FolderTree,
   Check,
   Shield,
+  MessageSquare,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStore } from '@/store/useStore';
 import type { Department, ActivationCode, LoginMode } from '@/types';
-
-interface AdminCenterProps {
-  onBack?: () => void;
-}
 
 // 部门树节点组件
 const DepartmentTreeNode: React.FC<{
@@ -152,53 +147,52 @@ const LoginModeOption: React.FC<{
   </button>
 );
 
-// 激活码行操作菜单
-const CodeActionMenu: React.FC<{
+// 激活码行内联操作按钮
+const CodeActionButtons: React.FC<{
   code: ActivationCode;
   onToggle: (id: string) => void;
   onCopy: (text: string) => void;
-}> = ({ code, onToggle, onCopy }) => {
-  const [open, setOpen] = useState(false);
-
-  return (
-    <div className="relative">
+  onViewChat: (code: ActivationCode) => void;
+}> = ({ code, onToggle, onCopy, onViewChat }) => (
+  <div className="flex items-center gap-1">
+    <button
+      onClick={() => onViewChat(code)}
+      className="inline-flex items-center gap-1 px-2 py-1 text-xs text-[#FF6B35] hover:bg-[#FF6B35]/10 rounded-md transition-colors whitespace-nowrap"
+      title="查看聊天记录"
+    >
+      <MessageSquare className="w-3.5 h-3.5" />
+      聊天记录
+    </button>
+    <button
+      onClick={() => onCopy(code.code)}
+      className="inline-flex items-center gap-1 px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded-md transition-colors whitespace-nowrap"
+      title="复制激活码"
+    >
+      <Copy className="w-3.5 h-3.5" />
+      复制
+    </button>
+    {(code.status === 'active' || code.status === 'disabled') && (
       <button
-        onClick={() => setOpen(!open)}
-        className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+        onClick={() => onToggle(code.id)}
+        className={cn(
+          "inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md transition-colors whitespace-nowrap",
+          code.status === 'active'
+            ? "text-red-600 hover:bg-red-50"
+            : "text-green-600 hover:bg-green-50"
+        )}
+        title={code.status === 'active' ? '禁用' : '启用'}
       >
-        <MoreHorizontal className="w-4 h-4" />
+        {code.status === 'active' ? (
+          <><EyeOff className="w-3.5 h-3.5" />禁用</>
+        ) : (
+          <><Eye className="w-3.5 h-3.5" />启用</>
+        )}
       </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-8 z-20 w-36 bg-white rounded-lg border border-gray-200 shadow-lg py-1">
-            <button
-              onClick={() => { onCopy(code.code); setOpen(false); }}
-              className="w-full px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
-            >
-              <Copy className="w-3.5 h-3.5" />
-              复制激活码
-            </button>
-            {(code.status === 'active' || code.status === 'disabled') && (
-              <button
-                onClick={() => { onToggle(code.id); setOpen(false); }}
-                className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 flex items-center gap-2"
-              >
-                {code.status === 'active' ? (
-                  <><EyeOff className="w-3.5 h-3.5 text-red-500" /><span className="text-red-600">禁用</span></>
-                ) : (
-                  <><Eye className="w-3.5 h-3.5 text-green-500" /><span className="text-green-600">启用</span></>
-                )}
-              </button>
-            )}
-          </div>
-        </>
-      )}
-    </div>
-  );
-};
+    )}
+  </div>
+);
 
-export const AdminCenter: React.FC<AdminCenterProps> = ({ onBack }) => {
+export const AdminCenter: React.FC<{ onViewChat?: (code: ActivationCode) => void }> = ({ onViewChat }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<ActivationCode['status'] | 'all'>('all');
   const [showFilters, setShowFilters] = useState(false);
@@ -249,38 +243,18 @@ export const AdminCenter: React.FC<AdminCenterProps> = ({ onBack }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* 顶部导航 */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-[1400px] mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            {onBack && (
-              <button
-                onClick={onBack}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-              </button>
-            )}
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-[#FF6B35] rounded-xl flex items-center justify-center">
-                <span className="text-white font-bold text-lg">洽</span>
-              </div>
-              <div>
-                <h1 className="text-lg font-bold text-gray-900">激活码管理</h1>
-                <p className="text-xs text-gray-500">{organization.name}</p>
-              </div>
-            </div>
-          </div>
-          <button className="flex items-center gap-2 px-4 py-2 bg-[#FF6B35] text-white text-sm font-medium rounded-lg hover:bg-[#E85A2A] transition-colors">
-            <Plus className="w-4 h-4" />
-            生成激活码
-          </button>
-        </div>
-      </header>
+    <div className="h-full flex flex-col">
+      {/* 顶部操作栏 */}
+      <div className="px-6 py-4 flex items-center justify-between flex-shrink-0">
+        <div />
+        <button className="flex items-center gap-2 px-4 py-2 bg-[#FF6B35] text-white text-sm font-medium rounded-lg hover:bg-[#E85A2A] transition-colors">
+          <Plus className="w-4 h-4" />
+          生成激活码
+        </button>
+      </div>
 
-      <div className="max-w-[1400px] mx-auto px-6 py-6">
-        <div className="flex gap-6 h-[calc(100vh-88px)]">
+      <div className="flex-1 px-6 pb-6 min-h-0">
+        <div className="flex gap-6 h-full">
           {/* 左侧部门树 + 登录模式 */}
           <div className="w-64 flex-shrink-0 flex flex-col gap-4">
             <div className="bg-white rounded-xl border border-gray-200 flex-1 flex flex-col min-h-0">
@@ -412,7 +386,7 @@ export const AdminCenter: React.FC<AdminCenterProps> = ({ onBack }) => {
                       <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">创建时间</th>
                       <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">到期时间</th>
                       <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">备注</th>
-                      <th className="text-right py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap w-12">操作</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">操作</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -440,8 +414,8 @@ export const AdminCenter: React.FC<AdminCenterProps> = ({ onBack }) => {
                         <td className="py-3 px-4 text-sm text-gray-500">{formatDate(code.createdAt)}</td>
                         <td className="py-3 px-4 text-sm text-gray-500">{formatDate(code.expiresAt)}</td>
                         <td className="py-3 px-4 text-sm text-gray-500 max-w-[120px] truncate">{code.remark || '-'}</td>
-                        <td className="py-3 px-4 text-right">
-                          <CodeActionMenu code={code} onToggle={toggleActivationCodeStatus} onCopy={handleCopy} />
+                        <td className="py-3 px-4">
+                          <CodeActionButtons code={code} onToggle={toggleActivationCodeStatus} onCopy={handleCopy} onViewChat={onViewChat || (() => {})} />
                         </td>
                       </tr>
                     ))}
@@ -463,3 +437,5 @@ export const AdminCenter: React.FC<AdminCenterProps> = ({ onBack }) => {
     </div>
   );
 };
+
+export default AdminCenter;

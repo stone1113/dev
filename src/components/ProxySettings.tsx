@@ -158,7 +158,7 @@ const ProxyTab: React.FC<ProxyTabProps> = ({ proxyType, setProxyType, protocol, 
             <select
               value={proxyType === 'managed' ? '' : protocol}
               onChange={(e) => setProtocol(e.target.value)}
-              className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg appearance-none focus:outline-none focus:border-[#FF6B35] bg-white shadow-sm"
+              className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] bg-white shadow-sm"
             >
               {proxyType === 'managed' ? (
                 <option value="">请选择</option>
@@ -219,7 +219,7 @@ const FingerprintTab: React.FC = () => {
           <select
             value={browserVersion}
             onChange={(e) => setBrowserVersion(e.target.value)}
-            className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg appearance-none focus:outline-none focus:border-[#FF6B35] bg-white"
+            className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] bg-white"
           >
             <option value="142">142</option>
             <option value="141">141</option>
@@ -228,7 +228,7 @@ const FingerprintTab: React.FC = () => {
           <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
         </div>
       </FormRow>
-      <p className="text-xs text-gray-400 ml-[68px] -mt-2">建议选择最新内核，若切换不同内核请清除缓存，以免异常</p>
+      <p className="text-xs text-gray-400 ml-[84px] -mt-1">建议选择最新内核，若切换不同内核请清除缓存，以免异常</p>
 
       {/* 操作系统 */}
       <FormRow label="操作系统">
@@ -236,7 +236,7 @@ const FingerprintTab: React.FC = () => {
           <select
             value={os}
             onChange={(e) => setOs(e.target.value)}
-            className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg appearance-none focus:outline-none focus:border-[#FF6B35] bg-white"
+            className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] bg-white"
           >
             <option value="Windows">Windows</option>
             <option value="macOS">macOS</option>
@@ -267,7 +267,7 @@ const FingerprintTab: React.FC = () => {
           <ToggleButton active={webRTC === 'disable'} onClick={() => setWebRTC('disable')} variant="primary">禁止</ToggleButton>
         </div>
       </FormRow>
-      <p className="text-xs text-gray-400 ml-[68px] -mt-2">WebRTC被关闭，网站会检测到您关闭了WebRTC</p>
+      <p className="text-xs text-gray-400 ml-[84px] -mt-1">WebRTC被关闭，网站会检测到您关闭了WebRTC</p>
 
       {/* 地理位置 */}
       <FormRow label="地理位置">
@@ -363,7 +363,7 @@ const FingerprintTab: React.FC = () => {
             <select
               value={hardwareConcurrency}
               onChange={(e) => setHardwareConcurrency(e.target.value)}
-              className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg appearance-none focus:outline-none focus:border-[#FF6B35] bg-white"
+              className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] bg-white"
             >
               <option value="2">2</option>
               <option value="4">4</option>
@@ -383,7 +383,7 @@ const FingerprintTab: React.FC = () => {
             <select
               value={deviceMemory}
               onChange={(e) => setDeviceMemory(e.target.value)}
-              className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg appearance-none focus:outline-none focus:border-[#FF6B35] bg-white"
+              className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] bg-white"
             >
               <option value="2">2</option>
               <option value="4">4</option>
@@ -437,8 +437,8 @@ const CookieTab: React.FC = () => {
 
 // 表单行组件
 const FormRow: React.FC<{ label: React.ReactNode; children: React.ReactNode }> = ({ label, children }) => (
-  <div className="flex items-start gap-3">
-    <span className="text-xs text-gray-500 w-16 pt-1.5 flex-shrink-0">{label}</span>
+  <div className="flex items-start gap-4">
+    <span className="text-xs text-gray-500 w-[68px] pt-1.5 flex-shrink-0 leading-tight">{label}</span>
     {children}
   </div>
 );
@@ -456,7 +456,7 @@ const ToggleButton: React.FC<ToggleButtonProps> = ({ active, onClick, children, 
     if (active) {
       if (variant === 'danger') return 'bg-red-500 text-white border-red-500';
       if (variant === 'primary') return 'bg-[#FF6B35] text-white border-[#FF6B35]';
-      return 'bg-gray-100 text-gray-900 border-gray-300';
+      return 'bg-[#FF6B35] text-white border-[#FF6B35]';
     }
     return 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50';
   };
@@ -465,7 +465,7 @@ const ToggleButton: React.FC<ToggleButtonProps> = ({ active, onClick, children, 
     <button
       onClick={onClick}
       className={cn(
-        "px-3 py-1 text-xs font-medium border rounded-lg transition-colors whitespace-nowrap",
+        "px-3 py-1.5 text-xs font-medium border rounded-lg transition-colors whitespace-nowrap min-w-[48px]",
         getStyles()
       )}
     >

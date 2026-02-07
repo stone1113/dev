@@ -10,7 +10,7 @@ import { ProxySettings } from '@/components/ProxySettings';
 import { TranslationSettings } from '@/components/TranslationSettings';
 import { ContactList } from '@/components/ContactList';
 import { LoginPage } from '@/components/LoginPage';
-import { AdminCenter } from '@/components/AdminCenter';
+import { AdminLayout } from '@/components/AdminLayout';
 import { AdminLoginPage } from '@/components/AdminLoginPage';
 import { SettingsPage } from '@/components/SettingsPage';
 import { platformConfigs } from '@/data/mockData';
@@ -45,7 +45,15 @@ import {
   Calendar,
   Key,
   Server,
-  Building2
+  Building2,
+  MessageSquare,
+  Instagram,
+  Facebook,
+  Mail,
+  Smartphone,
+  Music,
+  Twitter,
+  ShoppingBag
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -117,7 +125,7 @@ function App() {
     }
     // 管理端已登录，显示管理中心
     return (
-      <AdminCenter
+      <AdminLayout
         onBack={() => {
           setShowAdminCenter(false);
           setIsAdminLoggedIn(false);
@@ -293,6 +301,19 @@ function App() {
 
               if (pendingConversations.length === 0) return null;
 
+              const pendingIconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+                MessageCircle, Send, MessageSquare, Instagram, Facebook,
+                Mail, Smartphone, Music, Twitter, ShoppingBag,
+              };
+
+              const getPlatformInfo = (platform: string) => {
+                const config = platformConfigs.find(p => p.id === platform);
+                const PIcon = config ? pendingIconMap[config.icon] || MessageCircle : MessageCircle;
+                return { PIcon, pColor: config?.color || '#666' };
+              };
+
+              const MAX_VISIBLE = 16;
+
               return (
                 <div className="hidden md:flex items-center gap-3 ml-4 pl-4 border-l border-gray-200">
                   <div className="flex items-center gap-2">
@@ -305,36 +326,45 @@ function App() {
 
                   {/* 头像列表 - 重叠显示 */}
                   <div className="flex items-center overflow-x-auto scrollbar-hide">
-                    {pendingConversations.slice(0, 33).map((conv, index) => (
-                      <button
-                        key={conv.id}
-                        onClick={() => setSelectedConversation(conv.id)}
-                        className="relative flex-shrink-0 transition-all duration-200 hover:scale-110 hover:z-10"
-                        style={{ marginLeft: index === 0 ? 0 : '-6px', zIndex: 33 - index }}
-                        title={conv.customer.name}
-                      >
-                        <img
-                          src={conv.customer.avatar}
-                          alt={conv.customer.name}
-                          className={cn(
-                            "w-7 h-7 rounded-full object-cover border-2 border-white hover:border-amber-300 transition-all shadow-sm",
-                            index >= 30 && "opacity-60"
-                          )}
-                        />
-                      </button>
-                    ))}
+                    {pendingConversations.slice(0, MAX_VISIBLE).map((conv, index) => {
+                      const { PIcon, pColor } = getPlatformInfo(conv.platform);
+                      return (
+                        <button
+                          key={conv.id}
+                          onClick={() => setSelectedConversation(conv.id)}
+                          className="relative flex-shrink-0 transition-all duration-200 hover:scale-110 hover:z-10"
+                          style={{ marginLeft: index === 0 ? 0 : '-6px', zIndex: MAX_VISIBLE - index }}
+                          title={conv.customer.name}
+                        >
+                          <img
+                            src={conv.customer.avatar}
+                            alt={conv.customer.name}
+                            className={cn(
+                              "w-7 h-7 rounded-full object-cover border-2 border-white hover:border-amber-300 transition-all shadow-sm",
+                              index >= MAX_VISIBLE - 3 && "opacity-60"
+                            )}
+                          />
+                          <div
+                            className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center border border-white"
+                            style={{ backgroundColor: pColor }}
+                          >
+                            <PIcon className="w-2 h-2 text-white" />
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
 
-                  {/* 超过33个时显示更多数量 - 移到overflow容器外 */}
-                  {pendingConversations.length > 33 && (
+                  {/* 超过MAX_VISIBLE个时显示更多数量 */}
+                  {pendingConversations.length > MAX_VISIBLE && (
                     <div className="relative flex-shrink-0">
                       <button
                         onClick={() => setShowMorePending(!showMorePending)}
                         className="w-7 h-7 rounded-full bg-amber-100 border-2 border-amber-300 flex items-center justify-center hover:bg-amber-200 hover:border-amber-400 transition-colors cursor-pointer"
-                        title={`还有 ${pendingConversations.length - 33} 个待处理会话`}
+                        title={`还有 ${pendingConversations.length - MAX_VISIBLE} 个待处理会话`}
                       >
                         <span className="text-[10px] font-bold text-amber-700">
-                          +{pendingConversations.length - 33}
+                          +{pendingConversations.length - MAX_VISIBLE}
                         </span>
                       </button>
                       {/* 下拉列表 */}
@@ -348,10 +378,12 @@ function App() {
                           <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50 max-h-80 overflow-y-auto">
                             <div className="px-3 py-2 border-b border-gray-100">
                               <span className="text-xs font-medium text-gray-500">
-                                更多待处理会话 ({pendingConversations.length - 33})
+                                更多待处理会话 ({pendingConversations.length - MAX_VISIBLE})
                               </span>
                             </div>
-                            {pendingConversations.slice(33).map((conv) => (
+                            {pendingConversations.slice(MAX_VISIBLE).map((conv) => {
+                              const { PIcon, pColor } = getPlatformInfo(conv.platform);
+                              return (
                               <button
                                 key={conv.id}
                                 onClick={() => {
@@ -366,11 +398,12 @@ function App() {
                                     alt={conv.customer.name}
                                     className="w-8 h-8 rounded-full object-cover"
                                   />
-                                  {conv.unreadCount > 0 && (
-                                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 text-[10px] font-bold bg-red-500 text-white rounded-full flex items-center justify-center">
-                                      {conv.unreadCount > 9 ? '9+' : conv.unreadCount}
-                                    </span>
-                                  )}
+                                  <div
+                                    className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center border border-white"
+                                    style={{ backgroundColor: pColor }}
+                                  >
+                                    <PIcon className="w-2 h-2 text-white" />
+                                  </div>
                                 </div>
                                 <div className="flex-1 min-w-0 text-left">
                                   <p className="text-sm font-medium text-gray-900 truncate">
@@ -381,7 +414,8 @@ function App() {
                                   </p>
                                 </div>
                               </button>
-                            ))}
+                              );
+                            })}
                           </div>
                         </>
                       )}
@@ -923,9 +957,9 @@ function CustomersView() {
   const customers = useMemo(() => conversations.map((c, index) => ({
     ...c.customer,
     platform: c.platform,
-    accountId: c.accountId || '5726930093',
+    accountId: (c as unknown as Record<string, unknown>).accountId as string || '5726930093',
     fanId: (1000000000 + index * 123456789 % 9000000000).toString(),
-    addedAt: c.lastMessageAt || new Date(),
+    addedAt: c.lastMessage?.timestamp || new Date(),
     remark: '',
   })), [conversations]);
 
