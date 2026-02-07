@@ -231,6 +231,31 @@ export interface Organization {
   boundAccounts?: BoundAccount[];
 }
 
+// 部门节点
+export interface Department {
+  id: string;
+  name: string;
+  parentId: string | null;
+  children?: Department[];
+  memberCount: number;
+  order: number;
+}
+
+// 激活码
+export interface ActivationCode {
+  id: string;
+  code: string;
+  departmentId: string;
+  departmentName: string;
+  assignedTo?: string;
+  role: 'admin' | 'agent' | 'manager';
+  status: 'unused' | 'active' | 'expired' | 'disabled';
+  createdAt: Date;
+  activatedAt?: Date;
+  expiresAt?: Date;
+  remark?: string;
+}
+
 // 用户设置
 export interface UserSettings {
   id: string;

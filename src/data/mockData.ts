@@ -1,4 +1,4 @@
-import type { PlatformConfig, Conversation, CustomerProfile, UserSettings, AIReplySuggestion, PlatformAccount, ProxyConfig } from '@/types';
+import type { PlatformConfig, Conversation, CustomerProfile, UserSettings, AIReplySuggestion, PlatformAccount, ProxyConfig, Department, ActivationCode } from '@/types';
 
 // 平台配置
 export const platformConfigs: PlatformConfig[] = [
@@ -1184,3 +1184,64 @@ export const mockAIStats = {
     { date: '12-20', customers: 156, messages: 423, aiReplies: 298 },
   ],
 };
+
+// 部门树数据
+export const mockDepartments: Department[] = [
+  {
+    id: 'dept_root',
+    name: '示例企业',
+    parentId: null,
+    memberCount: 15,
+    order: 0,
+    children: [
+      {
+        id: 'dept_sales',
+        name: '销售部',
+        parentId: 'dept_root',
+        memberCount: 6,
+        order: 0,
+        children: [
+          { id: 'dept_sales_domestic', name: '国内销售组', parentId: 'dept_sales', memberCount: 3, order: 0 },
+          { id: 'dept_sales_overseas', name: '海外销售组', parentId: 'dept_sales', memberCount: 3, order: 1 },
+        ],
+      },
+      {
+        id: 'dept_cs',
+        name: '客服部',
+        parentId: 'dept_root',
+        memberCount: 5,
+        order: 1,
+        children: [
+          { id: 'dept_cs_pre', name: '售前客服组', parentId: 'dept_cs', memberCount: 2, order: 0 },
+          { id: 'dept_cs_after', name: '售后客服组', parentId: 'dept_cs', memberCount: 3, order: 1 },
+        ],
+      },
+      {
+        id: 'dept_ops',
+        name: '运营部',
+        parentId: 'dept_root',
+        memberCount: 4,
+        order: 2,
+      },
+    ],
+  },
+];
+
+// 激活码列表数据
+export const mockActivationCodes: ActivationCode[] = [
+  { id: 'ac_001', code: 'QXMS-SA01-2024', departmentId: 'dept_sales_domestic', departmentName: '国内销售组', assignedTo: '张三', role: 'agent', status: 'active', createdAt: new Date('2024-06-01'), activatedAt: new Date('2024-06-02'), expiresAt: new Date('2025-12-31'), remark: '销售主力' },
+  { id: 'ac_002', code: 'QXMS-SA02-2024', departmentId: 'dept_sales_domestic', departmentName: '国内销售组', assignedTo: '李四', role: 'agent', status: 'active', createdAt: new Date('2024-06-01'), activatedAt: new Date('2024-06-05'), expiresAt: new Date('2025-12-31') },
+  { id: 'ac_003', code: 'QXMS-SA03-2024', departmentId: 'dept_sales_domestic', departmentName: '国内销售组', role: 'agent', status: 'unused', createdAt: new Date('2024-08-15'), expiresAt: new Date('2025-12-31'), remark: '预留' },
+  { id: 'ac_004', code: 'QXMS-SO01-2024', departmentId: 'dept_sales_overseas', departmentName: '海外销售组', assignedTo: 'David', role: 'agent', status: 'active', createdAt: new Date('2024-06-01'), activatedAt: new Date('2024-06-03'), expiresAt: new Date('2025-12-31') },
+  { id: 'ac_005', code: 'QXMS-SO02-2024', departmentId: 'dept_sales_overseas', departmentName: '海外销售组', assignedTo: 'Emily', role: 'agent', status: 'active', createdAt: new Date('2024-07-01'), activatedAt: new Date('2024-07-02'), expiresAt: new Date('2025-12-31') },
+  { id: 'ac_006', code: 'QXMS-SO03-2024', departmentId: 'dept_sales_overseas', departmentName: '海外销售组', role: 'agent', status: 'expired', createdAt: new Date('2024-01-01'), expiresAt: new Date('2024-06-30'), remark: '已过期' },
+  { id: 'ac_007', code: 'QXMS-CP01-2024', departmentId: 'dept_cs_pre', departmentName: '售前客服组', assignedTo: '小美', role: 'agent', status: 'active', createdAt: new Date('2024-06-01'), activatedAt: new Date('2024-06-01'), expiresAt: new Date('2025-12-31') },
+  { id: 'ac_008', code: 'QXMS-CP02-2024', departmentId: 'dept_cs_pre', departmentName: '售前客服组', assignedTo: '小红', role: 'agent', status: 'active', createdAt: new Date('2024-06-01'), activatedAt: new Date('2024-06-01'), expiresAt: new Date('2025-12-31') },
+  { id: 'ac_009', code: 'QXMS-CA01-2024', departmentId: 'dept_cs_after', departmentName: '售后客服组', assignedTo: '王五', role: 'agent', status: 'disabled', createdAt: new Date('2024-06-01'), activatedAt: new Date('2024-06-10'), expiresAt: new Date('2025-12-31'), remark: '已离职' },
+  { id: 'ac_010', code: 'QXMS-CA02-2024', departmentId: 'dept_cs_after', departmentName: '售后客服组', assignedTo: '赵六', role: 'agent', status: 'active', createdAt: new Date('2024-08-01'), activatedAt: new Date('2024-08-02'), expiresAt: new Date('2025-12-31') },
+  { id: 'ac_011', code: 'QXMS-CA03-2024', departmentId: 'dept_cs_after', departmentName: '售后客服组', role: 'agent', status: 'unused', createdAt: new Date('2024-10-01'), expiresAt: new Date('2025-12-31') },
+  { id: 'ac_012', code: 'QXMS-OP01-2024', departmentId: 'dept_ops', departmentName: '运营部', assignedTo: '陈七', role: 'manager', status: 'active', createdAt: new Date('2024-06-01'), activatedAt: new Date('2024-06-01'), expiresAt: new Date('2025-12-31'), remark: '运营主管' },
+  { id: 'ac_013', code: 'QXMS-OP02-2024', departmentId: 'dept_ops', departmentName: '运营部', assignedTo: '周八', role: 'agent', status: 'active', createdAt: new Date('2024-06-01'), activatedAt: new Date('2024-06-05'), expiresAt: new Date('2025-12-31') },
+  { id: 'ac_014', code: 'QXMS-OP03-2024', departmentId: 'dept_ops', departmentName: '运营部', role: 'agent', status: 'unused', createdAt: new Date('2024-11-01'), expiresAt: new Date('2025-12-31') },
+  { id: 'ac_015', code: 'QXMS-AD01-2024', departmentId: 'dept_root', departmentName: '示例企业', assignedTo: '管理员', role: 'admin', status: 'active', createdAt: new Date('2024-01-01'), activatedAt: new Date('2024-01-01'), expiresAt: new Date('2025-12-31'), remark: '超级管理员' },
+];

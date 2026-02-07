@@ -12,15 +12,19 @@ import type {
   PlatformAccount,
   Organization,
   LoginMode,
-  BoundAccount
+  BoundAccount,
+  Department,
+  ActivationCode
 } from '@/types';
-import { 
-  mockConversations, 
+import {
+  mockConversations,
   mockUserSettings,
   mockAIReplySuggestions,
   platformConfigs,
   mockAIStats,
-  mockPlatformAccounts
+  mockPlatformAccounts,
+  mockDepartments,
+  mockActivationCodes
 } from '@/data/mockData';
 
 // 应用状态接口
@@ -35,6 +39,19 @@ interface AppState {
   updateBoundAccount: (accountId: string, updates: Partial<BoundAccount>) => void;
   deleteBoundAccount: (accountId: string) => void;
   toggleBoundAccountStatus: (accountId: string) => void;
+
+  // 部门管理
+  departments: Department[];
+  selectedDepartmentId: string | null;
+  setSelectedDepartment: (id: string | null) => void;
+
+  // 激活码管理
+  activationCodes: ActivationCode[];
+  addActivationCode: (code: Omit<ActivationCode, 'id'>) => void;
+  updateActivationCode: (id: string, updates: Partial<ActivationCode>) => void;
+  deleteActivationCode: (id: string) => void;
+  toggleActivationCodeStatus: (id: string) => void;
+  getFilteredActivationCodes: () => ActivationCode[];
 
   // 用户设置
   userSettings: UserSettings;
@@ -178,6 +195,62 @@ export const useStore = create<AppState>()(
             )
           }
         })),
+
+      // 部门管理
+      departments: mockDepartments,
+      selectedDepartmentId: null,
+      setSelectedDepartment: (id) => set({ selectedDepartmentId: id }),
+
+      // 激活码管理
+      activationCodes: mockActivationCodes,
+      addActivationCode: (code) =>
+        set((state) => ({
+          activationCodes: [...state.activationCodes, { ...code, id: `ac_${Date.now()}` }]
+        })),
+      updateActivationCode: (id, updates) =>
+        set((state) => ({
+          activationCodes: state.activationCodes.map(c =>
+            c.id === id ? { ...c, ...updates } : c
+          )
+        })),
+      deleteActivationCode: (id) =>
+        set((state) => ({
+          activationCodes: state.activationCodes.filter(c => c.id !== id)
+        })),
+      toggleActivationCodeStatus: (id) =>
+        set((state) => ({
+          activationCodes: state.activationCodes.map(c =>
+            c.id === id
+              ? { ...c, status: c.status === 'active' ? 'disabled' : c.status === 'disabled' ? 'active' : c.status }
+              : c
+          )
+        })),
+      getFilteredActivationCodes: () => {
+        const { activationCodes, selectedDepartmentId } = get();
+        if (!selectedDepartmentId) return activationCodes;
+        // 递归收集选中部门及其子部门的所有 ID
+        const collectDeptIds = (depts: Department[], targetId: string): string[] => {
+          const ids: string[] = [];
+          for (const dept of depts) {
+            if (dept.id === targetId) {
+              ids.push(dept.id);
+              if (dept.children) {
+                for (const child of dept.children) {
+                  ids.push(...collectDeptIds([child], child.id));
+                }
+              }
+              return ids;
+            }
+            if (dept.children) {
+              const found = collectDeptIds(dept.children, targetId);
+              if (found.length > 0) return found;
+            }
+          }
+          return ids;
+        };
+        const deptIds = collectDeptIds(get().departments, selectedDepartmentId);
+        return activationCodes.filter(c => deptIds.includes(c.departmentId));
+      },
 
       // 用户设置
       userSettings: mockUserSettings,
