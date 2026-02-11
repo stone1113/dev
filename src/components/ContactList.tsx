@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { X, Search, RefreshCw, ExternalLink, Users, Send, Check } from 'lucide-react';
 import { useStore } from '@/store/useStore';
-import { platformConfigs } from '@/data/mockData';
 import { cn } from '@/lib/utils';
 import { BroadcastMessage } from './BroadcastMessage';
 

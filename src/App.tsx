@@ -13,7 +13,9 @@ import { LoginPage } from '@/components/LoginPage';
 import { AdminLayout } from '@/components/AdminLayout';
 import { AdminLoginPage } from '@/components/AdminLoginPage';
 import { SettingsPage } from '@/components/SettingsPage';
+import { AccessGate } from '@/components/AccessGate';
 import { platformConfigs } from '@/data/mockData';
+import type { PlatformAccount, AIEmployeeConfig, ActivationCode } from '@/types';
 import {
   MessageCircle,
   Search,
@@ -80,7 +82,7 @@ function App() {
   const [showAdminCenter, setShowAdminCenter] = useState(false);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
 
-  const [activeSection, setActiveSection] = useState('conversations');
+  const [activeSection, setActiveSection] = useState('dashboard');
   const [showFilterPanel, setShowFilterPanel] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
@@ -148,7 +150,7 @@ function App() {
   const renderMainContent = () => {
     switch (activeSection) {
       case 'dashboard':
-        return <DashboardView />;
+        return <DashboardView onGoToConversations={() => setActiveSection('conversations')} />;
       case 'conversations':
         // 如果正在登录客服账号，只显示扫码页面
         if (loginAccountId) {
@@ -619,9 +621,245 @@ function QrCodeLoginPanel({
   );
 }
 
+// 时区友好名称映射
+function getTimezoneLabel(tz: string): string {
+  const map: Record<string, string> = {
+    'America/New_York': '纽约时间 UTC-5',
+    'America/Los_Angeles': '洛杉矶时间 UTC-8',
+    'America/Chicago': '芝加哥时间 UTC-6',
+    'Europe/London': '伦敦时间 UTC+0',
+    'Europe/Paris': '巴黎时间 UTC+1',
+    'Asia/Shanghai': '北京时间 UTC+8',
+    'Asia/Tokyo': '东京时间 UTC+9',
+    'Asia/Seoul': '首尔时间 UTC+9',
+    'Asia/Singapore': '新加坡时间 UTC+8',
+    'Asia/Dubai': '迪拜时间 UTC+4',
+    'Australia/Sydney': '悉尼时间 UTC+11',
+    'Pacific/Auckland': '奥克兰时间 UTC+12',
+  };
+  return map[tz] || tz;
+}
+
+// AI员工绑定页面
+function AIBindingPage({ platformAccounts, aiEmployeeConfig, iconMap, onBack, onGoToConversations, onToggleAI, activationCode, orgAiSeats }: {
+  platformAccounts: PlatformAccount[];
+  aiEmployeeConfig: AIEmployeeConfig;
+  iconMap: Record<string, React.ComponentType<{ className?: string }>>;
+  onBack: () => void;
+  onGoToConversations: () => void;
+  onToggleAI: (accountId: string, enabled: boolean) => void;
+  activationCode: ActivationCode | null;
+  orgAiSeats?: { total: number; used: number };
+}) {
+  // 过滤掉未登录账号（status 不是 online/offline/busy 的账号）
+  const loggedInAccounts = platformAccounts.filter(a => a.status === 'online' || a.status === 'offline' || a.status === 'busy');
+  const notLoggedInCount = platformAccounts.length - loggedInAccounts.length;
+  const boundCount = loggedInAccounts.filter(a => a.aiEnabled).length;
+
+  return (
+    <div className="h-full overflow-y-auto">
+      <div className="py-6 px-6 space-y-6">
+
+        {/* 顶部返回栏 */}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <ChevronLeft className="w-4 h-4" />
+            返回概览
+          </button>
+        </div>
+
+        {/* AI员工信息卡片 */}
+        <div className="bg-gradient-to-r from-[#FF6B35] to-[#E85A2A] rounded-xl p-5 text-white">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+              <Bot className="w-7 h-7 text-white" />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-lg font-semibold">{aiEmployeeConfig.name}</h2>
+              <p className="text-sm text-white/70 mt-0.5">
+                {aiEmployeeConfig.status === 'online' ? '在线工作中' : '离线'} · 已绑定 {boundCount} 个账号
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-white/60">工作时间</p>
+              <p className="text-sm font-medium">{aiEmployeeConfig.workStartTime} - {aiEmployeeConfig.workEndTime}</p>
+              <p className="text-[10px] text-white/50 mt-0.5">
+                {getTimezoneLabel(aiEmployeeConfig.timezone)} · 自动适配客户时区
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-white/15 flex items-start gap-2">
+            <Lightbulb className="w-3.5 h-3.5 text-white/50 mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-white/60 leading-relaxed">
+              开启AI绑定后，该账号收到的私信将由AI员工自动回复。AI员工会根据知识库和话术库内容进行智能应答，你可以随时手动接管对话。
+            </p>
+          </div>
+        </div>
+
+        {/* 坐席配额卡片 */}
+        {activationCode && (
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Key className="w-4 h-4 text-[#FF6B35]" />
+                <h3 className="text-sm font-semibold text-gray-900">AI坐席配额</h3>
+              </div>
+              <span className="text-xs text-gray-400 font-mono">{activationCode.code}</span>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="bg-gray-50 rounded-lg p-3 text-center">
+                <p className="text-xl font-bold text-gray-900">{activationCode.aiSeatLimit ?? 0}</p>
+                <p className="text-[10px] text-gray-500 mt-0.5">本码上限</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3 text-center">
+                <p className="text-xl font-bold text-[#FF6B35]">{activationCode.aiSeatUsed ?? 0}</p>
+                <p className="text-[10px] text-gray-500 mt-0.5">已使用</p>
+              </div>
+              <div className="bg-gray-50 rounded-lg p-3 text-center">
+                <p className={cn("text-xl font-bold", (activationCode.aiSeatLimit ?? 0) - (activationCode.aiSeatUsed ?? 0) > 0 ? "text-green-600" : "text-red-500")}>
+                  {(activationCode.aiSeatLimit ?? 0) - (activationCode.aiSeatUsed ?? 0)}
+                </p>
+                <p className="text-[10px] text-gray-500 mt-0.5">剩余可用</p>
+              </div>
+            </div>
+            {orgAiSeats && (
+              <p className="text-[10px] text-gray-400 mt-3 text-right">
+                组织总配额：{orgAiSeats.used}/{orgAiSeats.total}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* 账号列表 */}
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4 text-[#FF6B35]" />
+              <h3 className="text-sm font-semibold text-gray-900">平台账号列表</h3>
+            </div>
+            <span className="text-xs text-gray-400">
+              {boundCount}/{loggedInAccounts.length} 已绑定
+            </span>
+          </div>
+
+          {/* 未登录账号提示横幅 */}
+          {notLoggedInCount > 0 && (
+            <div className="mx-5 mt-3 mb-1 flex items-center justify-between px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="flex items-center gap-2.5">
+                <AlertTriangle className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                <p className="text-xs text-blue-700 leading-relaxed">
+                  请先在左侧会话页面扫码登录客服账号后，再回到此处开启AI绑定。
+                </p>
+              </div>
+              <button
+                onClick={onGoToConversations}
+                className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-md transition-colors flex-shrink-0"
+              >
+                前往登录
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
+          {/* 表头 */}
+          <div className="grid grid-cols-[1fr_2fr_auto] items-center px-5 py-3 border-b border-gray-100 bg-gray-50/50">
+            <span className="text-xs font-medium text-gray-500">平台</span>
+            <span className="text-xs font-medium text-gray-500">客服账号</span>
+            <span className="text-xs font-medium text-gray-500 text-right">操作</span>
+          </div>
+
+          <div className="divide-y divide-gray-100">
+            {loggedInAccounts.map((account) => {
+              const pc = platformConfigs.find(p => p.id === account.platformId);
+              const PIcon = pc ? iconMap[pc.icon] || MessageCircle : MessageCircle;
+              return (
+                <AIBindingRow
+                  key={account.id}
+                  account={account}
+                  platformConfig={pc}
+                  PIcon={PIcon}
+                  onToggle={() => onToggleAI(account.id, !account.aiEnabled)}
+                />
+              );
+            })}
+          </div>
+
+          {platformAccounts.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-12 text-gray-400">
+              <Inbox className="w-10 h-10 mb-3 text-gray-300" />
+              <p className="text-sm">暂无平台账号</p>
+              <p className="text-xs mt-1">请先在会话页面添加平台账号</p>
+            </div>
+          )}
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+// AI绑定行组件
+function AIBindingRow({ account, platformConfig, PIcon, onToggle }: {
+  account: PlatformAccount;
+  platformConfig: typeof platformConfigs[number] | undefined;
+  PIcon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+  onToggle: () => void;
+}) {
+  const isEnabled = !!account.aiEnabled;
+  const statusText = account.status === 'online' ? '在线' : account.status === 'offline' ? '离线' : '忙碌';
+  const statusColor = account.status === 'online' ? 'text-green-600 bg-green-50' : account.status === 'busy' ? 'text-amber-600 bg-amber-50' : 'text-gray-500 bg-gray-100';
+
+  return (
+    <div className="grid grid-cols-[1fr_2fr_auto] items-center px-5 py-4 hover:bg-gray-50/50 transition-colors">
+      {/* 平台 */}
+      <div className="flex items-center gap-2.5">
+        <div
+          className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
+          style={{ backgroundColor: `${platformConfig?.color || '#666'}20` }}
+        >
+          <PIcon className="w-4.5 h-4.5" style={{ color: platformConfig?.color || '#666' }} />
+        </div>
+        <span className="text-sm font-medium text-gray-900">{platformConfig?.name || account.platformId}</span>
+      </div>
+
+      {/* 客服账号 */}
+      <div className="flex items-center gap-2 min-w-0">
+        <span className="text-sm text-gray-900 truncate">{account.name}</span>
+        <span className={cn("px-1.5 py-0.5 text-[10px] font-medium rounded-full flex-shrink-0", statusColor)}>
+          {statusText}
+        </span>
+        <span className="text-xs text-gray-400 truncate">{account.accountId}</span>
+      </div>
+
+      {/* 操作 */}
+      <div className="flex items-center gap-3 flex-shrink-0">
+        {isEnabled && (
+          <span className="text-xs text-[#FF6B35] font-medium whitespace-nowrap">AI员工服务中</span>
+        )}
+        <button
+          onClick={onToggle}
+          className={cn(
+            "w-11 h-6 rounded-full transition-colors relative flex-shrink-0",
+            isEnabled ? "bg-[#FF6B35]" : "bg-gray-200"
+          )}
+        >
+          <span className={cn(
+            "absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform",
+            isEnabled ? "left-[22px]" : "left-0.5"
+          )} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // Dashboard View
-function DashboardView() {
-  const { conversations, getFilteredConversations, aiStats, organization, platformAccounts } = useStore();
+function DashboardView({ onGoToConversations }: { onGoToConversations: () => void }) {
+  const { conversations, getFilteredConversations, aiStats, organization, platformAccounts, aiEmployeeConfig, updatePlatformAccount, activationCodes, currentActivationCodeId } = useStore();
+  const [showAIBinding, setShowAIBinding] = useState(false);
   const stats = {
     total: conversations.length,
     active: conversations.filter(c => c.status === 'active').length,
@@ -640,16 +878,36 @@ function DashboardView() {
     pause: { text: '暂停', color: 'bg-amber-500', dotColor: 'bg-amber-400' },
   };
   const aiStatus = aiStatusConfig[aiStats.status];
-  
+
+  // 平台图标映射
+  const dashIconMap: Record<string, React.ComponentType<{ className?: string }>> = {
+    MessageCircle, Send, MessageSquare, Instagram, Facebook,
+    Mail, Smartphone, Music, Twitter, ShoppingBag,
+  };
+
+  const currentActivationCode = activationCodes.find(c => c.id === currentActivationCodeId) || null;
+
+  if (showAIBinding) {
+    return (
+      <AIBindingPage
+        platformAccounts={platformAccounts}
+        aiEmployeeConfig={aiEmployeeConfig}
+        iconMap={dashIconMap}
+        activationCode={currentActivationCode}
+        orgAiSeats={organization.aiSeats}
+        onBack={() => setShowAIBinding(false)}
+        onGoToConversations={onGoToConversations}
+        onToggleAI={(accountId, enabled) => updatePlatformAccount(accountId, { aiEnabled: enabled })}
+      />
+    );
+  }
+
   return (
     <div className="h-full overflow-y-auto space-y-6">
       {/* 订阅套餐信息 */}
       <div className="bg-white rounded-xl shadow-sm p-4">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-semibold text-gray-900">订阅信息</h3>
-          <button className="px-3 py-1.5 text-xs font-medium bg-[#FF6B35] text-white rounded-lg hover:bg-[#E85A2A] transition-colors">
-            续费套餐
-          </button>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {/* 当前套餐 */}
@@ -717,48 +975,97 @@ function DashboardView() {
         </div>
       </div>
 
-      {/* AI客服状态卡片 */}
-      <div className="bg-gradient-to-r from-[#FF6B35] to-[#E85A2A] rounded-xl p-5 text-white shadow-lg">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="relative">
-              <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
-                <Sparkles className="w-7 h-7 text-white" />
+      {/* AI员工绑定 + AI智能客服 并排 */}
+      <div className="grid grid-cols-2 gap-4">
+        {/* AI员工绑定入口 */}
+        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl p-4 text-white shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
+          onClick={() => setShowAIBinding(true)}
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="relative flex-shrink-0">
+                <div className="w-11 h-11 bg-white/20 rounded-full flex items-center justify-center">
+                  <Bot className="w-5.5 h-5.5 text-white" />
+                </div>
+                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-purple-600 bg-green-400" />
               </div>
-              <div className={cn("absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-[#FF6B35]", aiStatus.dotColor)} />
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm font-semibold">AI员工绑定</h2>
+                  <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-white/20 truncate max-w-[120px]">
+                    {aiEmployeeConfig.name}
+                  </span>
+                </div>
+                <p className="text-xs text-white/70 mt-0.5">
+                  已绑定 <span className="font-semibold text-white">{platformAccounts.filter(a => a.aiEnabled).length}</span> 个账号
+                </p>
+              </div>
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-lg font-semibold">AI智能客服</h2>
-                <span className={cn("px-2 py-0.5 text-xs font-medium rounded-full bg-white/20")}>
-                  {aiStatus.text}
-                </span>
+            <div className="hidden lg:flex items-center gap-3 flex-shrink-0">
+              <div className="text-center">
+                <p className="text-xl font-bold">{platformAccounts.filter(a => a.aiEnabled).length}</p>
+                <p className="text-[10px] text-white/70">已绑定</p>
               </div>
-              <p className="text-sm text-white/70 mt-0.5">
-                今日已接待 <span className="font-semibold text-white">{aiStats.today.customersServed}</span> 位客户，
-                回复 <span className="font-semibold text-white">{aiStats.today.messagesReplied}</span> 条消息
-              </p>
+              <div className="w-px h-8 bg-white/20" />
+              <div className="text-center">
+                <p className="text-xl font-bold">{platformAccounts.length}</p>
+                <p className="text-[10px] text-white/70">总账号</p>
+              </div>
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowAIBinding(true); }}
+                className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-white/20 hover:bg-white/30 rounded-lg transition-colors ml-1"
+              >
+                <SlidersHorizontal className="w-3.5 h-3.5" />
+                管理绑定
+              </button>
             </div>
           </div>
-          <div className="hidden md:flex items-center gap-6">
-            <div className="text-center">
-              <p className="text-2xl font-bold">{aiStats.realtime.currentChats}</p>
-              <p className="text-xs text-white/70">当前对话</p>
+        </div>
+
+        {/* AI客服状态卡片 */}
+        <div className="bg-gradient-to-r from-[#FF6B35] to-[#E85A2A] rounded-xl p-4 text-white shadow-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="relative flex-shrink-0">
+                <div className="w-11 h-11 bg-white/20 rounded-full flex items-center justify-center">
+                  <Sparkles className="w-5.5 h-5.5 text-white" />
+                </div>
+                <div className={cn("absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-[#FF6B35]", aiStatus.dotColor)} />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-sm font-semibold">AI智能客服</h2>
+                  <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-white/20">
+                    {aiStatus.text}
+                  </span>
+                </div>
+                <p className="text-xs text-white/70 mt-0.5">
+                  今日已接待 <span className="font-semibold text-white">{aiStats.today.customersServed}</span> 位客户，
+                  回复 <span className="font-semibold text-white">{aiStats.today.messagesReplied}</span> 条消息
+                </p>
+              </div>
             </div>
-            <div className="w-px h-10 bg-white/20" />
-            <div className="text-center">
-              <p className="text-2xl font-bold">{aiStats.realtime.queueLength}</p>
-              <p className="text-xs text-white/70">排队人数</p>
-            </div>
-            <div className="w-px h-10 bg-white/20" />
-            <div className="text-center">
-              <p className="text-2xl font-bold">{aiStats.today.satisfactionRate}%</p>
-              <p className="text-xs text-white/70">满意度</p>
+            <div className="hidden lg:flex items-center gap-3 flex-shrink-0">
+              <div className="text-center">
+                <p className="text-xl font-bold">{aiStats.realtime.currentChats}</p>
+                <p className="text-[10px] text-white/70">当前对话</p>
+              </div>
+              <div className="w-px h-8 bg-white/20" />
+              <div className="text-center">
+                <p className="text-xl font-bold">{aiStats.realtime.queueLength}</p>
+                <p className="text-[10px] text-white/70">排队人数</p>
+              </div>
+              <div className="w-px h-8 bg-white/20" />
+              <div className="text-center">
+                <p className="text-xl font-bold">{aiStats.today.satisfactionRate}%</p>
+                <p className="text-[10px] text-white/70">满意度</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      
+
+
       {/* Stats Cards - 今日数据统计 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* 今日总会话 - 带历史对比 */}
@@ -1693,7 +2000,7 @@ function AnalyticsView() {
 }
 
 // Settings View
-function SettingsView() {
+export function _SettingsView() {
   const { userSettings, updateUserSettings } = useStore();
   
   const languages = [
@@ -2025,4 +2332,10 @@ function SettingsView() {
   );
 }
 
-export default App;
+const AppWithGate = () => (
+  <AccessGate>
+    <App />
+  </AccessGate>
+);
+
+export default AppWithGate;

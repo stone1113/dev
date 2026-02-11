@@ -34,10 +34,6 @@ import {
   ThumbsUp,
   ThumbsDown,
   Copy,
-  ChevronLeft,
-  ChevronRight,
-  AlertCircle,
-  Inbox
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
@@ -72,8 +68,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
     generateAIReply,
     isGeneratingReply,
     updateUserSettings,
-    conversations,
-    setSelectedConversation
+    // conversations,
+    // setSelectedConversation
   } = useStore();
 
   const [inputMessage, setInputMessage] = useState('');
@@ -91,31 +87,31 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
   const isAutoReceiveEnabled = translationSettings.enabled && translationSettings.autoReceive;
 
   // 获取待回复的会话列表（未读或待处理状态）
-  const pendingConversations = conversations.filter(
-    c => c.unreadCount > 0 || c.status === 'pending'
-  );
+  // const pendingConversations = conversations.filter(
+  //   c => c.unreadCount > 0 || c.status === 'pending'
+  // );
 
   // 当前会话在待回复列表中的索引
-  const currentPendingIndex = pendingConversations.findIndex(
-    c => c.id === conversation?.id
-  );
+  // const currentPendingIndex = pendingConversations.findIndex(
+  //   c => c.id === conversation?.id
+  // );
 
   // 切换到上一个/下一个待回复会话
-  const handlePrevPending = () => {
-    if (pendingConversations.length === 0) return;
-    const newIndex = currentPendingIndex <= 0
-      ? pendingConversations.length - 1
-      : currentPendingIndex - 1;
-    setSelectedConversation(pendingConversations[newIndex].id);
-  };
+  // const handlePrevPending = () => {
+  //   if (pendingConversations.length === 0) return;
+  //   const newIndex = currentPendingIndex <= 0
+  //     ? pendingConversations.length - 1
+  //     : currentPendingIndex - 1;
+  //   setSelectedConversation(pendingConversations[newIndex].id);
+  // };
 
-  const handleNextPending = () => {
-    if (pendingConversations.length === 0) return;
-    const newIndex = currentPendingIndex >= pendingConversations.length - 1
-      ? 0
-      : currentPendingIndex + 1;
-    setSelectedConversation(pendingConversations[newIndex].id);
-  };
+  // const handleNextPending = () => {
+  //   if (pendingConversations.length === 0) return;
+  //   const newIndex = currentPendingIndex >= pendingConversations.length - 1
+  //     ? 0
+  //     : currentPendingIndex + 1;
+  //   setSelectedConversation(pendingConversations[newIndex].id);
+  // };
 
   useEffect(() => {
     if (conversation) {

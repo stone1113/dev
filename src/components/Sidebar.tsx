@@ -315,6 +315,19 @@ const AccountListInline: React.FC<AccountListInlineProps> = ({
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); updatePlatformAccount(account.id, { aiEnabled: !account.aiEnabled }); }}
+              className={cn(
+                "ml-auto flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium transition-colors",
+                account.aiEnabled
+                  ? "text-[#FF6B35] bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20"
+                  : "text-gray-400 bg-gray-100 hover:bg-gray-200"
+              )}
+              title={account.aiEnabled ? '关闭AI员工' : '开启AI员工'}
+            >
+              <Bot className="w-3 h-3" />
+              {account.aiEnabled ? 'AI开' : 'AI关'}
+            </button>
           </div>
         )}
       </div>
@@ -708,19 +721,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     </>
                   )}
                 </div>
-                {/* 续费和退出登录按钮 */}
-                <div className="flex gap-2">
-                  <button className="flex-1 py-1.5 bg-[#FF6B35] text-white text-xs font-medium rounded-lg hover:bg-[#E85A2A] transition-colors">
-                    续费
-                  </button>
-                  <button
-                    onClick={onLogout}
-                    className="flex-1 flex items-center justify-center gap-1 py-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors"
-                  >
-                    <LogOut className="w-3 h-3" />
-                    退出登录
-                  </button>
-                </div>
+                {/* 退出登录按钮 */}
+                <button
+                  onClick={onLogout}
+                  className="w-full flex items-center justify-center gap-1 py-1.5 text-xs font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                >
+                  <LogOut className="w-3 h-3" />
+                  退出登录
+                </button>
               </div>
             ) : (
               <button

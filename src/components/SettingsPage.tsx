@@ -12,13 +12,10 @@ import {
   Check,
   HelpCircle,
   GripVertical,
-  ExternalLink,
   Copy,
   RefreshCw,
-  Trash2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useStore } from '@/store/useStore';
 
 // 设置菜单类型
 type SettingsTab = 'platform' | 'translation' | 'proxy' | 'system' | 'general' | 'about';

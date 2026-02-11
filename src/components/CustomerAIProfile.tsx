@@ -6,27 +6,17 @@ import {
   FileText,
   User,
   X,
-  AlertTriangle,
   TrendingUp,
-  Lightbulb,
   Target,
   Building2,
   Mail,
   Phone,
-  Globe,
   MapPin,
   Tag,
   Briefcase,
   Users,
   MessageSquare,
-  ShoppingCart,
-  DollarSign,
   Clock,
-  Truck,
-  CreditCard,
-  Shield,
-  MessageCircle,
-  Star,
   Package,
   Zap,
   FileEdit,
@@ -34,8 +24,6 @@ import {
   Check,
   Plus,
   Loader2,
-  ChevronDown,
-  ChevronUp,
   Brain,
   ArrowRight
 } from 'lucide-react';
@@ -103,7 +91,7 @@ export const CustomerAIProfile: React.FC<CustomerAIProfileProps> = ({ onClose })
   const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
 
   // AI智能分析面板展开状态
-  const [aiAnalysisExpanded, setAiAnalysisExpanded] = useState(true);
+  const [_aiAnalysisExpanded, _setAiAnalysisExpanded] = useState(true);
   const [aiAnalysisTab, setAiAnalysisTab] = useState<'summary' | 'prediction'>('summary');
 
   // 从会话数据获取AI分析生成状态

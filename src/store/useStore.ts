@@ -14,7 +14,12 @@ import type {
   LoginMode,
   BoundAccount,
   Department,
-  ActivationCode
+  ActivationCode,
+  AIEmployeeConfig,
+  AILabelGroup,
+  AILabel,
+  KnowledgeBase,
+  KnowledgeDocument
 } from '@/types';
 import {
   mockConversations,
@@ -24,7 +29,10 @@ import {
   mockAIStats,
   mockPlatformAccounts,
   mockDepartments,
-  mockActivationCodes
+  mockActivationCodes,
+  mockAIEmployeeConfig,
+  mockAILabelGroups,
+  mockAILabels
 } from '@/data/mockData';
 
 // 应用状态接口
@@ -56,6 +64,9 @@ interface AppState {
   // 用户设置
   userSettings: UserSettings;
   updateUserSettings: (settings: Partial<UserSettings>) => void;
+
+  // 当前用户激活码（C端关联）
+  currentActivationCodeId: string | null;
   
   // 平台
   platforms: Platform[];
@@ -121,6 +132,30 @@ interface AppState {
   currentLanguage: string;
   setCurrentLanguage: (lang: string) => void;
   
+  // AI员工配置
+  aiEmployeeConfig: AIEmployeeConfig;
+  updateAIEmployeeConfig: (updates: Partial<AIEmployeeConfig>) => void;
+
+  // AI标签管理
+  aiLabelGroups: AILabelGroup[];
+  aiLabels: AILabel[];
+  addAILabel: (label: AILabel) => void;
+  updateAILabel: (id: string, updates: Partial<AILabel>) => void;
+  deleteAILabel: (id: string) => void;
+  addAILabelGroup: (group: AILabelGroup) => void;
+  updateAILabelGroup: (id: string, updates: Partial<AILabelGroup>) => void;
+  deleteAILabelGroup: (id: string) => void;
+
+  // 知识库管理
+  knowledgeBases: KnowledgeBase[];
+  knowledgeDocuments: KnowledgeDocument[];
+  addKnowledgeBase: (kb: KnowledgeBase) => void;
+  updateKnowledgeBase: (id: string, updates: Partial<KnowledgeBase>) => void;
+  deleteKnowledgeBase: (id: string) => void;
+  addKnowledgeDocument: (doc: KnowledgeDocument) => void;
+  updateKnowledgeDocument: (id: string, updates: Partial<KnowledgeDocument>) => void;
+  deleteKnowledgeDocument: (id: string) => void;
+
   // AI统计数据
   aiStats: typeof mockAIStats;
 }
@@ -144,7 +179,11 @@ export const useStore = create<AppState>()(
           { id: 'acc_002', username: 'zhangsan', displayName: '张三', role: 'agent', status: 'active' },
           { id: 'acc_003', username: 'lisi', displayName: '李四', role: 'agent', status: 'active' },
           { id: 'acc_004', username: 'wangwu', displayName: '王五', role: 'manager', status: 'disabled' },
-        ]
+        ],
+        aiSeats: {
+          total: 5,
+          used: 2,
+        },
       },
       updateOrganization: (updates) =>
         set((state) => ({
@@ -254,7 +293,11 @@ export const useStore = create<AppState>()(
 
       // 用户设置
       userSettings: mockUserSettings,
-      updateUserSettings: (settings) => 
+
+      // 当前用户激活码（C端demo默认关联张三）
+      currentActivationCodeId: 'ac_001',
+
+      updateUserSettings: (settings) =>
         set((state) => ({ 
           userSettings: { ...state.userSettings, ...settings } 
         })),
@@ -660,6 +703,78 @@ export const useStore = create<AppState>()(
       currentLanguage: 'zh',
       setCurrentLanguage: (lang) => set({ currentLanguage: lang }),
       
+      // AI员工配置
+      aiEmployeeConfig: mockAIEmployeeConfig,
+      updateAIEmployeeConfig: (updates) =>
+        set((state) => ({
+          aiEmployeeConfig: { ...state.aiEmployeeConfig, ...updates }
+        })),
+
+      // AI标签管理
+      aiLabelGroups: mockAILabelGroups,
+      aiLabels: mockAILabels,
+      addAILabel: (label) =>
+        set((state) => ({ aiLabels: [...state.aiLabels, label] })),
+      updateAILabel: (id, updates) =>
+        set((state) => ({
+          aiLabels: state.aiLabels.map((l) => l.id === id ? { ...l, ...updates } : l)
+        })),
+      deleteAILabel: (id) =>
+        set((state) => {
+          // 收集要删除的ID：自身 + 子节点 + 孙节点
+          const childIds = state.aiLabels.filter((l) => l.parentId === id).map((l) => l.id);
+          const grandchildIds = state.aiLabels.filter((l) => l.parentId && childIds.includes(l.parentId)).map((l) => l.id);
+          const toDelete = new Set([id, ...childIds, ...grandchildIds]);
+          return { aiLabels: state.aiLabels.filter((l) => !toDelete.has(l.id)) };
+        }),
+      addAILabelGroup: (group) =>
+        set((state) => ({ aiLabelGroups: [...state.aiLabelGroups, group] })),
+      updateAILabelGroup: (id, updates) =>
+        set((state) => ({
+          aiLabelGroups: state.aiLabelGroups.map((g) => g.id === id ? { ...g, ...updates } : g)
+        })),
+      deleteAILabelGroup: (id) =>
+        set((state) => ({
+          aiLabelGroups: state.aiLabelGroups.filter((g) => g.id !== id),
+          aiLabels: state.aiLabels.filter((l) => l.groupId !== id)
+        })),
+
+      // 知识库管理
+      knowledgeBases: [
+        { id: 'kb_1', name: '产品知识库', description: '公司产品信息、规格参数、价格体系', color: '#3B82F6', documentCount: 3, createdAt: '2025-01-15', updatedAt: '2025-02-01' },
+        { id: 'kb_2', name: 'FAQ知识库', description: '常见问题与标准回复', color: '#22C55E', documentCount: 2, createdAt: '2025-01-20', updatedAt: '2025-01-28' },
+        { id: 'kb_3', name: '售后政策', description: '退换货、保修、物流等售后相关政策', color: '#F59E0B', documentCount: 1, createdAt: '2025-02-01', updatedAt: '2025-02-05' },
+      ] as KnowledgeBase[],
+      knowledgeDocuments: [
+        { id: 'doc_1', knowledgeBaseId: 'kb_1', fileName: '2025产品目录.pdf', fileSize: 2456000, fileType: 'pdf', status: 'ready', enabled: true, uploadedAt: '2025-01-15', updatedAt: '2025-01-15' },
+        { id: 'doc_2', knowledgeBaseId: 'kb_1', fileName: '产品规格参数表.xlsx', fileSize: 890000, fileType: 'xlsx', status: 'ready', enabled: true, uploadedAt: '2025-01-18', updatedAt: '2025-01-18' },
+        { id: 'doc_3', knowledgeBaseId: 'kb_1', fileName: '价格体系说明.docx', fileSize: 345000, fileType: 'docx', status: 'ready', enabled: false, uploadedAt: '2025-01-20', updatedAt: '2025-01-20' },
+        { id: 'doc_4', knowledgeBaseId: 'kb_2', fileName: '常见问题汇总.pdf', fileSize: 1200000, fileType: 'pdf', status: 'ready', enabled: true, uploadedAt: '2025-01-20', updatedAt: '2025-01-20' },
+        { id: 'doc_5', knowledgeBaseId: 'kb_2', fileName: '标准回复模板.txt', fileSize: 56000, fileType: 'txt', status: 'processing', enabled: true, uploadedAt: '2025-01-28', updatedAt: '2025-01-28' },
+        { id: 'doc_6', knowledgeBaseId: 'kb_3', fileName: '售后服务政策2025.pdf', fileSize: 780000, fileType: 'pdf', status: 'ready', enabled: true, uploadedAt: '2025-02-01', updatedAt: '2025-02-01' },
+      ] as KnowledgeDocument[],
+      addKnowledgeBase: (kb) =>
+        set((state) => ({ knowledgeBases: [...state.knowledgeBases, kb] })),
+      updateKnowledgeBase: (id, updates) =>
+        set((state) => ({
+          knowledgeBases: state.knowledgeBases.map((kb) => kb.id === id ? { ...kb, ...updates } : kb)
+        })),
+      deleteKnowledgeBase: (id) =>
+        set((state) => ({
+          knowledgeBases: state.knowledgeBases.filter((kb) => kb.id !== id),
+          knowledgeDocuments: state.knowledgeDocuments.filter((d) => d.knowledgeBaseId !== id)
+        })),
+      addKnowledgeDocument: (doc) =>
+        set((state) => ({ knowledgeDocuments: [...state.knowledgeDocuments, doc] })),
+      updateKnowledgeDocument: (id, updates) =>
+        set((state) => ({
+          knowledgeDocuments: state.knowledgeDocuments.map((d) => d.id === id ? { ...d, ...updates } : d)
+        })),
+      deleteKnowledgeDocument: (id) =>
+        set((state) => ({
+          knowledgeDocuments: state.knowledgeDocuments.filter((d) => d.id !== id)
+        })),
+
       // AI统计数据
       aiStats: mockAIStats,
     }),

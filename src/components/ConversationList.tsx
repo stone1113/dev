@@ -15,8 +15,6 @@ import {
   ShoppingBag,
   Search,
   CheckCheck,
-  Clock,
-  AlertCircle,
   Bot,
   Sparkles,
   Users
@@ -37,12 +35,12 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   ShoppingBag,
 };
 
-const priorityIcons = {
-  low: null,
-  medium: <Clock className="w-3 h-3 text-amber-500" />,
-  high: <AlertCircle className="w-3 h-3 text-red-500" />,
-  urgent: <AlertCircle className="w-3 h-3 text-red-600" />,
-};
+// const priorityIcons = {
+//   low: null,
+//   medium: <Clock className="w-3 h-3 text-amber-500" />,
+//   high: <AlertCircle className="w-3 h-3 text-red-500" />,
+//   urgent: <AlertCircle className="w-3 h-3 text-red-600" />,
+// };
 
 interface ConversationListProps {
   onSelectConversation?: (conversation: Conversation) => void;
@@ -51,7 +49,7 @@ interface ConversationListProps {
 
 export const ConversationList: React.FC<ConversationListProps> = ({
   onSelectConversation,
-  onFilterClick
+  onFilterClick: _onFilterClick
 }) => {
   const {
     getFilteredConversations,

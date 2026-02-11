@@ -229,6 +229,10 @@ export interface Organization {
   status: 'active' | 'inactive' | 'expired';
   expiresAt?: Date;
   boundAccounts?: BoundAccount[];
+  aiSeats?: {
+    total: number;
+    used: number;
+  };
 }
 
 // 部门节点
@@ -242,6 +246,14 @@ export interface Department {
 }
 
 // 激活码
+export interface AiPlatformConfig {
+  platformId: string;
+  aiSalesChat?: boolean;
+  aiProactiveMarketing?: boolean;
+  aiRecall?: boolean;
+  aiQualityCheck?: boolean;
+}
+
 export interface ActivationCode {
   id: string;
   code: string;
@@ -254,6 +266,92 @@ export interface ActivationCode {
   activatedAt?: Date;
   expiresAt?: Date;
   remark?: string;
+  platforms?: string[];
+  aiPlatforms?: AiPlatformConfig[];
+  aiSeatLimit?: number;       // 该激活码可开启的AI坐席上限
+  aiSeatUsed?: number;        // 该激活码已使用的AI坐席数
+  aiAllocationMode?: 'fixed' | 'auto'; // 分配模式：固定分配/自动分配
+  aiFixedAccountIds?: string[];         // 固定分配模式下指定的客服账号ID列表
+}
+
+// AI标签管理 —— 四级树形结构
+// 一级：行业（制造业、消费品…）
+// 二级：维度（用户画像、联系人信息、公司信息、会话标签）
+// 三级：字段（客户等级、客户类型、意向品类…）
+// 四级：可选值（A级-已成交、批发商、鞋类…）
+export interface AILabelGroup {
+  id: string;
+  name: string;
+  icon?: string;
+  color: string;
+  order: number;
+}
+
+export interface AILabel {
+  id: string;
+  groupId: string;
+  parentId?: string | null; // 父节点ID
+  level: 1 | 2 | 3 | 4;    // 1=行业, 2=维度, 3=字段, 4=可选值
+  name: string;
+  color: string;
+  description?: string;
+  isSystem?: boolean;
+  order?: number;           // 同级排序
+  selectMode?: 'single' | 'multiple'; // 仅三级字段有效：单选/多选
+  inputType?: 'select' | 'text';      // 仅三级字段有效：选择/文本框，默认 select
+}
+
+// 知识库
+export interface KnowledgeBase {
+  id: string;
+  name: string;
+  description?: string;
+  color: string;
+  documentCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface KnowledgeDocument {
+  id: string;
+  knowledgeBaseId: string;
+  fileName: string;
+  fileSize: number;       // bytes
+  fileType: string;       // pdf, docx, txt, csv, xlsx
+  status: 'processing' | 'ready' | 'error';
+  enabled: boolean;
+  uploadedAt: string;
+  updatedAt: string;
+}
+
+// AI员工人设模板
+export type AIPersonaTemplate = 'sales' | 'support' | 'brand';
+
+// AI员工配置
+export interface AIEmployeeConfig {
+  id: string;
+  name: string;                    // AI员工对外昵称
+  avatar?: string;
+  language: string;                // 首选回复语言
+  personaTemplate: AIPersonaTemplate;
+  status: 'online' | 'offline';
+  // 工作时间
+  timezone: string;
+  workStartTime: string;
+  workEndTime: string;
+  workDays: number[];              // 0=Sun, 1=Mon ... 6=Sat
+  // 各平台能力配置
+  platformCapabilities: AIPlatformCapability[];
+  // 激活的平台列表
+  activePlatforms: string[];
+}
+
+export interface AIPlatformCapability {
+  platformId: string;
+  aiSalesChat: boolean;
+  aiProactiveMarketing: boolean;
+  aiRecall: boolean;
+  aiQualityCheck: boolean;
 }
 
 // 用户设置

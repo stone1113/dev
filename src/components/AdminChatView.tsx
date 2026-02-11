@@ -3,10 +3,7 @@ import {
   Key,
   Search,
   ChevronDown,
-  RefreshCw,
   Download,
-  Filter,
-  FolderTree,
   SlidersHorizontal,
   MessageCircle,
   Send,
@@ -31,7 +28,7 @@ import { ContactList } from './ContactList';
 import { RightMenuBar, type RightPanelType } from './RightMenuBar';
 import { AdvancedFilterPanel } from './AdvancedFilterPanel';
 import { User } from 'lucide-react';
-import type { ActivationCode, Platform, PlatformAccount } from '@/types';
+import type { ActivationCode, Platform } from '@/types';
 
 interface AdminChatViewProps {
   initialCode?: ActivationCode | null;
@@ -58,7 +55,7 @@ export const AdminChatView: React.FC<AdminChatViewProps> = ({ initialCode, onCle
   }, [initialCode]);
 
   const allCodeList = activationCodes.filter(c => c.status !== 'unused');
-  const selectedCode = activationCodes.find(c => c.id === selectedCodeId);
+  // const selectedCode = activationCodes.find(c => c.id === selectedCodeId);
 
   return (
     <div className="h-full flex flex-col">

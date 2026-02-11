@@ -154,17 +154,17 @@ export const BroadcastMessage: React.FC<BroadcastMessageProps> = ({ onClose, sel
   const [sendMode, setSendMode] = useState<SendMode>('original');
   const [sendTime, setSendTime] = useState<SendTime>('immediate');
   const [sendPattern, setSendPattern] = useState<SendPattern>('all');
-  const [messageContent, setMessageContent] = useState('');
+  // const [messageContent, setMessageContent] = useState('');
   const [messageItems, setMessageItems] = useState<MessageItem[]>([]);
   const [_editingItemId, setEditingItemId] = useState<string | null>(null);
   const [messageInterval, setMessageInterval] = useState({ min: 2, max: 26 });
   const [contactInterval, setContactInterval] = useState({ min: 2, max: 6 });
 
   // AI 相关状态
-  const [aiPrompt, setAiPrompt] = useState('');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedVariants, setGeneratedVariants] = useState<string[]>([]);
-  const [selectedVariantIndex, setSelectedVariantIndex] = useState<number>(0);
+  // const [aiPrompt, setAiPrompt] = useState('');
+  // const [isGenerating, setIsGenerating] = useState(false);
+  // const [generatedVariants, setGeneratedVariants] = useState<string[]>([]);
+  // const [selectedVariantIndex, setSelectedVariantIndex] = useState<number>(0);
   const [scheduledDate, setScheduledDate] = useState('');
   const [scheduledTime, setScheduledTime] = useState('');
 
@@ -172,7 +172,7 @@ export const BroadcastMessage: React.FC<BroadcastMessageProps> = ({ onClose, sel
   const [showKnowledgePanel, setShowKnowledgePanel] = useState(false);
   const [selectedKnowledgeBase, setSelectedKnowledgeBase] = useState<string>('');
   const [selectedKnowledgeItems, setSelectedKnowledgeItems] = useState<Set<string>>(new Set());
-  const [knowledgeSearchQuery, setKnowledgeSearchQuery] = useState('');
+  // const [knowledgeSearchQuery, setKnowledgeSearchQuery] = useState('');
 
   // 智能收件人建议相关状态
   const [showSuggestionPanel, setShowSuggestionPanel] = useState(false);
@@ -189,10 +189,10 @@ export const BroadcastMessage: React.FC<BroadcastMessageProps> = ({ onClose, sel
   const [sourceLanguage, setSourceLanguage] = useState('zh');
   const [targetLanguage, setTargetLanguage] = useState('auto');
   const [translationEngine, setTranslationEngine] = useState('google');
-  const [showTranslationPreview, setShowTranslationPreview] = useState(false);
+  // const [showTranslationPreview, setShowTranslationPreview] = useState(false);
   const [showTranslationSettings, setShowTranslationSettings] = useState(true);
-  const [translatedContent, setTranslatedContent] = useState('');
-  const [isTranslating, setIsTranslating] = useState(false);
+  // const [translatedContent, setTranslatedContent] = useState('');
+  // const [isTranslating, setIsTranslating] = useState(false);
 
   const toggleAgent = (id: string) => {
     const newSelected = new Set(selectedAgents);
@@ -319,74 +319,67 @@ export const BroadcastMessage: React.FC<BroadcastMessageProps> = ({ onClose, sel
   };
 
   // AI 生成消息内容（结合知识库）
-  const handleAIGenerate = async () => {
-    if (!aiPrompt.trim() && selectedKnowledgeItems.size === 0) return;
-    setIsGenerating(true);
+  // const handleAIGenerate = async () => {
+  //   if (!aiPrompt.trim() && selectedKnowledgeItems.size === 0) return;
+  //   setIsGenerating(true);
+  //   const selectedItemsTexts: string[] = [];
+  //   Object.values(mockKnowledgeItems).forEach(items => {
+  //     items.forEach(item => {
+  //       if (selectedKnowledgeItems.has(item.id)) {
+  //         selectedItemsTexts.push(item.content);
+  //       }
+  //     });
+  //   });
+  //   try {
+  //     const variants = await generateMessage({
+  //       prompt: aiPrompt,
+  //       knowledgeTexts: selectedItemsTexts,
+  //       tone: sendMode === 'smart' ? 'friendly' : 'professional',
+  //       maxVariants: 1,
+  //     });
+  //     setGeneratedVariants(variants);
+  //     setSelectedVariantIndex(0);
+  //   } catch (e) {
+  //     // ignore for now
+  //   } finally {
+  //     setIsGenerating(false);
+  //   }
+  // };
 
-    // 获取选中的知识库文本
-    const selectedItemsTexts: string[] = [];
-    Object.values(mockKnowledgeItems).forEach(items => {
-      items.forEach(item => {
-        if (selectedKnowledgeItems.has(item.id)) {
-          selectedItemsTexts.push(item.content);
-        }
-      });
-    });
-
-    try {
-      const variants = await generateMessage({
-        prompt: aiPrompt,
-        knowledgeTexts: selectedItemsTexts,
-        tone: sendMode === 'smart' ? 'friendly' : 'professional',
-        maxVariants: 1,
-      });
-
-      setGeneratedVariants(variants);
-      setSelectedVariantIndex(0);
-    } catch (e) {
-      // ignore for now
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const handleAIOptimize = async () => {
-    if (!messageContent.trim()) return;
-    setIsGenerating(true);
-    try {
-      const optimized = await optimizeMessage(messageContent, sendMode === 'smart' ? 'friendly' : 'professional');
-      setGeneratedVariants([optimized]);
-      setSelectedVariantIndex(0);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
+  // const handleAIOptimize = async () => {
+  //   if (!messageContent.trim()) return;
+  //   setIsGenerating(true);
+  //   try {
+  //     const optimized = await optimizeMessage(messageContent, sendMode === 'smart' ? 'friendly' : 'professional');
+  //     setGeneratedVariants([optimized]);
+  //     setSelectedVariantIndex(0);
+  //   } finally {
+  //     setIsGenerating(false);
+  //   }
+  // };
 
   // 翻译预览
-  const handleTranslatePreview = async () => {
-    if (!messageContent.trim()) return;
-    setIsTranslating(true);
-
-    // 模拟翻译（实际应调用翻译 API）
-    setTimeout(() => {
-      const targetLang = languages.find(l => l.code === targetLanguage);
-      // 模拟翻译结果
-      const mockTranslations: Record<string, string> = {
-        en: `Dear customer, ${messageContent.slice(0, 50)}... [Translated to English]`,
-        ja: `お客様へ、${messageContent.slice(0, 30)}... [日本語に翻訳]`,
-        ko: `고객님께, ${messageContent.slice(0, 30)}... [한국어로 번역]`,
-        es: `Estimado cliente, ${messageContent.slice(0, 40)}... [Traducido al español]`,
-      };
-      setTranslatedContent(mockTranslations[targetLanguage] || `[${targetLang?.name}] ${messageContent}`);
-      setShowTranslationPreview(true);
-      setIsTranslating(false);
-    }, 1000);
-  };
+  // const handleTranslatePreview = async () => {
+  //   if (!messageContent.trim()) return;
+  //   setIsTranslating(true);
+  //   setTimeout(() => {
+  //     const targetLang = languages.find(l => l.code === targetLanguage);
+  //     const mockTranslations: Record<string, string> = {
+  //       en: `Dear customer, ${messageContent.slice(0, 50)}... [Translated to English]`,
+  //       ja: `お客様へ、${messageContent.slice(0, 30)}... [日本語に翻訳]`,
+  //       ko: `고객님께, ${messageContent.slice(0, 30)}... [한국어로 번역]`,
+  //       es: `Estimado cliente, ${messageContent.slice(0, 40)}... [Traducido al español]`,
+  //     };
+  //     setTranslatedContent(mockTranslations[targetLanguage] || `[${targetLang?.name}] ${messageContent}`);
+  //     setShowTranslationPreview(true);
+  //     setIsTranslating(false);
+  //   }, 1000);
+  // };
 
   // 插入知识库内容
-  const insertKnowledgeContent = (item: KnowledgeItem) => {
-    setMessageContent(prev => prev ? `${prev}\n\n${item.content}` : item.content);
-  };
+  // const insertKnowledgeContent = (item: KnowledgeItem) => {
+  //   setMessageContent(prev => prev ? `${prev}\n\n${item.content}` : item.content);
+  // };
 
   // 当前正在AI生成的消息项ID
   const [generatingItemId, setGeneratingItemId] = useState<string | null>(null);

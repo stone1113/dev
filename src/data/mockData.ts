@@ -1,4 +1,4 @@
-import type { PlatformConfig, Conversation, CustomerProfile, UserSettings, AIReplySuggestion, PlatformAccount, ProxyConfig, Department, ActivationCode } from '@/types';
+import type { PlatformConfig, Conversation, CustomerProfile, UserSettings, AIReplySuggestion, PlatformAccount, ProxyConfig, Department, ActivationCode, AIEmployeeConfig, AILabelGroup, AILabel } from '@/types';
 
 // 平台配置
 export const platformConfigs: PlatformConfig[] = [
@@ -1229,19 +1229,228 @@ export const mockDepartments: Department[] = [
 
 // 激活码列表数据
 export const mockActivationCodes: ActivationCode[] = [
-  { id: 'ac_001', code: 'QXMS-SA01-2024', departmentId: 'dept_sales_domestic', departmentName: '国内销售组', assignedTo: '张三', role: 'agent', status: 'active', createdAt: new Date('2024-06-01'), activatedAt: new Date('2024-06-02'), expiresAt: new Date('2025-12-31'), remark: '销售主力' },
-  { id: 'ac_002', code: 'QXMS-SA02-2024', departmentId: 'dept_sales_domestic', departmentName: '国内销售组', assignedTo: '李四', role: 'agent', status: 'active', createdAt: new Date('2024-06-01'), activatedAt: new Date('2024-06-05'), expiresAt: new Date('2025-12-31') },
-  { id: 'ac_003', code: 'QXMS-SA03-2024', departmentId: 'dept_sales_domestic', departmentName: '国内销售组', role: 'agent', status: 'unused', createdAt: new Date('2024-08-15'), expiresAt: new Date('2025-12-31'), remark: '预留' },
-  { id: 'ac_004', code: 'QXMS-SO01-2024', departmentId: 'dept_sales_overseas', departmentName: '海外销售组', assignedTo: 'David', role: 'agent', status: 'active', createdAt: new Date('2024-06-01'), activatedAt: new Date('2024-06-03'), expiresAt: new Date('2025-12-31') },
-  { id: 'ac_005', code: 'QXMS-SO02-2024', departmentId: 'dept_sales_overseas', departmentName: '海外销售组', assignedTo: 'Emily', role: 'agent', status: 'active', createdAt: new Date('2024-07-01'), activatedAt: new Date('2024-07-02'), expiresAt: new Date('2025-12-31') },
-  { id: 'ac_006', code: 'QXMS-SO03-2024', departmentId: 'dept_sales_overseas', departmentName: '海外销售组', role: 'agent', status: 'expired', createdAt: new Date('2024-01-01'), expiresAt: new Date('2024-06-30'), remark: '已过期' },
-  { id: 'ac_007', code: 'QXMS-CP01-2024', departmentId: 'dept_cs_pre', departmentName: '售前客服组', assignedTo: '小美', role: 'agent', status: 'active', createdAt: new Date('2024-06-01'), activatedAt: new Date('2024-06-01'), expiresAt: new Date('2025-12-31') },
-  { id: 'ac_008', code: 'QXMS-CP02-2024', departmentId: 'dept_cs_pre', departmentName: '售前客服组', assignedTo: '小红', role: 'agent', status: 'active', createdAt: new Date('2024-06-01'), activatedAt: new Date('2024-06-01'), expiresAt: new Date('2025-12-31') },
-  { id: 'ac_009', code: 'QXMS-CA01-2024', departmentId: 'dept_cs_after', departmentName: '售后客服组', assignedTo: '王五', role: 'agent', status: 'disabled', createdAt: new Date('2024-06-01'), activatedAt: new Date('2024-06-10'), expiresAt: new Date('2025-12-31'), remark: '已离职' },
-  { id: 'ac_010', code: 'QXMS-CA02-2024', departmentId: 'dept_cs_after', departmentName: '售后客服组', assignedTo: '赵六', role: 'agent', status: 'active', createdAt: new Date('2024-08-01'), activatedAt: new Date('2024-08-02'), expiresAt: new Date('2025-12-31') },
-  { id: 'ac_011', code: 'QXMS-CA03-2024', departmentId: 'dept_cs_after', departmentName: '售后客服组', role: 'agent', status: 'unused', createdAt: new Date('2024-10-01'), expiresAt: new Date('2025-12-31') },
-  { id: 'ac_012', code: 'QXMS-OP01-2024', departmentId: 'dept_ops', departmentName: '运营部', assignedTo: '陈七', role: 'manager', status: 'active', createdAt: new Date('2024-06-01'), activatedAt: new Date('2024-06-01'), expiresAt: new Date('2025-12-31'), remark: '运营主管' },
-  { id: 'ac_013', code: 'QXMS-OP02-2024', departmentId: 'dept_ops', departmentName: '运营部', assignedTo: '周八', role: 'agent', status: 'active', createdAt: new Date('2024-06-01'), activatedAt: new Date('2024-06-05'), expiresAt: new Date('2025-12-31') },
-  { id: 'ac_014', code: 'QXMS-OP03-2024', departmentId: 'dept_ops', departmentName: '运营部', role: 'agent', status: 'unused', createdAt: new Date('2024-11-01'), expiresAt: new Date('2025-12-31') },
-  { id: 'ac_015', code: 'QXMS-AD01-2024', departmentId: 'dept_root', departmentName: '示例企业', assignedTo: '管理员', role: 'admin', status: 'active', createdAt: new Date('2024-01-01'), activatedAt: new Date('2024-01-01'), expiresAt: new Date('2025-12-31'), remark: '超级管理员' },
+  { id: 'ac_001', code: 'QXMS-SA01-2024', departmentId: 'dept_sales_domestic', departmentName: '国内销售组', assignedTo: '张三', role: 'agent', status: 'active', createdAt: new Date('2024-06-01'), activatedAt: new Date('2024-06-02'), expiresAt: new Date('2025-12-31'), remark: '销售主力', platforms: ['whatsapp', 'telegram'], aiAllocationMode: 'fixed', aiFixedAccountIds: ['wa_sarah_main', 'tg_sarah_01'], aiPlatforms: [
+    { platformId: 'whatsapp', aiSalesChat: true, aiProactiveMarketing: true, aiRecall: false, aiQualityCheck: true },
+    { platformId: 'telegram', aiSalesChat: true, aiProactiveMarketing: false, aiRecall: true, aiQualityCheck: true },
+  ] , aiSeatLimit: 3, aiSeatUsed: 2 },
+  { id: 'ac_002', code: 'QXMS-SA02-2024', departmentId: 'dept_sales_domestic', departmentName: '国内销售组', assignedTo: '李四', role: 'agent', status: 'active', createdAt: new Date('2024-06-01'), activatedAt: new Date('2024-06-05'), expiresAt: new Date('2025-12-31'), platforms: ['whatsapp', 'line'], aiSeatLimit: 2, aiSeatUsed: 1, aiAllocationMode: 'auto', aiPlatforms: [
+    { platformId: 'whatsapp', aiSalesChat: true, aiProactiveMarketing: false, aiRecall: false, aiQualityCheck: true },
+    { platformId: 'line', aiSalesChat: false, aiProactiveMarketing: true, aiRecall: false, aiQualityCheck: false },
+  ] },
+  { id: 'ac_003', code: 'QXMS-SA03-2024', departmentId: 'dept_sales_domestic', departmentName: '国内销售组', role: 'agent', status: 'unused', createdAt: new Date('2024-08-15'), expiresAt: new Date('2025-12-31'), remark: '预留', aiSeatLimit: 2, aiSeatUsed: 0 },
+  { id: 'ac_004', code: 'QXMS-SO01-2024', departmentId: 'dept_sales_overseas', departmentName: '海外销售组', assignedTo: 'David', role: 'agent', status: 'active', createdAt: new Date('2024-06-01'), activatedAt: new Date('2024-06-03'), expiresAt: new Date('2025-12-31'), platforms: ['whatsapp', 'telegram', 'instagram'], aiSeatLimit: 3, aiSeatUsed: 3, aiAllocationMode: 'fixed', aiFixedAccountIds: ['wa_david_01', 'tg_david_01', 'ig_david_01'], aiPlatforms: [
+    { platformId: 'whatsapp', aiSalesChat: true, aiProactiveMarketing: true, aiRecall: true, aiQualityCheck: true },
+    { platformId: 'telegram', aiSalesChat: true, aiProactiveMarketing: false, aiRecall: true, aiQualityCheck: false },
+    { platformId: 'instagram', aiSalesChat: false, aiProactiveMarketing: true, aiRecall: false, aiQualityCheck: true },
+  ] },
+  { id: 'ac_005', code: 'QXMS-SO02-2024', departmentId: 'dept_sales_overseas', departmentName: '海外销售组', assignedTo: 'Emily', role: 'agent', status: 'active', createdAt: new Date('2024-07-01'), activatedAt: new Date('2024-07-02'), expiresAt: new Date('2025-12-31'), platforms: ['facebook', 'instagram'], aiSeatLimit: 2, aiSeatUsed: 2, aiAllocationMode: 'auto', aiPlatforms: [
+    { platformId: 'facebook', aiSalesChat: false, aiProactiveMarketing: true, aiRecall: false, aiQualityCheck: false },
+    { platformId: 'instagram', aiSalesChat: true, aiProactiveMarketing: false, aiRecall: false, aiQualityCheck: true },
+  ] },
+  { id: 'ac_006', code: 'QXMS-SO03-2024', departmentId: 'dept_sales_overseas', departmentName: '海外销售组', role: 'agent', status: 'expired', createdAt: new Date('2024-01-01'), expiresAt: new Date('2024-06-30'), remark: '已过期', aiSeatLimit: 0, aiSeatUsed: 0 },
+  { id: 'ac_007', code: 'QXMS-CP01-2024', departmentId: 'dept_cs_pre', departmentName: '售前客服组', assignedTo: '小美', role: 'agent', status: 'active', createdAt: new Date('2024-06-01'), activatedAt: new Date('2024-06-01'), expiresAt: new Date('2025-12-31'), platforms: ['wechat', 'whatsapp'], aiSeatLimit: 2, aiSeatUsed: 2, aiAllocationMode: 'fixed', aiFixedAccountIds: ['wx_xiaomei_01', 'wa_xiaomei_01'], aiPlatforms: [
+    { platformId: 'wechat', aiSalesChat: true, aiProactiveMarketing: false, aiRecall: true, aiQualityCheck: true },
+    { platformId: 'whatsapp', aiSalesChat: false, aiProactiveMarketing: true, aiRecall: false, aiQualityCheck: true },
+  ] },
+  { id: 'ac_008', code: 'QXMS-CP02-2024', departmentId: 'dept_cs_pre', departmentName: '售前客服组', assignedTo: '小红', role: 'agent', status: 'active', createdAt: new Date('2024-06-01'), activatedAt: new Date('2024-06-01'), expiresAt: new Date('2025-12-31'), platforms: ['line', 'telegram'], aiSeatLimit: 2, aiSeatUsed: 1, aiAllocationMode: 'auto', aiPlatforms: [
+    { platformId: 'line', aiSalesChat: false, aiProactiveMarketing: false, aiRecall: false, aiQualityCheck: true },
+    { platformId: 'telegram', aiSalesChat: true, aiProactiveMarketing: false, aiRecall: false, aiQualityCheck: false },
+  ] },
+  { id: 'ac_009', code: 'QXMS-CA01-2024', departmentId: 'dept_cs_after', departmentName: '售后客服组', assignedTo: '王五', role: 'agent', status: 'disabled', createdAt: new Date('2024-06-01'), activatedAt: new Date('2024-06-10'), expiresAt: new Date('2025-12-31'), remark: '已离职', aiSeatLimit: 0, aiSeatUsed: 0 },
+  { id: 'ac_010', code: 'QXMS-CA02-2024', departmentId: 'dept_cs_after', departmentName: '售后客服组', assignedTo: '赵六', role: 'agent', status: 'active', createdAt: new Date('2024-08-01'), activatedAt: new Date('2024-08-02'), expiresAt: new Date('2025-12-31'), platforms: ['email', 'whatsapp'], aiSeatLimit: 2, aiSeatUsed: 2, aiAllocationMode: 'fixed', aiFixedAccountIds: ['email_zhaoliu_01', 'wa_zhaoliu_01'], aiPlatforms: [
+    { platformId: 'email', aiSalesChat: true, aiProactiveMarketing: true, aiRecall: true, aiQualityCheck: false },
+    { platformId: 'whatsapp', aiSalesChat: true, aiProactiveMarketing: false, aiRecall: true, aiQualityCheck: false },
+  ] },
+  { id: 'ac_011', code: 'QXMS-CA03-2024', departmentId: 'dept_cs_after', departmentName: '售后客服组', role: 'agent', status: 'unused', createdAt: new Date('2024-10-01'), expiresAt: new Date('2025-12-31'), aiSeatLimit: 1, aiSeatUsed: 0 },
+  { id: 'ac_012', code: 'QXMS-OP01-2024', departmentId: 'dept_ops', departmentName: '运营部', assignedTo: '陈七', role: 'manager', status: 'active', createdAt: new Date('2024-06-01'), activatedAt: new Date('2024-06-01'), expiresAt: new Date('2025-12-31'), remark: '运营主管', platforms: ['tiktok', 'twitter', 'shopify'], aiSeatLimit: 3, aiSeatUsed: 3, aiAllocationMode: 'auto', aiPlatforms: [
+    { platformId: 'tiktok', aiSalesChat: true, aiProactiveMarketing: true, aiRecall: true, aiQualityCheck: true },
+    { platformId: 'twitter', aiSalesChat: true, aiProactiveMarketing: true, aiRecall: false, aiQualityCheck: true },
+    { platformId: 'shopify', aiSalesChat: false, aiProactiveMarketing: true, aiRecall: true, aiQualityCheck: false },
+  ] },
+  { id: 'ac_013', code: 'QXMS-OP02-2024', departmentId: 'dept_ops', departmentName: '运营部', assignedTo: '周八', role: 'agent', status: 'active', createdAt: new Date('2024-06-01'), activatedAt: new Date('2024-06-05'), expiresAt: new Date('2025-12-31'), platforms: ['wechat'], aiSeatLimit: 1, aiSeatUsed: 0, aiPlatforms: [
+    { platformId: 'wechat', aiSalesChat: false, aiProactiveMarketing: false, aiRecall: false, aiQualityCheck: false },
+  ] },
+  { id: 'ac_014', code: 'QXMS-OP03-2024', departmentId: 'dept_ops', departmentName: '运营部', role: 'agent', status: 'unused', createdAt: new Date('2024-11-01'), expiresAt: new Date('2025-12-31'), aiSeatLimit: 1, aiSeatUsed: 0 },
+  { id: 'ac_015', code: 'QXMS-AD01-2024', departmentId: 'dept_root', departmentName: '示例企业', assignedTo: '管理员', role: 'admin', status: 'active', createdAt: new Date('2024-01-01'), activatedAt: new Date('2024-01-01'), expiresAt: new Date('2025-12-31'), remark: '超级管理员', platforms: ['whatsapp', 'telegram', 'line', 'wechat'], aiSeatLimit: 4, aiSeatUsed: 4, aiPlatforms: [
+    { platformId: 'whatsapp', aiSalesChat: true, aiProactiveMarketing: true, aiRecall: true, aiQualityCheck: true },
+    { platformId: 'telegram', aiSalesChat: true, aiProactiveMarketing: true, aiRecall: true, aiQualityCheck: true },
+    { platformId: 'line', aiSalesChat: true, aiProactiveMarketing: false, aiRecall: true, aiQualityCheck: true },
+    { platformId: 'wechat', aiSalesChat: true, aiProactiveMarketing: true, aiRecall: false, aiQualityCheck: true },
+  ] },
+];
+
+// AI员工配置数据
+export const mockAIEmployeeConfig: AIEmployeeConfig = {
+  id: 'ai_emp_001',
+  name: 'Sarah - AI销售员工',
+  avatar: '',
+  language: 'en-US',
+  personaTemplate: 'sales',
+  status: 'online',
+  timezone: 'Asia/Shanghai',
+  workStartTime: '09:00',
+  workEndTime: '18:00',
+  workDays: [1, 2, 3, 4, 5],
+  activePlatforms: ['whatsapp', 'facebook', 'instagram', 'telegram'],
+  platformCapabilities: [
+    { platformId: 'whatsapp', aiSalesChat: true, aiProactiveMarketing: false, aiRecall: true, aiQualityCheck: true },
+    { platformId: 'facebook', aiSalesChat: true, aiProactiveMarketing: false, aiRecall: false, aiQualityCheck: false },
+    { platformId: 'instagram', aiSalesChat: false, aiProactiveMarketing: true, aiRecall: false, aiQualityCheck: false },
+    { platformId: 'telegram', aiSalesChat: true, aiProactiveMarketing: false, aiRecall: true, aiQualityCheck: true },
+  ],
+};
+
+// AI标签分组 —— 一级：行业
+export const mockAILabelGroups: AILabelGroup[] = [
+  { id: 'grp_mfg', name: '制造业', color: '#A855F7', order: 1 },
+  { id: 'grp_consumer', name: '消费品', color: '#8B5CF6', order: 2 },
+  { id: 'grp_tech', name: '科技与电子', color: '#6366F1', order: 3 },
+  { id: 'grp_build', name: '建筑与家居', color: '#14B8A6', order: 4 },
+  { id: 'grp_auto', name: '汽车与交通', color: '#F59E0B', order: 5 },
+  { id: 'grp_health', name: '医疗与健康', color: '#EF4444', order: 6 },
+  { id: 'grp_service', name: '服务业', color: '#EC4899', order: 7 },
+];
+
+// AI标签数据 —— 三级树形结构（所有行业共享同一套二级维度和三级字段）
+// level 1 = 行业子分类（归属于 group）
+// level 2 = 维度（用户画像/联系人信息/公司信息/会话标签）
+// level 3 = 具体标签字段
+export const mockAILabels: AILabel[] = [
+  // ========== 二级：用户画像 ==========
+  { id: 'dim_profile', groupId: '', level: 2, name: '用户画像', color: '#FF6B35', isSystem: true, order: 1 },
+
+  // 三级字段：客户等级
+  { id: 'field_level', groupId: '', parentId: 'dim_profile', level: 3, name: '客户等级', color: '#FF6B35', isSystem: true, order: 1, selectMode: 'single' as const },
+  { id: 'lb_level_a', groupId: '', parentId: 'field_level', level: 4, name: 'A级 - 已成交', color: '#FF6B35', isSystem: true, order: 1 },
+  { id: 'lb_level_b', groupId: '', parentId: 'field_level', level: 4, name: 'B级 - 高意向询价', color: '#F59E0B', isSystem: true, order: 2 },
+  { id: 'lb_level_c', groupId: '', parentId: 'field_level', level: 4, name: 'C级 - 观望', color: '#3B82F6', isSystem: true, order: 3 },
+  { id: 'lb_level_d', groupId: '', parentId: 'field_level', level: 4, name: 'D级 - 仅加好友', color: '#9CA3AF', isSystem: true, order: 4 },
+
+  // 三级字段：客户类型
+  { id: 'field_type', groupId: '', parentId: 'dim_profile', level: 3, name: '客户类型', color: '#3B82F6', isSystem: true, order: 2, selectMode: 'multiple' as const },
+  { id: 'lb_type_1', groupId: '', parentId: 'field_type', level: 4, name: '批发商', color: '#3B82F6', isSystem: true, order: 1 },
+  { id: 'lb_type_2', groupId: '', parentId: 'field_type', level: 4, name: '平台卖家', color: '#3B82F6', isSystem: true, order: 2 },
+  { id: 'lb_type_3', groupId: '', parentId: 'field_type', level: 4, name: '零售终端', color: '#3B82F6', isSystem: true, order: 3 },
+  { id: 'lb_type_4', groupId: '', parentId: 'field_type', level: 4, name: '品牌代理', color: '#3B82F6', isSystem: true, order: 4 },
+  { id: 'lb_type_5', groupId: '', parentId: 'field_type', level: 4, name: '个人消费者', color: '#3B82F6', isSystem: true, order: 5 },
+  // 三级字段：意向品类
+  { id: 'field_category', groupId: '', parentId: 'dim_profile', level: 3, name: '意向品类', color: '#8B5CF6', isSystem: true, order: 3, selectMode: 'multiple' as const },
+  { id: 'lb_cat_1', groupId: '', parentId: 'field_category', level: 4, name: '鞋类', color: '#8B5CF6', isSystem: true, order: 1 },
+  { id: 'lb_cat_2', groupId: '', parentId: 'field_category', level: 4, name: '运动服饰', color: '#8B5CF6', isSystem: true, order: 2 },
+  { id: 'lb_cat_3', groupId: '', parentId: 'field_category', level: 4, name: '电子产品', color: '#8B5CF6', isSystem: true, order: 3 },
+  { id: 'lb_cat_4', groupId: '', parentId: 'field_category', level: 4, name: '家居用品', color: '#8B5CF6', isSystem: true, order: 4 },
+  { id: 'lb_cat_5', groupId: '', parentId: 'field_category', level: 4, name: '美妆护肤', color: '#8B5CF6', isSystem: true, order: 5 },
+  // 三级字段：预算区间
+  { id: 'field_budget', groupId: '', parentId: 'dim_profile', level: 3, name: '预算区间', color: '#10B981', isSystem: true, order: 4, selectMode: 'single' as const },
+  { id: 'lb_bud_1', groupId: '', parentId: 'field_budget', level: 4, name: '低预算 (<$500)', color: '#10B981', isSystem: true, order: 1 },
+  { id: 'lb_bud_2', groupId: '', parentId: 'field_budget', level: 4, name: '中预算 ($500-$5K)', color: '#10B981', isSystem: true, order: 2 },
+  { id: 'lb_bud_3', groupId: '', parentId: 'field_budget', level: 4, name: '高预算 ($5K-$50K)', color: '#10B981', isSystem: true, order: 3 },
+  { id: 'lb_bud_4', groupId: '', parentId: 'field_budget', level: 4, name: '超高预算 (>$50K)', color: '#10B981', isSystem: true, order: 4 },
+  // 三级字段：意向数量
+  { id: 'field_quantity', groupId: '', parentId: 'dim_profile', level: 3, name: '意向数量', color: '#F59E0B', isSystem: true, order: 5, selectMode: 'single' as const },
+  { id: 'lb_qty_1', groupId: '', parentId: 'field_quantity', level: 4, name: '小批量 (<100件)', color: '#F59E0B', isSystem: true, order: 1 },
+  { id: 'lb_qty_2', groupId: '', parentId: 'field_quantity', level: 4, name: '中批量 (100-1000件)', color: '#F59E0B', isSystem: true, order: 2 },
+  { id: 'lb_qty_3', groupId: '', parentId: 'field_quantity', level: 4, name: '大批量 (>1000件)', color: '#F59E0B', isSystem: true, order: 3 },
+  // 三级：购买目的
+  // 三级字段：购买目的
+  { id: 'field_purpose', groupId: '', parentId: 'dim_profile', level: 3, name: '购买目的', color: '#EC4899', isSystem: true, order: 6, selectMode: 'multiple' as const },
+  { id: 'lb_pur_1', groupId: '', parentId: 'field_purpose', level: 4, name: '转售', color: '#EC4899', isSystem: true, order: 1 },
+  { id: 'lb_pur_2', groupId: '', parentId: 'field_purpose', level: 4, name: '自用', color: '#EC4899', isSystem: true, order: 2 },
+  { id: 'lb_pur_3', groupId: '', parentId: 'field_purpose', level: 4, name: '送礼', color: '#EC4899', isSystem: true, order: 3 },
+  { id: 'lb_pur_4', groupId: '', parentId: 'field_purpose', level: 4, name: '代购', color: '#EC4899', isSystem: true, order: 4 },
+  // 三级字段：购买紧迫度
+  { id: 'field_urgency', groupId: '', parentId: 'dim_profile', level: 3, name: '购买紧迫度', color: '#EF4444', isSystem: true, order: 7, selectMode: 'single' as const },
+  { id: 'lb_urg_1', groupId: '', parentId: 'field_urgency', level: 4, name: '本周内', color: '#EF4444', isSystem: true, order: 1 },
+  { id: 'lb_urg_2', groupId: '', parentId: 'field_urgency', level: 4, name: '本月内', color: '#F97316', isSystem: true, order: 2 },
+  { id: 'lb_urg_3', groupId: '', parentId: 'field_urgency', level: 4, name: '近期考虑', color: '#F59E0B', isSystem: true, order: 3 },
+  { id: 'lb_urg_4', groupId: '', parentId: 'field_urgency', level: 4, name: '观望中', color: '#9CA3AF', isSystem: true, order: 4 },
+  // 三级字段：敏感度特征
+  { id: 'field_sensitivity', groupId: '', parentId: 'dim_profile', level: 3, name: '敏感度特征', color: '#6366F1', isSystem: true, order: 8, selectMode: 'multiple' as const },
+  { id: 'lb_sen_1', groupId: '', parentId: 'field_sensitivity', level: 4, name: '价格敏感', color: '#6366F1', isSystem: true, order: 1 },
+  { id: 'lb_sen_2', groupId: '', parentId: 'field_sensitivity', level: 4, name: '物流敏感', color: '#6366F1', isSystem: true, order: 2 },
+  { id: 'lb_sen_3', groupId: '', parentId: 'field_sensitivity', level: 4, name: '真实性敏感', color: '#6366F1', isSystem: true, order: 3 },
+  { id: 'lb_sen_4', groupId: '', parentId: 'field_sensitivity', level: 4, name: '付款安全敏感', color: '#6366F1', isSystem: true, order: 4 },
+  { id: 'lb_sen_5', groupId: '', parentId: 'field_sensitivity', level: 4, name: '质量敏感', color: '#6366F1', isSystem: true, order: 5 },
+  // 三级字段：付款偏好
+  { id: 'field_payment', groupId: '', parentId: 'dim_profile', level: 3, name: '付款偏好', color: '#14B8A6', isSystem: true, order: 9, selectMode: 'single' as const },
+  { id: 'lb_pay_1', groupId: '', parentId: 'field_payment', level: 4, name: 'PayPal', color: '#14B8A6', isSystem: true, order: 1 },
+  { id: 'lb_pay_2', groupId: '', parentId: 'field_payment', level: 4, name: '信用卡', color: '#14B8A6', isSystem: true, order: 2 },
+  { id: 'lb_pay_3', groupId: '', parentId: 'field_payment', level: 4, name: '银行转账', color: '#14B8A6', isSystem: true, order: 3 },
+  { id: 'lb_pay_4', groupId: '', parentId: 'field_payment', level: 4, name: '货到付款', color: '#14B8A6', isSystem: true, order: 4 },
+  // 三级字段：信任等级
+  { id: 'field_trust', groupId: '', parentId: 'dim_profile', level: 3, name: '信任等级', color: '#22C55E', isSystem: true, order: 10, selectMode: 'single' as const },
+  { id: 'lb_trust_1', groupId: '', parentId: 'field_trust', level: 4, name: '高信任', color: '#22C55E', isSystem: true, order: 1 },
+  { id: 'lb_trust_2', groupId: '', parentId: 'field_trust', level: 4, name: '中信任', color: '#F97316', isSystem: true, order: 2 },
+  { id: 'lb_trust_3', groupId: '', parentId: 'field_trust', level: 4, name: '低信任', color: '#EF4444', isSystem: true, order: 3 },
+  // 三级字段：渠道来源
+  { id: 'field_channel', groupId: '', parentId: 'dim_profile', level: 3, name: '渠道来源', color: '#25D366', isSystem: true, order: 11, selectMode: 'multiple' as const },
+  { id: 'lb_ch_1', groupId: '', parentId: 'field_channel', level: 4, name: 'WhatsApp', color: '#25D366', isSystem: true, order: 1 },
+  { id: 'lb_ch_2', groupId: '', parentId: 'field_channel', level: 4, name: '微信', color: '#07C160', isSystem: true, order: 2 },
+  { id: 'lb_ch_3', groupId: '', parentId: 'field_channel', level: 4, name: 'Instagram', color: '#E4405F', isSystem: true, order: 3 },
+  { id: 'lb_ch_4', groupId: '', parentId: 'field_channel', level: 4, name: 'Facebook', color: '#1877F2', isSystem: true, order: 4 },
+  { id: 'lb_ch_5', groupId: '', parentId: 'field_channel', level: 4, name: 'Telegram', color: '#26A5E4', isSystem: true, order: 5 },
+  // 三级字段：生命周期
+  { id: 'field_lifecycle', groupId: '', parentId: 'dim_profile', level: 3, name: '生命周期', color: '#84CC16', isSystem: true, order: 12, selectMode: 'single' as const },
+  { id: 'lb_lc_1', groupId: '', parentId: 'field_lifecycle', level: 4, name: '新客户', color: '#84CC16', isSystem: true, order: 1 },
+  { id: 'lb_lc_2', groupId: '', parentId: 'field_lifecycle', level: 4, name: '潜在客户', color: '#22C55E', isSystem: true, order: 2 },
+  { id: 'lb_lc_3', groupId: '', parentId: 'field_lifecycle', level: 4, name: '活跃客户', color: '#10B981', isSystem: true, order: 3 },
+  { id: 'lb_lc_4', groupId: '', parentId: 'field_lifecycle', level: 4, name: '流失风险', color: '#EF4444', isSystem: true, order: 4 },
+  // ========== 二级：联系人信息 ==========
+  { id: 'dim_contact', groupId: '', level: 2, name: '联系人信息', color: '#3B82F6', isSystem: true, order: 2 },
+
+  // 三级字段：联系方式（文本框类型）
+  { id: 'field_contact_method', groupId: '', parentId: 'dim_contact', level: 3, name: '联系方式', color: '#3B82F6', isSystem: true, order: 1, selectMode: 'multiple' as const, inputType: 'text' as const },
+
+  // 三级字段：地区信息
+  { id: 'field_region', groupId: '', parentId: 'dim_contact', level: 3, name: '地区信息', color: '#6366F1', isSystem: true, order: 2, selectMode: 'multiple' as const },
+  { id: 'lb_ct_domestic', groupId: '', parentId: 'field_region', level: 4, name: '国内客户', color: '#6366F1', isSystem: true, order: 1 },
+  { id: 'lb_ct_overseas', groupId: '', parentId: 'field_region', level: 4, name: '海外客户', color: '#6366F1', isSystem: true, order: 2 },
+
+  // 三级字段：语言偏好
+  { id: 'field_language', groupId: '', parentId: 'dim_contact', level: 3, name: '语言偏好', color: '#EF4444', isSystem: true, order: 3, selectMode: 'multiple' as const },
+  { id: 'lb_ct_lang_zh', groupId: '', parentId: 'field_language', level: 4, name: '中文沟通', color: '#EF4444', isSystem: true, order: 1 },
+  { id: 'lb_ct_lang_en', groupId: '', parentId: 'field_language', level: 4, name: '英文沟通', color: '#EF4444', isSystem: true, order: 2 },
+  { id: 'lb_ct_lang_other', groupId: '', parentId: 'field_language', level: 4, name: '小语种沟通', color: '#EF4444', isSystem: true, order: 3 },
+  // ========== 二级：公司信息 ==========
+  { id: 'dim_company', groupId: '', level: 2, name: '公司信息', color: '#8B5CF6', isSystem: true, order: 3 },
+
+  // 三级字段：公司规模
+  { id: 'field_company_scale', groupId: '', parentId: 'dim_company', level: 3, name: '公司规模', color: '#8B5CF6', isSystem: true, order: 1, selectMode: 'single' as const },
+  { id: 'lb_co_small', groupId: '', parentId: 'field_company_scale', level: 4, name: '小型企业 (<50人)', color: '#8B5CF6', isSystem: true, order: 1 },
+  { id: 'lb_co_medium', groupId: '', parentId: 'field_company_scale', level: 4, name: '中型企业 (50-500人)', color: '#8B5CF6', isSystem: true, order: 2 },
+  { id: 'lb_co_large', groupId: '', parentId: 'field_company_scale', level: 4, name: '大型企业 (>500人)', color: '#8B5CF6', isSystem: true, order: 3 },
+
+  // 三级字段：年营收
+  { id: 'field_revenue', groupId: '', parentId: 'dim_company', level: 3, name: '年营收', color: '#10B981', isSystem: true, order: 2, selectMode: 'single' as const },
+  { id: 'lb_co_rev_low', groupId: '', parentId: 'field_revenue', level: 4, name: '年营收 <100万', color: '#10B981', isSystem: true, order: 1 },
+  { id: 'lb_co_rev_mid', groupId: '', parentId: 'field_revenue', level: 4, name: '年营收 100万-1000万', color: '#10B981', isSystem: true, order: 2 },
+  { id: 'lb_co_rev_high', groupId: '', parentId: 'field_revenue', level: 4, name: '年营收 >1000万', color: '#10B981', isSystem: true, order: 3 },
+
+  // 三级字段：经营模式
+  { id: 'field_biz_mode', groupId: '', parentId: 'dim_company', level: 3, name: '经营模式', color: '#F59E0B', isSystem: true, order: 3, selectMode: 'multiple' as const },
+  { id: 'lb_co_mode_factory', groupId: '', parentId: 'field_biz_mode', level: 4, name: '工厂直销', color: '#F59E0B', isSystem: true, order: 1 },
+  { id: 'lb_co_mode_trade', groupId: '', parentId: 'field_biz_mode', level: 4, name: '贸易公司', color: '#F59E0B', isSystem: true, order: 2 },
+  { id: 'lb_co_mode_brand', groupId: '', parentId: 'field_biz_mode', level: 4, name: '品牌商', color: '#F59E0B', isSystem: true, order: 3 },
+  // ========== 二级：会话标签 ==========
+  { id: 'dim_session', groupId: '', level: 2, name: '会话标签', color: '#10B981', isSystem: true, order: 4 },
+
+  // 三级字段：咨询类型
+  { id: 'field_inquiry_type', groupId: '', parentId: 'dim_session', level: 3, name: '咨询类型', color: '#10B981', isSystem: true, order: 1, selectMode: 'multiple' as const },
+  { id: 'lb_ss_inquiry', groupId: '', parentId: 'field_inquiry_type', level: 4, name: '产品咨询', color: '#10B981', isSystem: true, order: 1 },
+  { id: 'lb_ss_quote', groupId: '', parentId: 'field_inquiry_type', level: 4, name: '报价请求', color: '#10B981', isSystem: true, order: 2 },
+  { id: 'lb_ss_sample', groupId: '', parentId: 'field_inquiry_type', level: 4, name: '样品需求', color: '#10B981', isSystem: true, order: 3 },
+  { id: 'lb_ss_after', groupId: '', parentId: 'field_inquiry_type', level: 4, name: '售后服务', color: '#F97316', isSystem: true, order: 4 },
+  { id: 'lb_ss_complaint', groupId: '', parentId: 'field_inquiry_type', level: 4, name: '投诉建议', color: '#EF4444', isSystem: true, order: 5 },
+
+  // 三级字段：满意度
+  { id: 'field_satisfaction', groupId: '', parentId: 'dim_session', level: 3, name: '满意度', color: '#22C55E', isSystem: true, order: 2, selectMode: 'single' as const },
+  { id: 'lb_ss_sat_high', groupId: '', parentId: 'field_satisfaction', level: 4, name: '满意', color: '#22C55E', isSystem: true, order: 1 },
+  { id: 'lb_ss_sat_mid', groupId: '', parentId: 'field_satisfaction', level: 4, name: '一般', color: '#F59E0B', isSystem: true, order: 2 },
+  { id: 'lb_ss_sat_low', groupId: '', parentId: 'field_satisfaction', level: 4, name: '不满意', color: '#EF4444', isSystem: true, order: 3 },
+
+  // 三级字段：跟进状态
+  { id: 'field_follow_status', groupId: '', parentId: 'dim_session', level: 3, name: '跟进状态', color: '#3B82F6', isSystem: true, order: 3, selectMode: 'single' as const },
+  { id: 'lb_ss_follow_wait', groupId: '', parentId: 'field_follow_status', level: 4, name: '待跟进', color: '#F59E0B', isSystem: true, order: 1 },
+  { id: 'lb_ss_follow_ing', groupId: '', parentId: 'field_follow_status', level: 4, name: '跟进中', color: '#3B82F6', isSystem: true, order: 2 },
+  { id: 'lb_ss_follow_done', groupId: '', parentId: 'field_follow_status', level: 4, name: '已完结', color: '#9CA3AF', isSystem: true, order: 3 },
 ];

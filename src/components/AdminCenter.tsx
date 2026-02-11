@@ -15,6 +15,11 @@ import {
   Check,
   Shield,
   MessageSquare,
+  Bot,
+  Settings2,
+  X,
+  Zap,
+  Lock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStore } from '@/store/useStore';
@@ -84,15 +89,15 @@ const DepartmentTreeNode: React.FC<{
 
 // 激活码状态徽章
 const StatusBadge: React.FC<{ status: ActivationCode['status'] }> = ({ status }) => {
-  const config: Record<ActivationCode['status'], { label: string; cls: string }> = {
-    active: { label: '已激活', cls: 'bg-green-50 text-green-700 border-green-200' },
-    unused: { label: '未使用', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
+  const config: Record<string, { label: string; cls: string }> = {
+    active: { label: '已启用', cls: 'bg-green-50 text-green-700 border-green-200' },
     expired: { label: '已过期', cls: 'bg-gray-50 text-gray-500 border-gray-200' },
     disabled: { label: '已禁用', cls: 'bg-red-50 text-red-600 border-red-200' },
   };
   const c = config[status];
+  if (!c) return null;
   return (
-    <span className={cn("px-2 py-0.5 text-xs font-medium rounded-full border", c.cls)}>
+    <span className={cn("px-2 py-0.5 text-xs font-medium rounded-full border whitespace-nowrap", c.cls)}>
       {c.label}
     </span>
   );
@@ -110,6 +115,24 @@ const RoleBadge: React.FC<{ role: ActivationCode['role'] }> = ({ role }) => {
     <span className={cn("px-2 py-0.5 text-xs font-medium rounded-full", c.cls)}>
       {c.label}
     </span>
+  );
+};
+
+// AI分配模式徽章
+const AllocationModeBadge: React.FC<{ mode?: 'fixed' | 'auto'; limit?: number; used?: number }> = ({ mode, limit, used }) => {
+  if (!mode || !limit) return <span className="text-xs text-gray-300">-</span>;
+  const isFixed = mode === 'fixed';
+  return (
+    <div className="flex items-center gap-1.5 whitespace-nowrap">
+      <span className={cn(
+        "inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium rounded",
+        isFixed ? "bg-blue-50 text-blue-600" : "bg-emerald-50 text-emerald-600"
+      )}>
+        {isFixed ? <Lock className="w-2.5 h-2.5" /> : <Zap className="w-2.5 h-2.5" />}
+        {isFixed ? '固定' : '动态'}
+      </span>
+      <span className="text-xs text-gray-500">{used ?? 0}/{limit}</span>
+    </div>
   );
 };
 
@@ -192,10 +215,137 @@ const CodeActionButtons: React.FC<{
   </div>
 );
 
+// AI配额配置弹窗
+const AIQuotaModal: React.FC<{
+  code: ActivationCode;
+  onClose: () => void;
+  onSave: (updates: Partial<ActivationCode>) => void;
+}> = ({ code, onClose, onSave }) => {
+  const [mode, setMode] = useState<'fixed' | 'auto'>(code.aiAllocationMode || 'auto');
+  const [seatLimit, setSeatLimit] = useState(code.aiSeatLimit ?? 0);
+  const handleSave = () => {
+    onSave({
+      aiAllocationMode: mode,
+      aiSeatLimit: seatLimit,
+    });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
+
+        {/* 弹窗头部 */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[#FF6B35]/10 flex items-center justify-center">
+              <Bot className="w-4 h-4 text-[#FF6B35]" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-gray-900">AI配额设置</h3>
+              <p className="text-xs text-gray-400 font-mono">{code.code}</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+            <X className="w-4 h-4 text-gray-400" />
+          </button>
+        </div>
+
+        {/* 弹窗内容 */}
+        <div className="px-6 py-5 space-y-5">
+
+          {/* 坐席上限 */}
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1.5">AI坐席上限</label>
+            <div className="flex items-center gap-3">
+              <input
+                type="number"
+                min={0}
+                max={99}
+                value={seatLimit}
+                onChange={(e) => setSeatLimit(Math.max(0, parseInt(e.target.value) || 0))}
+                className="w-24 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/30 focus:border-[#FF6B35]"
+              />
+              <span className="text-xs text-gray-400">已使用 {code.aiSeatUsed ?? 0} 个</span>
+            </div>
+          </div>
+
+          {/* 分配模式 */}
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-2">分配模式</label>
+            <div className="grid grid-cols-2 gap-3">
+
+              {/* 固定分配 */}
+              <button
+                onClick={() => setMode('fixed')}
+                className={cn(
+                  "p-3 rounded-xl border text-left transition-all",
+                  mode === 'fixed'
+                    ? "border-[#FF6B35] bg-[#FF6B35]/5 ring-1 ring-[#FF6B35]/20"
+                    : "border-gray-200 hover:border-gray-300"
+                )}
+              >
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Lock className={cn("w-4 h-4", mode === 'fixed' ? "text-[#FF6B35]" : "text-gray-400")} />
+                  <span className={cn("text-sm font-medium", mode === 'fixed' ? "text-[#FF6B35]" : "text-gray-700")}>
+                    固定分配
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-500 leading-relaxed">
+                  按固定数量分配AI端口给激活码，分配即占用端口
+                </p>
+              </button>
+
+              {/* 自动分配 */}
+              <button
+                onClick={() => setMode('auto')}
+                className={cn(
+                  "p-3 rounded-xl border text-left transition-all",
+                  mode === 'auto'
+                    ? "border-[#FF6B35] bg-[#FF6B35]/5 ring-1 ring-[#FF6B35]/20"
+                    : "border-gray-200 hover:border-gray-300"
+                )}
+              >
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Zap className={cn("w-4 h-4", mode === 'auto' ? "text-[#FF6B35]" : "text-gray-400")} />
+                  <span className={cn("text-sm font-medium", mode === 'auto' ? "text-[#FF6B35]" : "text-gray-700")}>
+                    动态分配
+                  </span>
+                </div>
+                <p className="text-[11px] text-gray-500 leading-relaxed">
+                  从共享端口池按需分配，会话结束后释放，先到先得
+                </p>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        {/* 弹窗底部 */}
+        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            取消
+          </button>
+          <button
+            onClick={handleSave}
+            className="px-4 py-2 text-sm font-medium text-white bg-[#FF6B35] hover:bg-[#E85A2A] rounded-lg transition-colors"
+          >
+            保存
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const AdminCenter: React.FC<{ onViewChat?: (code: ActivationCode) => void }> = ({ onViewChat }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<ActivationCode['status'] | 'all'>('all');
   const [showFilters, setShowFilters] = useState(false);
+  const [aiConfigCode, setAiConfigCode] = useState<ActivationCode | null>(null);
 
   const organization = useStore((state) => state.organization);
   const departments = useStore((state) => state.departments);
@@ -203,13 +353,14 @@ export const AdminCenter: React.FC<{ onViewChat?: (code: ActivationCode) => void
   const setSelectedDepartment = useStore((state) => state.setSelectedDepartment);
   const getFilteredActivationCodes = useStore((state) => state.getFilteredActivationCodes);
   const toggleActivationCodeStatus = useStore((state) => state.toggleActivationCodeStatus);
+  const updateActivationCode = useStore((state) => state.updateActivationCode);
   const setOrganizationLoginMode = useStore((state) => state.setOrganizationLoginMode);
 
   const deptCodes = getFilteredActivationCodes();
 
   // 搜索和状态筛选
   const filteredCodes = useMemo(() => {
-    let result = deptCodes;
+    let result = deptCodes.filter(c => c.status !== 'unused');
     if (statusFilter !== 'all') {
       result = result.filter(c => c.status === statusFilter);
     }
@@ -226,9 +377,8 @@ export const AdminCenter: React.FC<{ onViewChat?: (code: ActivationCode) => void
 
   // 统计数据
   const stats = useMemo(() => ({
-    total: deptCodes.length,
+    total: deptCodes.filter(c => c.status !== 'unused').length,
     active: deptCodes.filter(c => c.status === 'active').length,
-    unused: deptCodes.filter(c => c.status === 'unused').length,
     expired: deptCodes.filter(c => c.status === 'expired').length,
     disabled: deptCodes.filter(c => c.status === 'disabled').length,
   }), [deptCodes]);
@@ -307,11 +457,10 @@ export const AdminCenter: React.FC<{ onViewChat?: (code: ActivationCode) => void
           {/* 右侧激活码列表 */}
           <div className="flex-1 flex flex-col min-w-0">
             {/* 统计卡片 */}
-            <div className="grid grid-cols-5 gap-3 mb-4">
+            <div className="grid grid-cols-4 gap-3 mb-4">
               {[
                 { label: '全部', value: stats.total, color: 'text-gray-900', bg: 'bg-white', filter: 'all' as const },
-                { label: '已激活', value: stats.active, color: 'text-green-600', bg: 'bg-green-50', filter: 'active' as const },
-                { label: '未使用', value: stats.unused, color: 'text-blue-600', bg: 'bg-blue-50', filter: 'unused' as const },
+                { label: '已启用', value: stats.active, color: 'text-green-600', bg: 'bg-green-50', filter: 'active' as const },
                 { label: '已过期', value: stats.expired, color: 'text-gray-500', bg: 'bg-gray-50', filter: 'expired' as const },
                 { label: '已禁用', value: stats.disabled, color: 'text-red-600', bg: 'bg-red-50', filter: 'disabled' as const },
               ].map((item) => (
@@ -383,6 +532,7 @@ export const AdminCenter: React.FC<{ onViewChat?: (code: ActivationCode) => void
                       <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">使用人</th>
                       <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">角色</th>
                       <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">状态</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">AI配额</th>
                       <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">创建时间</th>
                       <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">到期时间</th>
                       <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">备注</th>
@@ -411,6 +561,15 @@ export const AdminCenter: React.FC<{ onViewChat?: (code: ActivationCode) => void
                         </td>
                         <td className="py-3 px-4"><RoleBadge role={code.role} /></td>
                         <td className="py-3 px-4"><StatusBadge status={code.status} /></td>
+                        <td className="py-3 px-4">
+                          <button
+                            onClick={() => setAiConfigCode(code)}
+                            className="group flex items-center gap-1"
+                          >
+                            <AllocationModeBadge mode={code.aiAllocationMode} limit={code.aiSeatLimit} used={code.aiSeatUsed} />
+                            <Settings2 className="w-3 h-3 text-gray-300 group-hover:text-[#FF6B35] transition-colors" />
+                          </button>
+                        </td>
                         <td className="py-3 px-4 text-sm text-gray-500">{formatDate(code.createdAt)}</td>
                         <td className="py-3 px-4 text-sm text-gray-500">{formatDate(code.expiresAt)}</td>
                         <td className="py-3 px-4 text-sm text-gray-500 max-w-[120px] truncate">{code.remark || '-'}</td>
@@ -434,6 +593,18 @@ export const AdminCenter: React.FC<{ onViewChat?: (code: ActivationCode) => void
           </div>
         </div>
       </div>
+
+      {/* AI配额配置弹窗 */}
+      {aiConfigCode && (
+        <AIQuotaModal
+          code={aiConfigCode}
+          onClose={() => setAiConfigCode(null)}
+          onSave={(updates) => {
+            updateActivationCode(aiConfigCode.id, updates);
+            setAiConfigCode(null);
+          }}
+        />
+      )}
     </div>
   );
 };
