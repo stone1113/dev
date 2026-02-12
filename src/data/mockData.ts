@@ -1398,39 +1398,41 @@ export const mockAILabels: AILabel[] = [
   // ========== 二级：联系人信息 ==========
   { id: 'dim_contact', groupId: '', level: 2, name: '联系人信息', color: '#3B82F6', isSystem: true, order: 2 },
 
-  // 三级字段：联系方式（文本框类型）
-  { id: 'field_contact_method', groupId: '', parentId: 'dim_contact', level: 3, name: '联系方式', color: '#3B82F6', isSystem: true, order: 1, selectMode: 'multiple' as const, inputType: 'text' as const },
-
-  // 三级字段：地区信息
-  { id: 'field_region', groupId: '', parentId: 'dim_contact', level: 3, name: '地区信息', color: '#6366F1', isSystem: true, order: 2, selectMode: 'multiple' as const },
-  { id: 'lb_ct_domestic', groupId: '', parentId: 'field_region', level: 4, name: '国内客户', color: '#6366F1', isSystem: true, order: 1 },
-  { id: 'lb_ct_overseas', groupId: '', parentId: 'field_region', level: 4, name: '海外客户', color: '#6366F1', isSystem: true, order: 2 },
-
-  // 三级字段：语言偏好
-  { id: 'field_language', groupId: '', parentId: 'dim_contact', level: 3, name: '语言偏好', color: '#EF4444', isSystem: true, order: 3, selectMode: 'multiple' as const },
-  { id: 'lb_ct_lang_zh', groupId: '', parentId: 'field_language', level: 4, name: '中文沟通', color: '#EF4444', isSystem: true, order: 1 },
-  { id: 'lb_ct_lang_en', groupId: '', parentId: 'field_language', level: 4, name: '英文沟通', color: '#EF4444', isSystem: true, order: 2 },
-  { id: 'lb_ct_lang_other', groupId: '', parentId: 'field_language', level: 4, name: '小语种沟通', color: '#EF4444', isSystem: true, order: 3 },
+  // 三级字段：昵称（文本框）
+  { id: 'field_nickname', groupId: '', parentId: 'dim_contact', level: 3, name: '昵称', color: '#3B82F6', isSystem: true, order: 1, inputType: 'text' as const },
+  // 三级字段：邮箱（文本框）
+  { id: 'field_email', groupId: '', parentId: 'dim_contact', level: 3, name: '邮箱', color: '#3B82F6', isSystem: true, order: 2, inputType: 'text' as const },
+  // 三级字段：电话（文本框）
+  { id: 'field_phone', groupId: '', parentId: 'dim_contact', level: 3, name: '电话', color: '#3B82F6', isSystem: true, order: 3, inputType: 'text' as const },
+  // 三级字段：地区（文本框）
+  { id: 'field_region', groupId: '', parentId: 'dim_contact', level: 3, name: '地区', color: '#6366F1', isSystem: true, order: 4, inputType: 'text' as const },
+  // 三级字段：活跃度（选择）
+  { id: 'field_activity', groupId: '', parentId: 'dim_contact', level: 3, name: '活跃度', color: '#10B981', isSystem: true, order: 5, selectMode: 'single' as const },
+  { id: 'lb_activity_lost', groupId: '', parentId: 'field_activity', level: 4, name: '已流失', color: '#9CA3AF', isSystem: true, order: 1 },
+  { id: 'lb_activity_low', groupId: '', parentId: 'field_activity', level: 4, name: '低活跃', color: '#F59E0B', isSystem: true, order: 2 },
+  { id: 'lb_activity_medium', groupId: '', parentId: 'field_activity', level: 4, name: '中活跃', color: '#3B82F6', isSystem: true, order: 3 },
+  { id: 'lb_activity_high', groupId: '', parentId: 'field_activity', level: 4, name: '高活跃', color: '#22C55E', isSystem: true, order: 4 },
+  // 三级字段：活跃时段（多选）
+  { id: 'field_active_time', groupId: '', parentId: 'dim_contact', level: 3, name: '活跃时段', color: '#8B5CF6', isSystem: true, order: 6, selectMode: 'multiple' as const },
+  { id: 'lb_time_early', groupId: '', parentId: 'field_active_time', level: 4, name: '早晨 6-9点', color: '#F97316', isSystem: true, order: 1 },
+  { id: 'lb_time_morning', groupId: '', parentId: 'field_active_time', level: 4, name: '上午 9-12点', color: '#F59E0B', isSystem: true, order: 2 },
+  { id: 'lb_time_afternoon', groupId: '', parentId: 'field_active_time', level: 4, name: '下午 12-17点', color: '#3B82F6', isSystem: true, order: 3 },
+  { id: 'lb_time_dusk', groupId: '', parentId: 'field_active_time', level: 4, name: '傍晚 17-20点', color: '#6366F1', isSystem: true, order: 4 },
+  { id: 'lb_time_evening', groupId: '', parentId: 'field_active_time', level: 4, name: '晚上 20-24点', color: '#8B5CF6', isSystem: true, order: 5 },
+  { id: 'lb_time_latenight', groupId: '', parentId: 'field_active_time', level: 4, name: '凌晨 0-6点', color: '#6B7280', isSystem: true, order: 6 },
+  // 三级字段：备注（文本框）
+  { id: 'field_remark', groupId: '', parentId: 'dim_contact', level: 3, name: '备注', color: '#6B7280', isSystem: true, order: 7, inputType: 'text' as const },
   // ========== 二级：公司信息 ==========
   { id: 'dim_company', groupId: '', level: 2, name: '公司信息', color: '#8B5CF6', isSystem: true, order: 3 },
 
-  // 三级字段：公司规模
-  { id: 'field_company_scale', groupId: '', parentId: 'dim_company', level: 3, name: '公司规模', color: '#8B5CF6', isSystem: true, order: 1, selectMode: 'single' as const },
-  { id: 'lb_co_small', groupId: '', parentId: 'field_company_scale', level: 4, name: '小型企业 (<50人)', color: '#8B5CF6', isSystem: true, order: 1 },
-  { id: 'lb_co_medium', groupId: '', parentId: 'field_company_scale', level: 4, name: '中型企业 (50-500人)', color: '#8B5CF6', isSystem: true, order: 2 },
-  { id: 'lb_co_large', groupId: '', parentId: 'field_company_scale', level: 4, name: '大型企业 (>500人)', color: '#8B5CF6', isSystem: true, order: 3 },
-
-  // 三级字段：年营收
-  { id: 'field_revenue', groupId: '', parentId: 'dim_company', level: 3, name: '年营收', color: '#10B981', isSystem: true, order: 2, selectMode: 'single' as const },
-  { id: 'lb_co_rev_low', groupId: '', parentId: 'field_revenue', level: 4, name: '年营收 <100万', color: '#10B981', isSystem: true, order: 1 },
-  { id: 'lb_co_rev_mid', groupId: '', parentId: 'field_revenue', level: 4, name: '年营收 100万-1000万', color: '#10B981', isSystem: true, order: 2 },
-  { id: 'lb_co_rev_high', groupId: '', parentId: 'field_revenue', level: 4, name: '年营收 >1000万', color: '#10B981', isSystem: true, order: 3 },
-
-  // 三级字段：经营模式
-  { id: 'field_biz_mode', groupId: '', parentId: 'dim_company', level: 3, name: '经营模式', color: '#F59E0B', isSystem: true, order: 3, selectMode: 'multiple' as const },
-  { id: 'lb_co_mode_factory', groupId: '', parentId: 'field_biz_mode', level: 4, name: '工厂直销', color: '#F59E0B', isSystem: true, order: 1 },
-  { id: 'lb_co_mode_trade', groupId: '', parentId: 'field_biz_mode', level: 4, name: '贸易公司', color: '#F59E0B', isSystem: true, order: 2 },
-  { id: 'lb_co_mode_brand', groupId: '', parentId: 'field_biz_mode', level: 4, name: '品牌商', color: '#F59E0B', isSystem: true, order: 3 },
+  // 三级字段：公司名称（文本框）
+  { id: 'field_company_name', groupId: '', parentId: 'dim_company', level: 3, name: '公司名称', color: '#8B5CF6', isSystem: true, order: 1, inputType: 'text' as const },
+  // 三级字段：行业（文本框）
+  { id: 'field_industry', groupId: '', parentId: 'dim_company', level: 3, name: '行业', color: '#10B981', isSystem: true, order: 2, inputType: 'text' as const },
+  // 三级字段：规模（文本框）
+  { id: 'field_scale', groupId: '', parentId: 'dim_company', level: 3, name: '规模', color: '#F59E0B', isSystem: true, order: 3, inputType: 'text' as const },
+  // 三级字段：地址（文本框）
+  { id: 'field_address', groupId: '', parentId: 'dim_company', level: 3, name: '地址', color: '#6366F1', isSystem: true, order: 4, inputType: 'text' as const },
   // ========== 二级：会话标签 ==========
   { id: 'dim_session', groupId: '', level: 2, name: '会话标签', color: '#10B981', isSystem: true, order: 4 },
 

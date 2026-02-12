@@ -318,7 +318,9 @@ export interface KnowledgeDocument {
   fileName: string;
   fileSize: number;       // bytes
   fileType: string;       // pdf, docx, txt, csv, xlsx
-  status: 'processing' | 'ready' | 'error';
+  charCount?: number;     // 字符数
+  chunkCount?: number;    // 分块数量
+  status: 'parsing' | 'chunking' | 'embedding' | 'ready' | 'error';
   enabled: boolean;
   uploadedAt: string;
   updatedAt: string;

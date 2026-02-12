@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Key,
   Building2,
@@ -38,6 +38,8 @@ import {
   Phone,
   UserCircle,
   ClipboardList,
+  Download,
+  AlertCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStore } from '@/store/useStore';
@@ -46,9 +48,10 @@ import { AdminCenter } from './AdminCenter';
 import { AdminChatView } from './AdminChatView';
 import { AILabelsPage } from './AILabelsPage';
 import { KnowledgeBasePage } from './KnowledgeBasePage';
+import { CustomerAIProfile } from './CustomerAIProfile';
 import type { ActivationCode } from '@/types';
 
-type AdminSection = 'activation-codes' | 'org-settings' | 'members' | 'security' | 'statistics' | 'settings' | 'audit' | 'ai-settings' | 'ai-config' | 'ai-knowledge' | 'ai-scripts' | 'ai-labels' | 'customer-list' | 'ticket-list';
+type AdminSection = 'activation-codes' | 'org-settings' | 'members' | 'security' | 'statistics' | 'settings' | 'audit' | 'audit-report' | 'ai-settings' | 'ai-config' | 'ai-knowledge' | 'ai-scripts' | 'ai-labels' | 'customer-list' | 'customer-detail' | 'ticket-list';
 
 interface AdminLayoutProps {
   onBack?: () => void;
@@ -65,6 +68,7 @@ const menuItems: { id: AdminSection; name: string; icon: React.ComponentType<{ c
 // 内控管理子菜单
 const auditSubMenuItems: { id: AdminSection; name: string; icon: React.ComponentType<{ className?: string }>; }[] = [
   { id: 'audit', name: '聊天记录', icon: Eye },
+  { id: 'audit-report', name: '内控报表', icon: BarChart3 },
 ];
 
 // 客户管理子菜单
@@ -101,17 +105,29 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onBack }) => {
   const [ticketMenuExpanded, setTicketMenuExpanded] = useState(false);
   const [orgMenuExpanded, setOrgMenuExpanded] = useState(false);
   const isAiSection = activeSection === 'ai-config' || activeSection === 'ai-settings' || activeSection === 'ai-knowledge' || activeSection === 'ai-scripts' || activeSection === 'ai-labels';
-  const isAuditSection = activeSection === 'audit';
-  const isCustomerSection = activeSection === 'customer-list';
+  const isAuditSection = activeSection === 'audit' || activeSection === 'audit-report';
+  const isCustomerSection = activeSection === 'customer-list' || activeSection === 'customer-detail';
   const isTicketSection = activeSection === 'ticket-list';
   const isOrgSection = activeSection === 'members' || activeSection === 'org-settings';
   const [auditCode, setAuditCode] = useState<ActivationCode | null>(null);
+  const [detailCustomerId, setDetailCustomerId] = useState<string | null>(null);
   const organization = useStore((state) => state.organization);
 
   // 从激活码列表跳转到内控管理查看聊天记录
   const handleViewChat = (code: ActivationCode) => {
     setAuditCode(code);
     setActiveSection('audit');
+  };
+
+  // 从客户列表跳转到客户详情
+  const handleViewCustomerDetail = (customerId: string) => {
+    setDetailCustomerId(customerId);
+    setActiveSection('customer-detail');
+  };
+
+  const handleBackToCustomerList = () => {
+    setDetailCustomerId(null);
+    setActiveSection('customer-list');
   };
 
   return (
@@ -507,7 +523,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onBack }) => {
         <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0">
           <div>
             <h1 className="text-lg font-bold text-gray-900">
-              {menuItems.find(m => m.id === activeSection)?.name || aiSubMenuItems.find(m => m.id === activeSection)?.name || auditSubMenuItems.find(m => m.id === activeSection)?.name || customerSubMenuItems.find(m => m.id === activeSection)?.name || ticketSubMenuItems.find(m => m.id === activeSection)?.name || orgSubMenuItems.find(m => m.id === activeSection)?.name}
+              {menuItems.find(m => m.id === activeSection)?.name || aiSubMenuItems.find(m => m.id === activeSection)?.name || auditSubMenuItems.find(m => m.id === activeSection)?.name || customerSubMenuItems.find(m => m.id === activeSection)?.name || ticketSubMenuItems.find(m => m.id === activeSection)?.name || orgSubMenuItems.find(m => m.id === activeSection)?.name || (activeSection === 'customer-detail' ? '客户详情' : '')}
             </h1>
             <p className="text-xs text-gray-500 mt-0.5">{organization.name}</p>
           </div>
@@ -515,7 +531,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onBack }) => {
 
         {/* 页面内容 */}
         <div className="flex-1 overflow-auto">
-          <AdminContent section={activeSection} onViewChat={handleViewChat} auditCode={auditCode} onClearAuditCode={() => setAuditCode(null)} onNavigateToKnowledge={() => setActiveSection('ai-knowledge')} onNavigateToScripts={() => setActiveSection('ai-scripts')} onNavigateToLabels={() => setActiveSection('ai-labels')} />
+          <AdminContent section={activeSection} onViewChat={handleViewChat} auditCode={auditCode} onClearAuditCode={() => setAuditCode(null)} onNavigateToKnowledge={() => setActiveSection('ai-knowledge')} onNavigateToScripts={() => setActiveSection('ai-scripts')} onNavigateToLabels={() => setActiveSection('ai-labels')} detailCustomerId={detailCustomerId} onViewCustomerDetail={handleViewCustomerDetail} onBackToCustomerList={handleBackToCustomerList} />
         </div>
       </div>
     </div>
@@ -531,12 +547,17 @@ const AdminContent: React.FC<{
   onNavigateToKnowledge: () => void;
   onNavigateToScripts: () => void;
   onNavigateToLabels: () => void;
-}> = ({ section, onViewChat, auditCode, onClearAuditCode, onNavigateToKnowledge, onNavigateToScripts, onNavigateToLabels }) => {
+  detailCustomerId: string | null;
+  onViewCustomerDetail: (customerId: string) => void;
+  onBackToCustomerList: () => void;
+}> = ({ section, onViewChat, auditCode, onClearAuditCode, onNavigateToKnowledge, onNavigateToScripts, onNavigateToLabels, detailCustomerId, onViewCustomerDetail, onBackToCustomerList }) => {
   switch (section) {
     case 'activation-codes':
       return <AdminCenter onViewChat={onViewChat} />;
     case 'audit':
       return <AdminChatView initialCode={auditCode} onClearCode={onClearAuditCode} />;
+    case 'audit-report':
+      return <AdminAuditReportPage />;
     case 'members':
       return (
         <PlaceholderPage
@@ -594,7 +615,9 @@ const AdminContent: React.FC<{
     case 'ai-labels':
       return <AILabelsPage />;
     case 'customer-list':
-      return <AdminCustomerListPage />;
+      return <AdminCustomerListPage onViewDetail={onViewCustomerDetail} />;
+    case 'customer-detail':
+      return <AdminCustomerDetailPage customerId={detailCustomerId} onBack={onBackToCustomerList} />;
     case 'ticket-list':
       return <AdminTicketListPage />;
     default:
@@ -1282,30 +1305,6 @@ const AIConfigPage: React.FC<{ onNavigateToKnowledge?: () => void; onNavigateToS
                 <Clock className="w-3 h-3" />
                 根据目标客户所在区域选择，避免半夜营销骚扰。
               </p>
-
-              {/* 工作日 */}
-              <div>
-                <label className="text-xs font-medium text-gray-600 mb-2 block">工作日</label>
-                <div className="flex items-center gap-2">
-                  {dayLabels.map(({ day, label }) => {
-                    const isActive = aiConfig.workDays.includes(day);
-                    return (
-                      <button
-                        key={day}
-                        onClick={() => toggleWorkDay(day)}
-                        className={cn(
-                          "w-12 h-10 rounded-lg text-sm font-medium transition-all",
-                          isActive
-                            ? "bg-[#FF6B35] text-white shadow-sm"
-                            : "bg-gray-100 text-gray-400 hover:bg-gray-200"
-                        )}
-                      >
-                        {label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
             </div>
           </div>
 
@@ -1455,13 +1454,48 @@ const CapabilityCard: React.FC<{
 );
 
 // 客户列表页面
-const AdminCustomerListPage: React.FC = () => {
+const CUSTOMER_STATUS_MAP: Record<string, { label: string; cls: string }> = {
+  normal: { label: '正常', cls: 'bg-green-50 text-green-600 border-green-200' },
+  unfollowed: { label: '取消跟进', cls: 'bg-yellow-50 text-yellow-600 border-yellow-200' },
+  deleted: { label: '已删除', cls: 'bg-red-50 text-red-500 border-red-200' },
+};
+
+const ACTIVITY_LEVELS = ['高', '中', '低'] as const;
+
+const getActivityLevel = (customer: import('@/types').CustomerProfile) => {
+  const days = customer.lastContactAt
+    ? Math.floor((Date.now() - new Date(customer.lastContactAt).getTime()) / 86400000)
+    : 999;
+  if (days <= 3) return { level: '高' as const, cls: 'text-green-600' };
+  if (days <= 14) return { level: '中' as const, cls: 'text-yellow-600' };
+  return { level: '低' as const, cls: 'text-gray-400' };
+};
+
+const getCustomerStatus = (customer: import('@/types').CustomerProfile) => {
+  // 默认都是正常状态，取消跟进和已删除需要业务操作触发
+  return 'normal';
+};
+
+const AdminCustomerListPage: React.FC<{ onViewDetail: (customerId: string) => void }> = ({ onViewDetail }) => {
   const conversations = useStore((s) => s.conversations);
+  const activationCodes = useStore((s) => s.activationCodes);
+  const platformAccounts = useStore((s) => s.platformAccounts);
+  const aiLabels = useStore((s) => s.aiLabels);
+  const setSelectedConversation = useStore((s) => s.setSelectedConversation);
   const [searchQuery, setSearchQuery] = useState('');
   const [platformFilter, setPlatformFilter] = useState<string>('all');
-  const [showFilters, setShowFilters] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [codeFilter, setCodeFilter] = useState<string>('all');
+  const [countryFilter, setCountryFilter] = useState<string>('all');
+  const [activityFilter, setActivityFilter] = useState<string>('all');
+  const [nicknameFilter, setNicknameFilter] = useState('');
+  const [accountFilter, setAccountFilter] = useState('');
+  const [leadDateRange, setLeadDateRange] = useState('');
+  const [recordDateRange, setRecordDateRange] = useState('');
+  const [tagFilter, setTagFilter] = useState<Record<string, string[]>>({});
+  const [showTagSidebar, setShowTagSidebar] = useState(false);
 
-  // 从会话中提取唯一客户
   const customers = useMemo(() => {
     const seen = new Set<string>();
     const list: typeof conversations[0]['customer'][] = [];
@@ -1474,11 +1508,89 @@ const AdminCustomerListPage: React.FC = () => {
     return list;
   }, [conversations]);
 
-  // 筛选
+  // 客户 → 会话/账号映射
+  const customerConvMap = useMemo(() => {
+    const map = new Map<string, typeof conversations[0]>();
+    for (const conv of conversations) {
+      if (!map.has(conv.customer.id)) map.set(conv.customer.id, conv);
+    }
+    return map;
+  }, [conversations]);
+
+  const getCustomerAccount = (customerId: string) => {
+    const conv = customerConvMap.get(customerId);
+    if (!conv) return null;
+    return platformAccounts.find(a => a.platformId === conv.platform) ?? null;
+  };
+
+  const getCustomerActivationCode = (customerId: string) => {
+    const account = getCustomerAccount(customerId);
+    if (!account) return activationCodes[0] ?? null;
+    return activationCodes.find(ac => ac.platforms?.includes(account.platformId)) ?? activationCodes[0] ?? null;
+  };
+
+  // 国家列表
+  const allCountries = useMemo(() => {
+    const set = new Set(customers.map(c => c.country));
+    return Array.from(set).sort();
+  }, [customers]);
+
+  // AI画像标签：三级字段 + 四级可选值
+  const aiLabelFields = useMemo(() => aiLabels.filter(l => l.level === 3), [aiLabels]);
+  const getFieldOptions = (fieldId: string) => aiLabels.filter(l => l.level === 4 && l.parentId === fieldId);
+
+  const toggleTagFilter = (fieldId: string, optionId: string) => {
+    setTagFilter(prev => {
+      const current = prev[fieldId] ?? [];
+      const next = current.includes(optionId)
+        ? current.filter(v => v !== optionId)
+        : [...current, optionId];
+      return { ...prev, [fieldId]: next };
+    });
+  };
+
   const filtered = useMemo(() => {
     let result = customers;
     if (platformFilter !== 'all') {
       result = result.filter(c => c.platform === platformFilter);
+    }
+    if (statusFilter !== 'all') {
+      result = result.filter(c => getCustomerStatus(c) === statusFilter);
+    }
+    if (codeFilter !== 'all') {
+      result = result.filter(c => {
+        const ac = getCustomerActivationCode(c.id);
+        return ac?.code === codeFilter;
+      });
+    }
+    if (countryFilter !== 'all') {
+      result = result.filter(c => c.country === countryFilter);
+    }
+    if (activityFilter !== 'all') {
+      result = result.filter(c => getActivityLevel(c).level === activityFilter);
+    }
+    // AI画像标签筛选：每个字段内OR，字段间AND
+    const activeFieldEntries = Object.entries(tagFilter).filter(([, vals]) => vals.length > 0);
+    if (activeFieldEntries.length > 0) {
+      result = result.filter(c => {
+        return activeFieldEntries.every(([, labelIds]) => {
+          return labelIds.some(labelId => {
+            const label = aiLabels.find(l => l.id === labelId);
+            return label ? c.tags.includes(label.name) : false;
+          });
+        });
+      });
+    }
+    if (nicknameFilter.trim()) {
+      const q = nicknameFilter.toLowerCase();
+      result = result.filter(c => c.name.toLowerCase().includes(q) || (c.notes && c.notes.toLowerCase().includes(q)));
+    }
+    if (accountFilter.trim()) {
+      const q = accountFilter.toLowerCase();
+      result = result.filter(c => {
+        const account = getCustomerAccount(c.id);
+        return account?.accountId?.toLowerCase().includes(q) || c.email?.toLowerCase().includes(q);
+      });
     }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -1486,220 +1598,610 @@ const AdminCustomerListPage: React.FC = () => {
         c.name.toLowerCase().includes(q) ||
         (c.email && c.email.toLowerCase().includes(q)) ||
         (c.phone && c.phone.includes(q)) ||
-        c.country.toLowerCase().includes(q)
+        c.country.toLowerCase().includes(q) ||
+        (c.notes && c.notes.toLowerCase().includes(q))
       );
     }
     return result;
-  }, [customers, platformFilter, searchQuery]);
+  }, [customers, platformFilter, statusFilter, codeFilter, countryFilter, activityFilter, tagFilter, nicknameFilter, accountFilter, searchQuery]);
 
   const formatDate = (date?: Date) => {
     if (!date) return '-';
     return date instanceof Date ? date.toLocaleDateString('zh-CN') : String(date);
   };
 
-  // 统计
-  const stats = useMemo(() => ({
-    total: customers.length,
-    platforms: [...new Set(customers.map(c => c.platform))].length,
-    withOrders: customers.filter(c => c.orderHistory && c.orderHistory.length > 0).length,
-    countries: [...new Set(customers.map(c => c.country))].length,
-  }), [customers]);
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setPlatformFilter('all');
+    setStatusFilter('all');
+    setCodeFilter('all');
+    setCountryFilter('all');
+    setActivityFilter('all');
+    setNicknameFilter('');
+    setAccountFilter('');
+    setLeadDateRange('');
+    setRecordDateRange('');
+    setTagFilter({});
+  };
+
+  const toggleSelect = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelectedIds(next);
+  };
+
+  const toggleAll = () => {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map(c => c.id)));
+    }
+  };
 
   return (
-    <div className="h-full flex flex-col">
-      {/* 顶部操作栏 */}
-      <div className="px-6 py-4 flex items-center justify-between flex-shrink-0">
-        <div />
-        <button className="flex items-center gap-2 px-4 py-2 bg-[#FF6B35] text-white text-sm font-medium rounded-lg hover:bg-[#E85A2A] transition-colors">
+    <div className="h-full flex flex-col bg-gray-50/50">
+      {/* 顶部栏 */}
+      <div className="px-6 py-4 flex items-center justify-between flex-shrink-0 bg-white border-b border-gray-100">
+        <div className="flex items-center gap-3">
+          <Users className="w-5 h-5 text-[#FF6B35]" />
+          <h1 className="text-base font-semibold text-gray-900">客户管理</h1>
+          <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{customers.length} 位客户</span>
+        </div>
+        <button className="flex items-center gap-1.5 px-4 py-2 bg-[#FF6B35] text-white text-sm font-medium rounded-lg hover:bg-[#E85A2A] transition-colors shadow-sm">
           <Plus className="w-4 h-4" />
           添加客户
         </button>
       </div>
 
-      <div className="flex-1 px-6 pb-6 min-h-0 flex flex-col">
-        {/* 统计卡片 */}
-        <div className="grid grid-cols-4 gap-3 mb-4">
-          {[
-            { label: '总客户数', value: stats.total, color: 'text-gray-900' },
-            { label: '覆盖平台', value: stats.platforms, color: 'text-blue-600' },
-            { label: '有订单客户', value: stats.withOrders, color: 'text-green-600' },
-            { label: '覆盖国家', value: stats.countries, color: 'text-purple-600' },
-          ].map((item) => (
-            <div key={item.label} className="rounded-xl border border-gray-200 bg-white p-3 text-center">
-              <p className={cn("text-xl font-bold", item.color)}>{item.value}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{item.label}</p>
-            </div>
-          ))}
-        </div>
+      {/* 提示说明 */}
+      <div className="px-6 py-2 bg-amber-50 border-b border-amber-100 flex items-center gap-2">
+        <AlertCircle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
+        <span className="text-xs text-amber-700">仅开启了"聊天备份"的激活码，并且在社交账号上对客户添加了"客户画像"信息，才会上报客户信息</span>
+      </div>
 
-        {/* 搜索和筛选栏 */}
-        <div className="bg-white rounded-t-xl border border-b-0 border-gray-200 px-4 py-3 flex items-center gap-3">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="搜索客户名称、邮箱、电话、国家..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/30 focus:border-[#FF6B35]"
-            />
+      {/* 筛选栏 */}
+      <div className="px-6 py-3 bg-white border-b border-gray-100 space-y-3">
+        {/* 第一行筛选 */}
+        <div className="grid grid-cols-5 gap-3">
+          <div>
+            <label className="text-[11px] text-gray-400 mb-1 block">激活码</label>
+            <select value={codeFilter} onChange={(e) => setCodeFilter(e.target.value)} className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]">
+              <option value="all">全部激活码</option>
+              {activationCodes.map(ac => (
+                <option key={ac.id} value={ac.code}>{ac.code}{ac.remark ? ` (${ac.remark})` : ''}</option>
+              ))}
+            </select>
           </div>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className={cn(
-              "flex items-center gap-1.5 px-3 py-2 text-sm border rounded-lg transition-colors",
-              showFilters
-                ? "border-[#FF6B35] text-[#FF6B35] bg-[#FF6B35]/5"
-                : "border-gray-200 text-gray-600 hover:bg-gray-50"
-            )}
-          >
-            <Filter className="w-4 h-4" />
-            筛选
+          <div>
+            <label className="text-[11px] text-gray-400 mb-1 block">社交平台</label>
+            <select value={platformFilter} onChange={(e) => setPlatformFilter(e.target.value)} className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]">
+              <option value="all">全部平台</option>
+              {platformConfigs.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-[11px] text-gray-400 mb-1 block">国家</label>
+            <select value={countryFilter} onChange={(e) => setCountryFilter(e.target.value)} className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]">
+              <option value="all">全部国家</option>
+              {allCountries.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="text-[11px] text-gray-400 mb-1 block">社交账号昵称</label>
+            <input type="text" placeholder="请输入" value={accountFilter} onChange={(e) => setAccountFilter(e.target.value)} className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]" />
+          </div>
+          <div>
+            <label className="text-[11px] text-gray-400 mb-1 block">客户状态</label>
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]">
+              <option value="all">全部状态</option>
+              {Object.entries(CUSTOMER_STATUS_MAP).map(([k, v]) => (
+                <option key={k} value={k}>{v.label}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        {/* 第二行筛选 */}
+        <div className="grid grid-cols-5 gap-3">
+          <div>
+            <label className="text-[11px] text-gray-400 mb-1 block">活跃度</label>
+            <select value={activityFilter} onChange={(e) => setActivityFilter(e.target.value)} className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]">
+              <option value="all">全部</option>
+              <option value="高">高</option>
+              <option value="中">中</option>
+              <option value="低">低</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-[11px] text-gray-400 mb-1 block">昵称备注</label>
+            <input type="text" placeholder="请输入" value={nicknameFilter} onChange={(e) => setNicknameFilter(e.target.value)} className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]" />
+          </div>
+          <div>
+            <label className="text-[11px] text-gray-400 mb-1 block">线索录入时间</label>
+            <input type="date" value={leadDateRange} onChange={(e) => setLeadDateRange(e.target.value)} className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]" />
+          </div>
+          <div>
+            <label className="text-[11px] text-gray-400 mb-1 block">记录时间</label>
+            <input type="date" value={recordDateRange} onChange={(e) => setRecordDateRange(e.target.value)} className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]" />
+          </div>
+          <div className="flex items-end gap-2">
+            <button onClick={() => {}} className="px-4 py-1.5 text-sm font-medium bg-[#FF6B35] text-white rounded-lg hover:bg-[#E85A2A] transition-colors">查询</button>
+            <button onClick={handleResetFilters} className="px-4 py-1.5 text-sm font-medium border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">重置</button>
+          </div>
+        </div>
+        {/* 第三行：操作栏 */}
+        <div className="flex items-center justify-between pt-1">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setShowTagSidebar(!showTagSidebar)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border transition-colors",
+                showTagSidebar
+                  ? "bg-[#FF6B35]/10 text-[#FF6B35] border-[#FF6B35]/30"
+                  : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+              )}
+            >
+              <Tags className="w-3.5 h-3.5" />
+              标签筛选
+              {Object.values(tagFilter).flat().length > 0 && (
+                <span className="ml-0.5 px-1.5 py-0.5 text-[10px] font-medium bg-[#FF6B35] text-white rounded-full leading-none">
+                  {Object.values(tagFilter).flat().length}
+                </span>
+              )}
+            </button>
+            <span className="text-xs text-gray-400">{filtered.length} 条结果</span>
+          </div>
+          <button className="flex items-center gap-1 px-3 py-1.5 text-xs border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">
+            <Download className="w-3.5 h-3.5" />
+            导出
           </button>
-          {platformFilter !== 'all' && (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FF6B35]/10 text-[#FF6B35] text-sm rounded-lg">
-              <Globe className="w-3.5 h-3.5" />
-              <span>{platformConfigs.find(p => p.id === platformFilter)?.name || platformFilter}</span>
-              <button onClick={() => setPlatformFilter('all')} className="ml-1 hover:bg-[#FF6B35]/20 rounded p-0.5">&times;</button>
+        </div>
+      </div>
+
+      {/* 表格 + 标签侧边栏 */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* 表格区域 */}
+        <div className="flex-1 overflow-auto px-6 py-4">
+        <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
+          <table className="w-full min-w-max">
+            <thead>
+              <tr className="border-b border-gray-100 bg-gray-50/80">
+                <th className="w-10 py-3 px-4">
+                  <input type="checkbox" checked={selectedIds.size === filtered.length && filtered.length > 0} onChange={toggleAll} className="rounded border-gray-300 text-[#FF6B35] focus:ring-[#FF6B35]/30" />
+                </th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">激活码(备注)</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">社交账号</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">客户信息</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">昵称备注</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">客户标签</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">客户手机号</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">客户备注</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">国家</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">线索录入时间</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">记录时间</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">更新时间</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">活跃度</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">客户状态</th>
+                <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((customer) => {
+                const activity = getActivityLevel(customer);
+                const status = getCustomerStatus(customer);
+                const statusCfg = CUSTOMER_STATUS_MAP[status] ?? CUSTOMER_STATUS_MAP.normal;
+                const ac = getCustomerActivationCode(customer.id);
+                const account = getCustomerAccount(customer.id);
+                const pc = platformConfigs.find(p => p.id === customer.platform);
+                return (
+                  <tr key={customer.id} className="border-b border-gray-50 hover:bg-[#FF6B35]/[0.02] transition-colors">
+                    <td className="py-3 px-4">
+                      <input type="checkbox" checked={selectedIds.has(customer.id)} onChange={() => toggleSelect(customer.id)} className="rounded border-gray-300 text-[#FF6B35] focus:ring-[#FF6B35]/30" />
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="text-sm text-gray-700">{ac?.code ?? '-'}</div>
+                      {ac?.remark && <div className="text-[11px] text-gray-400">{ac.remark}</div>}
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-1.5">
+                        {pc && <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: pc.color }} />}
+                        <span className="text-sm text-gray-700">{account?.accountId ?? customer.email ?? '-'}</span>
+                      </div>
+                      {pc && <div className="text-[11px] text-gray-400 mt-0.5">{pc.name}</div>}
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                          {customer.avatar ? (
+                            <img src={customer.avatar} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <UserCircle className="w-4 h-4 text-gray-400" />
+                          )}
+                        </div>
+                        <div>
+                          <div className="text-sm text-gray-700">{customer.name}</div>
+                          {customer.email && <div className="text-[11px] text-gray-400">{customer.email}</div>}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="text-sm text-gray-600">{customer.notes || customer.name}</span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex flex-wrap gap-1 max-w-[180px]">
+                        {customer.tags.slice(0, 2).map(tag => (
+                          <span key={tag} className="px-1.5 py-0.5 text-[10px] bg-[#FF6B35]/8 text-[#FF6B35] rounded">{tag}</span>
+                        ))}
+                        {customer.tags.length > 2 && <span className="text-[10px] text-gray-400">+{customer.tags.length - 2}</span>}
+                      </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="text-sm text-gray-700 font-medium">{customer.phone || '-'}</span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className="text-sm text-gray-600 truncate max-w-[200px] inline-block">{customer.notes || customer.name}</span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                        <span className="text-sm text-gray-600">{customer.country}</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-4 text-sm text-gray-500">{formatDate(customer.createdAt)}</td>
+                    <td className="py-3 px-4 text-sm text-gray-500">{formatDate(customer.lastContactAt)}</td>
+                    <td className="py-3 px-4 text-sm text-gray-500">{formatDate(customer.lastContactAt)}</td>
+                    <td className="py-3 px-4">
+                      <span className={`text-sm font-medium ${activity.cls}`}>{activity.level}</span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <span className={`inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full border ${statusCfg.cls}`}>
+                        {statusCfg.label}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-3">
+                        <button onClick={() => {
+                          const conv = customerConvMap.get(customer.id);
+                          if (conv) setSelectedConversation(conv.id);
+                          onViewDetail(customer.id);
+                        }} className="text-xs text-[#FF6B35] hover:underline whitespace-nowrap">聊天记录</button>
+                        <button onClick={() => {
+                          const conv = customerConvMap.get(customer.id);
+                          if (conv) setSelectedConversation(conv.id);
+                          onViewDetail(customer.id);
+                        }} className="text-xs text-[#FF6B35] hover:underline whitespace-nowrap">客户详情</button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
+          {filtered.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+              <UserCircle className="w-10 h-10 mb-3 text-gray-300" />
+              <p className="text-sm">暂无客户数据</p>
+              <p className="text-xs mt-1">请调整筛选条件</p>
             </div>
           )}
-          <div className="ml-auto text-xs text-gray-500">
-            共 {filtered.length} 位客户
+        </div>
+        </div>
+
+        {/* AI画像标签侧边栏 */}
+        <div className={cn(
+          "border-l border-gray-200 bg-white overflow-y-auto transition-all duration-300 flex-shrink-0",
+          showTagSidebar ? "w-72" : "w-0 border-l-0"
+        )}>
+          {showTagSidebar && (
+            <div className="p-4 space-y-4 w-72">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <Tags className="w-4 h-4 text-[#FF6B35]" />
+                  <span className="text-sm font-medium text-gray-800">AI画像标签</span>
+                </div>
+                <button
+                  onClick={() => setShowTagSidebar(false)}
+                  className="p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              {Object.values(tagFilter).flat().length > 0 && (
+                <button
+                  onClick={() => setTagFilter({})}
+                  className="text-[11px] text-[#FF6B35] hover:underline"
+                >
+                  清除全部筛选
+                </button>
+              )}
+
+              {aiLabelFields.slice(0, 8).map(field => {
+                const options = getFieldOptions(field.id);
+                const selected = tagFilter[field.id] ?? [];
+                return (
+                  <div key={field.id}>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-[11px] text-gray-500">{field.name}</span>
+                      {selected.length > 0 && (
+                        <span className="text-[10px] text-[#FF6B35]">{selected.length}项</span>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {options.map(opt => {
+                        const isSelected = selected.includes(opt.id);
+                        return (
+                          <button
+                            key={opt.id}
+                            onClick={() => toggleTagFilter(field.id, opt.id)}
+                            className={cn(
+                              "px-2.5 py-1 text-xs rounded-lg transition-all border",
+                              isSelected
+                                ? "bg-[#FF6B35] text-white border-transparent"
+                                : "bg-white text-gray-600 border-gray-200 hover:border-gray-300"
+                            )}
+                          >
+                            {opt.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+    </div>
+  );
+};
+
+// ============ 客户详情整页视图 ============
+const AdminCustomerDetailPage: React.FC<{
+  customerId: string | null;
+  onBack: () => void;
+}> = ({ customerId, onBack }) => {
+  const conversations = useStore((s) => s.conversations);
+  const setSelectedConversation = useStore((s) => s.setSelectedConversation);
+
+  const conversation = useMemo(() => {
+    if (!customerId) return null;
+    return conversations.find(c => c.customer.id === customerId) ?? null;
+  }, [conversations, customerId]);
+
+  const customer = conversation?.customer ?? null;
+
+  // 设置 selectedConversation 以便 CustomerAIProfile 能读取
+  useEffect(() => {
+    if (conversation) setSelectedConversation(conversation.id);
+  }, [conversation, setSelectedConversation]);
+
+  const messages = conversation?.messages ?? [];
+
+  // 跟进记录
+  interface FollowUpRecord {
+    id: string;
+    content: string;
+    createdAt: string;
+    type: 'call' | 'visit' | 'email' | 'wechat' | 'other';
+  }
+  const FOLLOW_UP_TYPES: { value: FollowUpRecord['type']; label: string }[] = [
+    { value: 'call', label: '电话' },
+    { value: 'wechat', label: '微信' },
+    { value: 'email', label: '邮件' },
+    { value: 'visit', label: '拜访' },
+    { value: 'other', label: '其他' },
+  ];
+  const [followUps, setFollowUps] = useState<FollowUpRecord[]>([
+    { id: 'fu_1', content: '首次联系客户，了解需求，客户对产品感兴趣', createdAt: '2025-01-15 10:30', type: 'call' },
+    { id: 'fu_2', content: '发送产品报价单，客户表示需要内部讨论', createdAt: '2025-01-18 14:20', type: 'email' },
+  ]);
+  const [newFollowUp, setNewFollowUp] = useState('');
+  const [newFollowUpType, setNewFollowUpType] = useState<FollowUpRecord['type']>('call');
+  const [showFollowUpInput, setShowFollowUpInput] = useState(false);
+
+  const handleAddFollowUp = () => {
+    if (!newFollowUp.trim()) return;
+    const record: FollowUpRecord = {
+      id: `fu_${Date.now()}`,
+      content: newFollowUp.trim(),
+      createdAt: new Date().toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
+      type: newFollowUpType,
+    };
+    setFollowUps(prev => [record, ...prev]);
+    setNewFollowUp('');
+    setShowFollowUpInput(false);
+  };
+
+  if (!customerId) {
+    return (
+      <div className="h-full flex items-center justify-center text-gray-400">
+        <p className="text-sm">未选择客户</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="h-full flex flex-col bg-gray-50/50">
+      {/* 顶部导航栏 */}
+      <div className="flex items-center gap-3 px-6 py-3 bg-white border-b border-gray-100 flex-shrink-0">
+        <button
+          onClick={onBack}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          返回客户列表
+        </button>
+        <div className="w-px h-5 bg-gray-200" />
+        <div className="flex items-center gap-2">
+          <User className="w-4 h-4 text-[#FF6B35]" />
+          <span className="text-sm font-medium text-gray-800">
+            {customer?.name ?? '客户详情'}
+          </span>
+          {conversation && (
+            <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+              {platformConfigs[conversation.platform]?.name ?? conversation.platform}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* 主体：三列分栏 */}
+      <div className="flex-1 flex min-h-0">
+        {/* 左侧：聊天记录 */}
+        <div className="w-[35%] border-r border-gray-100 flex flex-col min-h-0 bg-white">
+          <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-100 bg-gray-50/80 flex-shrink-0">
+            <MessageSquare className="w-4 h-4 text-[#FF6B35]" />
+            <span className="text-sm font-medium text-gray-800">聊天记录</span>
+            <span className="ml-auto text-xs text-gray-400">{messages.length} 条消息</span>
+          </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50/30">
+            {messages.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                <MessageSquare className="w-8 h-8 mb-2 text-gray-300" />
+                <p className="text-sm">暂无聊天记录</p>
+              </div>
+            ) : (
+              messages.map((msg) => {
+                const isCustomer = msg.senderType === 'customer';
+                return (
+                  <div key={msg.id} className={cn("flex", isCustomer ? "justify-start" : "justify-end")}>
+                    <div className={cn(
+                      "max-w-[80%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm",
+                      isCustomer
+                        ? "bg-white text-gray-800 border border-gray-100"
+                        : msg.senderType === 'ai'
+                          ? "bg-purple-50 text-purple-900 border border-purple-100"
+                          : "bg-[#FF6B35]/10 text-gray-800 border border-[#FF6B35]/20"
+                    )}>
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <span className="text-[10px] font-medium text-gray-400">
+                          {isCustomer ? '客户' : msg.senderType === 'ai' ? 'AI' : '客服'}
+                        </span>
+                        <span className="text-[10px] text-gray-300">
+                          {(() => { try { return new Date(msg.timestamp).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch { return ''; } })()}
+                        </span>
+                      </div>
+                      <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                      {msg.translatedContent && msg.translatedContent !== msg.content && (
+                        <p className="mt-1.5 pt-1.5 border-t border-gray-200/60 text-xs text-gray-500 italic">{msg.translatedContent}</p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
           </div>
         </div>
 
-        {/* 平台筛选面板 */}
-        {showFilters && (
-          <div className="bg-white border-x border-gray-200 px-4 py-3 flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-gray-500 mr-1">平台:</span>
-            <button
-              onClick={() => setPlatformFilter('all')}
-              className={cn(
-                "px-2.5 py-1 text-xs rounded-md transition-colors",
-                platformFilter === 'all' ? "bg-[#FF6B35] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              )}
-            >全部</button>
-            {platformConfigs.map(p => (
-              <button
-                key={p.id}
-                onClick={() => setPlatformFilter(p.id)}
-                className={cn(
-                  "px-2.5 py-1 text-xs rounded-md transition-colors",
-                  platformFilter === p.id ? "bg-[#FF6B35] text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                )}
-              >{p.name}</button>
-            ))}
-          </div>
-        )}
+        {/* 中间：AI画像 */}
+        <div className="w-[35%] border-r border-gray-100 overflow-y-auto bg-white">
+          <CustomerAIProfile />
+        </div>
 
-        {/* 客户表格 */}
-        <CustomerTable customers={filtered} formatDate={formatDate} />
+        {/* 右侧：跟进记录 */}
+        <div className="w-[30%] flex flex-col min-h-0 bg-white">
+          <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-100 bg-gray-50/80 flex-shrink-0">
+            <ClipboardList className="w-4 h-4 text-[#FF6B35]" />
+            <span className="text-sm font-medium text-gray-800">跟进记录</span>
+            <span className="text-xs text-gray-400">{followUps.length} 条</span>
+            <button
+              onClick={() => setShowFollowUpInput(!showFollowUpInput)}
+              className="ml-auto flex items-center gap-1 px-2.5 py-1 text-xs font-medium text-white bg-[#FF6B35] rounded-md hover:bg-[#FF6B35]/90 transition-colors"
+            >
+              <Plus className="w-3 h-3" />
+              新增跟进
+            </button>
+          </div>
+
+          {/* 新增跟进输入 */}
+          {showFollowUpInput && (
+            <div className="px-4 py-3 bg-orange-50/50 border-b border-orange-100 flex-shrink-0 space-y-2">
+              <div className="flex flex-wrap items-center gap-1.5">
+                {FOLLOW_UP_TYPES.map(t => (
+                  <button
+                    key={t.value}
+                    onClick={() => setNewFollowUpType(t.value)}
+                    className={cn(
+                      "px-2.5 py-1 text-xs rounded-md border transition-colors",
+                      newFollowUpType === t.value
+                        ? "bg-[#FF6B35]/10 text-[#FF6B35] border-[#FF6B35]/30 font-medium"
+                        : "bg-white text-gray-500 border-gray-200 hover:border-gray-300"
+                    )}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
+              <textarea
+                value={newFollowUp}
+                onChange={e => setNewFollowUp(e.target.value)}
+                placeholder="输入跟进内容..."
+                rows={3}
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg resize-none focus:outline-none focus:ring-1 focus:ring-[#FF6B35]/40 focus:border-[#FF6B35]/40"
+              />
+              <div className="flex justify-end">
+                <button
+                  onClick={handleAddFollowUp}
+                  disabled={!newFollowUp.trim()}
+                  className={cn(
+                    "px-4 py-1.5 text-xs font-medium rounded-lg transition-colors",
+                    newFollowUp.trim()
+                      ? "bg-[#FF6B35] text-white hover:bg-[#FF6B35]/90"
+                      : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                  )}
+                >
+                  保存
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* 跟进记录列表 */}
+          <div className="flex-1 overflow-y-auto">
+            {followUps.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                <ClipboardList className="w-6 h-6 mb-2 text-gray-300" />
+                <p className="text-xs">暂无跟进记录</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-50">
+                {followUps.map(record => (
+                  <div key={record.id} className="px-5 py-3 hover:bg-gray-50/50 transition-colors">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className={cn(
+                        "px-1.5 py-0.5 text-[10px] font-medium rounded",
+                        record.type === 'call' ? 'bg-blue-50 text-blue-600' :
+                        record.type === 'wechat' ? 'bg-green-50 text-green-600' :
+                        record.type === 'email' ? 'bg-purple-50 text-purple-600' :
+                        record.type === 'visit' ? 'bg-orange-50 text-orange-600' :
+                        'bg-gray-100 text-gray-500'
+                      )}>
+                        {FOLLOW_UP_TYPES.find(t => t.value === record.type)?.label ?? '其他'}
+                      </span>
+                      <span className="text-[10px] text-gray-400 flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {record.createdAt}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-700 leading-relaxed">{record.content}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
 };
 
-// 客户表格组件（拆分以保持可读性）
-const CustomerTable: React.FC<{
-  customers: import('@/types').CustomerProfile[];
-  formatDate: (date?: Date) => string;
-}> = ({ customers, formatDate }) => (
-  <div className="bg-white rounded-b-xl border border-gray-200 flex-1 overflow-hidden flex flex-col">
-    <div className="overflow-x-auto flex-1">
-      <table className="w-full">
-        <thead>
-          <tr className="border-b border-gray-200 bg-gray-50/50">
-            <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">客户</th>
-            <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">平台</th>
-            <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">国家</th>
-            <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">联系方式</th>
-            <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">标签</th>
-            <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">订单数</th>
-            <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">最后联系</th>
-          </tr>
-        </thead>
-        <tbody>
-          {customers.map((customer) => {
-            const pc = platformConfigs.find(p => p.id === customer.platform);
-            return (
-              <tr key={customer.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
-                <td className="py-3 px-4">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0">
-                      {customer.avatar ? (
-                        <img src={customer.avatar} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <UserCircle className="w-5 h-5 text-gray-400" />
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{customer.name}</p>
-                      {customer.email && (
-                        <p className="text-xs text-gray-400">{customer.email}</p>
-                      )}
-                    </div>
-                  </div>
-                </td>
-                <td className="py-3 px-4">
-                  {pc && (
-                    <span
-                      className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full text-white"
-                      style={{ backgroundColor: pc.color }}
-                    >
-                      {pc.name}
-                    </span>
-                  )}
-                </td>
-                <td className="py-3 px-4">
-                  <div className="flex items-center gap-1">
-                    <MapPin className="w-3.5 h-3.5 text-gray-400" />
-                    <span className="text-sm text-gray-600">{customer.country}</span>
-                  </div>
-                </td>
-                <td className="py-3 px-4">
-                  {customer.phone && (
-                    <div className="flex items-center gap-1">
-                      <Phone className="w-3.5 h-3.5 text-gray-400" />
-                      <span className="text-xs text-gray-500">{customer.phone}</span>
-                    </div>
-                  )}
-                </td>
-                <td className="py-3 px-4">
-                  <div className="flex flex-wrap gap-1 max-w-[200px]">
-                    {customer.tags.slice(0, 3).map(tag => (
-                      <span key={tag} className="px-1.5 py-0.5 text-[10px] bg-gray-100 text-gray-600 rounded">
-                        {tag}
-                      </span>
-                    ))}
-                    {customer.tags.length > 3 && (
-                      <span className="text-[10px] text-gray-400">+{customer.tags.length - 3}</span>
-                    )}
-                  </div>
-                </td>
-                <td className="py-3 px-4 text-sm text-gray-600">
-                  {customer.orderHistory?.length || 0}
-                </td>
-                <td className="py-3 px-4 text-sm text-gray-500">
-                  {formatDate(customer.lastContactAt)}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-
-      {customers.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-16 text-gray-400">
-          <UserCircle className="w-10 h-10 mb-3 text-gray-300" />
-          <p className="text-sm">暂无客户数据</p>
-          <p className="text-xs mt-1">请调整筛选条件</p>
-        </div>
-      )}
-    </div>
-  </div>
-);
-
-// 平台工单定义
 type PlatformTicketStatus = 'normal' | 'abnormal' | 'offline';
 
 interface PlatformTicket {
@@ -2062,6 +2564,316 @@ const TicketTableRows: React.FC<{
     })}
   </tbody>
 );
+
+// ============ 内控报表页面 ============
+// 排行榜 mock 数据
+const mockRankingData = [
+  { name: '销售主力(SA01)', conversations: 156, messages: 1842, initiated: 89, customers: 67 },
+  { name: '李四(SA02)', conversations: 132, messages: 1567, initiated: 72, customers: 58 },
+  { name: 'David(SO01)', conversations: 98, messages: 1203, initiated: 45, customers: 42 },
+  { name: 'Emily(SO02)', conversations: 87, messages: 956, initiated: 38, customers: 35 },
+  { name: '运营主管(OP01)', conversations: 64, messages: 723, initiated: 28, customers: 24 },
+];
+
+const AdminAuditReportPage: React.FC = () => {
+  const [rankTab, setRankTab] = useState<'daily' | 'weekly' | 'monthly'>('daily');
+
+  const rankTabs: { value: 'daily' | 'weekly' | 'monthly'; label: string }[] = [
+    { value: 'daily', label: '日报' },
+    { value: 'weekly', label: '周报' },
+    { value: 'monthly', label: '月报' },
+  ];
+
+  // 排行榜条形图最大值
+  const maxConv = Math.max(...mockRankingData.map(r => r.conversations));
+  const maxMsg = Math.max(...mockRankingData.map(r => r.messages));
+  const maxInit = Math.max(...mockRankingData.map(r => r.initiated));
+  const maxCust = Math.max(...mockRankingData.map(r => r.customers));
+
+  return (
+    <div className="h-full flex flex-col overflow-auto">
+      <div className="p-6 space-y-5">
+        {/* 第一行：社交账号在线总数 + 对话总数 + 回复效率看板 */}
+        <div className="grid grid-cols-3 gap-4">
+          {/* 社交账号在线总数 */}
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-gray-900">社交账号在线总数</h3>
+              <span className="text-[11px] text-gray-400">实时</span>
+            </div>
+            <div className="flex items-end gap-3">
+              <p className="text-3xl font-bold text-[#FF6B35]">5</p>
+              <span className="text-sm text-gray-400 mb-1">/ 8 个账号</span>
+            </div>
+            <div className="mt-4 flex items-center gap-4">
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-green-500" />
+                <span className="text-xs text-gray-500">在线 5</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-gray-300" />
+                <span className="text-xs text-gray-500">离线 3</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 对话总数 */}
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-gray-900">对话总数</h3>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-gray-400">今日</span>
+                <button className="text-[11px] text-[#FF6B35] hover:text-[#e55a2b] font-medium transition-colors">查看明细</button>
+              </div>
+            </div>
+            <div className="flex items-end gap-3">
+              <p className="text-3xl font-bold text-gray-900">537</p>
+              <div className="flex items-center gap-1 mb-1">
+                <span className="text-xs text-green-600">+12.5%</span>
+                <span className="text-[10px] text-gray-400">较昨日</span>
+              </div>
+            </div>
+            <div className="mt-4 grid grid-cols-3 gap-3">
+              <div>
+                <p className="text-lg font-semibold text-gray-900">328</p>
+                <span className="text-[11px] text-gray-400">客户发起</span>
+              </div>
+              <div>
+                <p className="text-lg font-semibold text-gray-900">142</p>
+                <span className="text-[11px] text-gray-400">主动发起</span>
+              </div>
+              <div>
+                <p className="text-lg font-semibold text-gray-900">67</p>
+                <span className="text-[11px] text-gray-400">AI发起</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 回复效率看板 */}
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-gray-900">回复效率看板</h3>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-gray-400">今日</span>
+                <button className="text-[11px] text-[#FF6B35] hover:text-[#e55a2b] font-medium transition-colors">查看明细</button>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-2xl font-bold text-gray-900">2.3<span className="text-sm font-normal text-gray-400 ml-0.5">min</span></p>
+                <span className="text-[11px] text-gray-400">平均首次响应</span>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-gray-900">4.8<span className="text-sm font-normal text-gray-400 ml-0.5">min</span></p>
+                <span className="text-[11px] text-gray-400">平均回复时长</span>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-green-600">96.2<span className="text-sm font-normal text-green-500 ml-0.5">%</span></p>
+                <span className="text-[11px] text-gray-400">回复率</span>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-gray-900">8.5</p>
+                <span className="text-[11px] text-gray-400">平均对话轮次</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 第二行：超时未回复次数 + 合规统计看板 */}
+        <div className="grid grid-cols-2 gap-4">
+          {/* 超时未回复次数 */}
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-gray-900">超时未回复次数</h3>
+              <span className="text-[11px] text-gray-400">今日</span>
+            </div>
+            <div className="flex items-end gap-3 mb-4">
+              <p className="text-3xl font-bold text-red-500">12</p>
+              <div className="flex items-center gap-1 mb-1">
+                <span className="text-xs text-red-500">+3</span>
+                <span className="text-[10px] text-gray-400">较昨日</span>
+              </div>
+            </div>
+            <div className="space-y-2.5">
+              {[
+                { name: '销售主力(SA01)', count: 5, color: '#EF4444' },
+                { name: '李四(SA02)', count: 4, color: '#F97316' },
+                { name: 'Emily(SO02)', count: 2, color: '#F59E0B' },
+                { name: 'David(SO01)', count: 1, color: '#22C55E' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <span className="text-xs text-gray-500 w-28 truncate">{item.name}</span>
+                  <div className="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{ width: `${(item.count / 5) * 100}%`, backgroundColor: item.color }}
+                    />
+                  </div>
+                  <span className="text-xs font-medium text-gray-700 w-6 text-right">{item.count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 合规统计看板 */}
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-semibold text-gray-900">合规统计看板</h3>
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] text-gray-400">本周</span>
+                <button className="text-[11px] text-[#FF6B35] hover:text-[#e55a2b] font-medium transition-colors">查看明细</button>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-4 mb-4">
+              <div className="text-center p-3 bg-red-50 rounded-lg">
+                <p className="text-xl font-bold text-red-600">3</p>
+                <span className="text-[11px] text-red-500">敏感词触发</span>
+              </div>
+              <div className="text-center p-3 bg-orange-50 rounded-lg">
+                <p className="text-xl font-bold text-orange-600">7</p>
+                <span className="text-[11px] text-orange-500">删除消息</span>
+              </div>
+              <div className="text-center p-3 bg-amber-50 rounded-lg">
+                <p className="text-xl font-bold text-amber-600">2</p>
+                <span className="text-[11px] text-amber-500">删除联系人</span>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="text-center p-3 bg-blue-50 rounded-lg">
+                <p className="text-xl font-bold text-blue-600">4</p>
+                <span className="text-[11px] text-blue-500">发送名片</span>
+              </div>
+              <div className="text-center p-3 bg-indigo-50 rounded-lg">
+                <p className="text-xl font-bold text-indigo-600">5</p>
+                <span className="text-[11px] text-indigo-500">发送文件</span>
+              </div>
+              <div className="text-center p-3 bg-purple-50 rounded-lg">
+                <p className="text-xl font-bold text-purple-600">1</p>
+                <span className="text-[11px] text-purple-500">异常登录</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 第三行：排行榜 */}
+        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+          <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-gray-900">数据排行</h3>
+            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+              {rankTabs.map(tab => (
+                <button
+                  key={tab.value}
+                  onClick={() => setRankTab(tab.value)}
+                  className={cn(
+                    "px-3 py-1 text-xs font-medium rounded-md transition-colors",
+                    rankTab === tab.value
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  )}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="grid grid-cols-4 divide-x divide-gray-100">
+            {/* 对话总数排行 */}
+            <div className="p-4">
+              <h4 className="text-xs font-medium text-gray-500 mb-3">对话总数排行</h4>
+              <div className="space-y-2.5">
+                {mockRankingData.map((item, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className={cn(
+                      "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0",
+                      i === 0 ? "bg-[#FF6B35] text-white" :
+                      i === 1 ? "bg-orange-300 text-white" :
+                      i === 2 ? "bg-orange-200 text-orange-700" :
+                      "bg-gray-100 text-gray-400"
+                    )}>{i + 1}</span>
+                    <span className="text-xs text-gray-700 truncate flex-1">{item.name}</span>
+                    <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden flex-shrink-0">
+                      <div className="h-full bg-[#FF6B35] rounded-full" style={{ width: `${(item.conversations / maxConv) * 100}%` }} />
+                    </div>
+                    <span className="text-xs font-medium text-gray-700 w-8 text-right flex-shrink-0">{item.conversations}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 消息总数排行 */}
+            <div className="p-4">
+              <h4 className="text-xs font-medium text-gray-500 mb-3">消息总数排行榜</h4>
+              <div className="space-y-2.5">
+                {mockRankingData.map((item, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className={cn(
+                      "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0",
+                      i === 0 ? "bg-blue-500 text-white" :
+                      i === 1 ? "bg-blue-300 text-white" :
+                      i === 2 ? "bg-blue-200 text-blue-700" :
+                      "bg-gray-100 text-gray-400"
+                    )}>{i + 1}</span>
+                    <span className="text-xs text-gray-700 truncate flex-1">{item.name}</span>
+                    <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden flex-shrink-0">
+                      <div className="h-full bg-blue-500 rounded-full" style={{ width: `${(item.messages / maxMsg) * 100}%` }} />
+                    </div>
+                    <span className="text-xs font-medium text-gray-700 w-10 text-right flex-shrink-0">{item.messages}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 主动发起对话数排行 */}
+            <div className="p-4">
+              <h4 className="text-xs font-medium text-gray-500 mb-3">主动发起对话数排行</h4>
+              <div className="space-y-2.5">
+                {mockRankingData.map((item, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className={cn(
+                      "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0",
+                      i === 0 ? "bg-emerald-500 text-white" :
+                      i === 1 ? "bg-emerald-300 text-white" :
+                      i === 2 ? "bg-emerald-200 text-emerald-700" :
+                      "bg-gray-100 text-gray-400"
+                    )}>{i + 1}</span>
+                    <span className="text-xs text-gray-700 truncate flex-1">{item.name}</span>
+                    <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden flex-shrink-0">
+                      <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(item.initiated / maxInit) * 100}%` }} />
+                    </div>
+                    <span className="text-xs font-medium text-gray-700 w-8 text-right flex-shrink-0">{item.initiated}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 接待客户数排行 */}
+            <div className="p-4">
+              <h4 className="text-xs font-medium text-gray-500 mb-3">接待客户数排行</h4>
+              <div className="space-y-2.5">
+                {mockRankingData.map((item, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className={cn(
+                      "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0",
+                      i === 0 ? "bg-violet-500 text-white" :
+                      i === 1 ? "bg-violet-300 text-white" :
+                      i === 2 ? "bg-violet-200 text-violet-700" :
+                      "bg-gray-100 text-gray-400"
+                    )}>{i + 1}</span>
+                    <span className="text-xs text-gray-700 truncate flex-1">{item.name}</span>
+                    <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden flex-shrink-0">
+                      <div className="h-full bg-violet-500 rounded-full" style={{ width: `${(item.customers / maxCust) * 100}%` }} />
+                    </div>
+                    <span className="text-xs font-medium text-gray-700 w-8 text-right flex-shrink-0">{item.customers}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // 占位页面组件
 const PlaceholderPage: React.FC<{

@@ -1,6 +1,7 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { useStore } from '@/store/useStore';
 import { languageMap } from '@/data/mockData';
+import type { AILabel } from '@/types';
 import {
   Sparkles,
   FileText,
@@ -9,20 +10,15 @@ import {
   TrendingUp,
   Target,
   Building2,
+  Tag,
   Mail,
   Phone,
   MapPin,
-  Tag,
-  Briefcase,
-  Users,
   MessageSquare,
   Clock,
-  Package,
   Zap,
-  FileEdit,
   Pencil,
   Check,
-  Plus,
   Loader2,
   Brain,
   ArrowRight
@@ -32,37 +28,21 @@ interface CustomerAIProfileProps {
   onClose?: () => void;
 }
 
-// 编辑表单数据类型
-interface ProfileFormData {
-  customerLevel: string;
-  customerTypes: string[];
-  categories: string[];
-  products: string[];
-  budgetRange: string;
-  intentQuantity: string;
-  purchasePurpose: string;
-  priceSensitivity: string;
-  logisticsSensitivity: string;
-  authenticitySensitivity: string;
-  paymentSecuritySensitivity: string;
-  qualitySensitivity: string;
-  paymentPreference: string;
-  trustLevel: string;
-  channelSource: string;
-  lifecycle: string;
-  urgency: string;
-}
+// 动态字段值存储：fieldId -> 选中的标签值ID数组 或 文本内容
+type DynamicFieldValues = Record<string, string[] | string>;
 
+// 联系人信息
 interface ContactFormData {
   nickname: string;
   email: string;
   phone: string;
   region: string;
-  activeHours: string;
-  activityLevel: string;
-  notes: string;
+  activity: 'lost' | 'low' | 'medium' | 'high';
+  activeTime: string[];
+  remark: string;
 }
 
+// 公司信息
 interface CompanyFormData {
   companyName: string;
   industry: string;
@@ -76,11 +56,18 @@ export const CustomerAIProfile: React.FC<CustomerAIProfileProps> = ({ onClose })
     generateAIReply,
     addMessage,
     userSettings,
-    updateConversation
+    updateConversation,
+    aiLabels,
   } = useStore();
 
   const conversation = getSelectedConversation();
   const aiSettings = userSettings.preferences.ai;
+
+  // AI会话消息数量
+  const aiMessageCount = useMemo(() => {
+    if (!conversation) return 0;
+    return (conversation.messages || []).filter(m => m.senderType === 'ai' || m.isAIGenerated).length;
+  }, [conversation]);
 
   // 编辑状态
   const [editingProfile, setEditingProfile] = useState(false);
@@ -119,62 +106,39 @@ export const CustomerAIProfile: React.FC<CustomerAIProfileProps> = ({ onClose })
     }
   };
 
-  // AI画像表单数据
-  const [profileData, setProfileData] = useState<ProfileFormData>({
-    customerLevel: 'B级 - 高意向询价',
-    customerTypes: ['批发', '平台卖家'],
-    categories: ['鞋类', '运动服饰'],
-    products: ['Nike Air Max 270', 'Adidas Yeezy 350', 'Jordan 1 Retro'],
-    budgetRange: '中($50-$200)',
-    intentQuantity: '中批(10-99)',
-    purchasePurpose: '转售',
-    priceSensitivity: '高',
-    logisticsSensitivity: '高',
-    authenticitySensitivity: '高',
-    paymentSecuritySensitivity: '中',
-    qualitySensitivity: '高',
-    paymentPreference: 'PayPal',
-    trustLevel: '中',
-    channelSource: 'WhatsApp',
-    lifecycle: '潜在(B)',
-    urgency: '本周',
-  });
+  // 从 AI 标签数据动态获取各维度字段
+  const profileFields = useMemo(() => {
+    return aiLabels.filter((l) => l.parentId === 'dim_profile' && l.level === 3)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  }, [aiLabels]);
 
-  // 联系人表单数据
+  const getFieldValues = (fieldId: string) => {
+    return aiLabels.filter((l) => l.parentId === fieldId && l.level === 4)
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  };
+
+  // 动态字段值：fieldId -> 选中的标签ID数组 或 文本内容
+  const [profileFieldValues, setProfileFieldValues] = useState<DynamicFieldValues>({});
+
+  // 联系人信息固定字段
   const [contactData, setContactData] = useState<ContactFormData>({
     nickname: '',
     email: '',
-    phone: '+1-234-567-890',
+    phone: '',
     region: '',
-    activeHours: '20:00-22:00 (UTC-5)',
-    activityLevel: '中活跃',
-    notes: '偏好白色鞋/喜欢跑步风格',
+    activity: 'medium',
+    activeTime: [],
+    remark: '',
   });
 
-  // 公司表单数据
+  // 公司信息固定字段
   const [companyData, setCompanyData] = useState<CompanyFormData>({
-    companyName: 'TechCorp International',
-    industry: '电子商务/零售',
-    scale: '50-200 员工',
+    companyName: '',
+    industry: '',
+    scale: '',
     address: '',
   });
 
-  // 同步客户数据到表单
-  useEffect(() => {
-    if (conversation) {
-      setContactData(prev => ({
-        ...prev,
-        nickname: conversation.customer.name,
-        email: conversation.customer.email || 'john@example.com',
-        region: conversation.customer.country,
-      }));
-      setCompanyData(prev => ({
-        ...prev,
-        address: conversation.customer.country,
-      }));
-    }
-  }, [conversation?.id]);
-  
   // AI自动回复 - 当开启AI接管且收到新客户消息时
   useEffect(() => {
     if (!conversation || !aiSettings.enabled || !aiSettings.autoReply) return;
@@ -201,9 +165,29 @@ export const CustomerAIProfile: React.FC<CustomerAIProfileProps> = ({ onClose })
       return () => clearTimeout(autoReplyTimeout);
     }
   }, [conversation?.lastMessage, aiSettings.enabled, aiSettings.autoReply]);
-  
 
-  
+  // 动态字段值切换
+  const toggleFieldValue = (
+    setter: React.Dispatch<React.SetStateAction<DynamicFieldValues>>,
+    fieldId: string,
+    valueId: string,
+    mode: 'single' | 'multiple'
+  ) => {
+    setter((prev) => {
+      const current = (prev[fieldId] as string[]) || [];
+      if (mode === 'single') return { ...prev, [fieldId]: current.includes(valueId) ? [] : [valueId] };
+      return { ...prev, [fieldId]: current.includes(valueId) ? current.filter((v) => v !== valueId) : [...current, valueId] };
+    });
+  };
+
+  const setFieldText = (
+    setter: React.Dispatch<React.SetStateAction<DynamicFieldValues>>,
+    fieldId: string,
+    text: string
+  ) => {
+    setter((prev) => ({ ...prev, [fieldId]: text }));
+  };
+
   if (!conversation) {
     return (
       <div className="flex flex-col items-center justify-center h-full bg-white rounded-xl p-6">
@@ -457,414 +441,33 @@ export const CustomerAIProfile: React.FC<CustomerAIProfileProps> = ({ onClose })
             </button>
           </div>
 
-          <div className="space-y-3">
-            {/* 客户等级 */}
-            <div>
-              <span className="text-xs text-gray-600 mb-1.5 block font-medium">客户等级</span>
-              {editingProfile ? (
-                <select
-                  value={profileData.customerLevel}
-                  onChange={(e) => setProfileData({ ...profileData, customerLevel: e.target.value })}
-                  className="w-full px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20"
-                >
-                  <option value="A级 - 已成交">A级 - 已成交</option>
-                  <option value="B级 - 高意向询价">B级 - 高意向询价</option>
-                  <option value="C级 - 观望">C级 - 观望</option>
-                  <option value="D级 - 仅加好友">D级 - 仅加好友</option>
-                </select>
-              ) : (
-                <>
-                  <div className="flex items-center gap-2">
-                    <span className="px-3 py-1.5 text-xs bg-[#FF6B35] text-white rounded-lg font-medium">
-                      {profileData.customerLevel}
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-gray-400 mt-1">A(已成交) / B(高意向询价) / C(观望) / D(仅加好友)</p>
-                </>
-              )}
-            </div>
-
-            {/* 客户类型 */}
-            <div>
-              <span className="text-xs text-gray-600 mb-1.5 block font-medium">客户类型</span>
-              {editingProfile ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {profileData.customerTypes.map((type, idx) => (
-                    <span key={idx} className="px-2.5 py-1 text-xs bg-[#FF6B35] text-white rounded-full flex items-center gap-1">
-                      {type}
-                      <button onClick={() => setProfileData({
-                        ...profileData,
-                        customerTypes: profileData.customerTypes.filter((_, i) => i !== idx)
-                      })} className="hover:bg-white/20 rounded-full">
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  ))}
-                  <button
-                    onClick={() => {
-                      const newType = prompt('输入新的客户类型:');
-                      if (newType) setProfileData({ ...profileData, customerTypes: [...profileData.customerTypes, newType] });
-                    }}
-                    className="px-2 py-1 text-xs border border-dashed border-[#FF6B35] text-[#FF6B35] rounded-full flex items-center gap-1 hover:bg-[#FF6B35]/10"
-                  >
-                    <Plus className="w-3 h-3" />添加
-                  </button>
+          <div className="grid grid-cols-2 gap-3">
+            {profileFields.map((field) => {
+              const values = getFieldValues(field.id);
+              const selected = (profileFieldValues[field.id] as string[]) || [];
+              const textVal = (profileFieldValues[field.id] as string) || '';
+              const isWide = field.selectMode === 'multiple';
+              return (
+                <div key={field.id} className={isWide ? 'col-span-2' : ''}>
+                  <DynamicFieldSection
+                    field={field}
+                    values={values}
+                    selected={selected}
+                    textVal={typeof profileFieldValues[field.id] === 'string' ? textVal : ''}
+                    editing={editingProfile}
+                    onToggle={(valId) => toggleFieldValue(setProfileFieldValues, field.id, valId, field.selectMode || 'single')}
+                    onTextChange={(text) => setFieldText(setProfileFieldValues, field.id, text)}
+                  />
                 </div>
-              ) : (
-                <div className="flex flex-wrap gap-1.5">
-                  {profileData.customerTypes.map((type, idx) => (
-                    <span key={idx} className={`px-2.5 py-1 text-xs rounded-full ${idx === 0 ? 'bg-[#FF6B35] text-white' : 'bg-[#FF6B35]/10 text-[#FF6B35]'}`}>
-                      {type}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* 意向品类 */}
-            <div>
-              <span className="text-xs text-gray-600 mb-1.5 block font-medium">意向品类</span>
-              {editingProfile ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {profileData.categories.map((cat, idx) => (
-                    <span key={idx} className="px-2 py-1 text-xs bg-white text-gray-700 border border-gray-200 rounded-lg flex items-center gap-1">
-                      <Package className="w-3 h-3 text-[#FF6B35]" />{cat}
-                      <button onClick={() => setProfileData({
-                        ...profileData,
-                        categories: profileData.categories.filter((_, i) => i !== idx)
-                      })} className="hover:bg-gray-100 rounded-full ml-1">
-                        <X className="w-3 h-3 text-gray-400" />
-                      </button>
-                    </span>
-                  ))}
-                  <button
-                    onClick={() => {
-                      const newCat = prompt('输入新的意向品类:');
-                      if (newCat) setProfileData({ ...profileData, categories: [...profileData.categories, newCat] });
-                    }}
-                    className="px-2 py-1 text-xs border border-dashed border-gray-300 text-gray-500 rounded-lg flex items-center gap-1 hover:bg-gray-50"
-                  >
-                    <Plus className="w-3 h-3" />添加
-                  </button>
-                </div>
-              ) : (
-                <div className="flex flex-wrap gap-1.5">
-                  {profileData.categories.map((cat, idx) => (
-                    <span key={idx} className="px-2 py-1 text-xs bg-white text-gray-700 border border-gray-200 rounded-lg">
-                      {cat}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* 意向商品 */}
-            <div>
-              <span className="text-xs text-gray-600 mb-1.5 block font-medium">意向商品</span>
-              {editingProfile ? (
-                <div className="flex flex-wrap gap-1.5">
-                  {profileData.products.map((product, idx) => (
-                    <span key={idx} className="px-2 py-1 text-xs bg-white text-gray-700 border border-gray-200 rounded-lg flex items-center gap-1">
-                      {product}
-                      <button onClick={() => setProfileData({
-                        ...profileData,
-                        products: profileData.products.filter((_, i) => i !== idx)
-                      })} className="hover:bg-gray-100 rounded-full ml-1">
-                        <X className="w-3 h-3 text-gray-400" />
-                      </button>
-                    </span>
-                  ))}
-                  <button
-                    onClick={() => {
-                      const newProduct = prompt('输入新的意向商品:');
-                      if (newProduct) setProfileData({ ...profileData, products: [...profileData.products, newProduct] });
-                    }}
-                    className="px-2 py-1 text-xs border border-dashed border-gray-300 text-gray-500 rounded-lg flex items-center gap-1 hover:bg-gray-50"
-                  >
-                    <Plus className="w-3 h-3" />添加
-                  </button>
-                </div>
-              ) : (
-                <div className="flex flex-wrap gap-1.5">
-                  {profileData.products.map((product, idx) => (
-                    <span key={idx} className="px-2 py-1 text-xs bg-white text-gray-700 border border-gray-200 rounded-lg">
-                      {product}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* 预算区间 & 意向数量 */}
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <span className="text-xs text-gray-600 mb-1 block font-medium">预算区间</span>
-                {editingProfile ? (
-                  <select
-                    value={profileData.budgetRange}
-                    onChange={(e) => setProfileData({ ...profileData, budgetRange: e.target.value })}
-                    className="w-full px-2 py-1 text-xs border border-gray-200 rounded-lg"
-                  >
-                    <option value="低(&lt;$50)">低(&lt;$50)</option>
-                    <option value="中($50-$200)">中($50-$200)</option>
-                    <option value="高($200-$500)">高($200-$500)</option>
-                    <option value="超高(&gt;$500)">超高(&gt;$500)</option>
-                  </select>
-                ) : (
-                  <span className="px-2 py-1 text-xs bg-white text-gray-700 border border-gray-200 rounded-lg">
-                    {profileData.budgetRange}
-                  </span>
-                )}
-              </div>
-              <div>
-                <span className="text-xs text-gray-600 mb-1 block font-medium">意向数量</span>
-                {editingProfile ? (
-                  <select
-                    value={profileData.intentQuantity}
-                    onChange={(e) => setProfileData({ ...profileData, intentQuantity: e.target.value })}
-                    className="w-full px-2 py-1 text-xs border border-gray-200 rounded-lg"
-                  >
-                    <option value="小批(1-9)">小批(1-9)</option>
-                    <option value="中批(10-99)">中批(10-99)</option>
-                    <option value="大批(100+)">大批(100+)</option>
-                  </select>
-                ) : (
-                  <span className="px-2 py-1 text-xs bg-[#FF6B35]/10 text-[#FF6B35] rounded-lg">
-                    {profileData.intentQuantity}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* 购买目的 */}
-            <div>
-              <span className="text-xs text-gray-600 mb-1 block font-medium">购买目的</span>
-              {editingProfile ? (
-                <select
-                  value={profileData.purchasePurpose}
-                  onChange={(e) => setProfileData({ ...profileData, purchasePurpose: e.target.value })}
-                  className="w-full px-2 py-1 text-xs border border-gray-200 rounded-lg"
-                >
-                  <option value="转售">转售</option>
-                  <option value="自用">自用</option>
-                  <option value="送礼">送礼</option>
-                  <option value="代购">代购</option>
-                </select>
-              ) : (
-                <span className="px-2 py-1 text-xs bg-white text-gray-700 border border-gray-200 rounded-lg">
-                  {profileData.purchasePurpose}
-                </span>
-              )}
-            </div>
-
-            {/* 敏感度标签 */}
-            <div>
-              <span className="text-xs text-gray-600 mb-1.5 block font-medium">敏感度特征</span>
-              {editingProfile ? (
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <span className="text-[10px] text-gray-500">价格敏感度</span>
-                    <select
-                      value={profileData.priceSensitivity}
-                      onChange={(e) => setProfileData({ ...profileData, priceSensitivity: e.target.value })}
-                      className="w-full px-2 py-1 text-xs border border-gray-200 rounded-lg"
-                    >
-                      <option value="低">低</option>
-                      <option value="中">中</option>
-                      <option value="高">高</option>
-                    </select>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-gray-500">物流敏感度</span>
-                    <select
-                      value={profileData.logisticsSensitivity}
-                      onChange={(e) => setProfileData({ ...profileData, logisticsSensitivity: e.target.value })}
-                      className="w-full px-2 py-1 text-xs border border-gray-200 rounded-lg"
-                    >
-                      <option value="低">低</option>
-                      <option value="中">中</option>
-                      <option value="高">高</option>
-                    </select>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-gray-500">真实性敏感度</span>
-                    <select
-                      value={profileData.authenticitySensitivity}
-                      onChange={(e) => setProfileData({ ...profileData, authenticitySensitivity: e.target.value })}
-                      className="w-full px-2 py-1 text-xs border border-gray-200 rounded-lg"
-                    >
-                      <option value="低">低</option>
-                      <option value="中">中</option>
-                      <option value="高">高</option>
-                    </select>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-gray-500">付款安全敏感度</span>
-                    <select
-                      value={profileData.paymentSecuritySensitivity}
-                      onChange={(e) => setProfileData({ ...profileData, paymentSecuritySensitivity: e.target.value })}
-                      className="w-full px-2 py-1 text-xs border border-gray-200 rounded-lg"
-                    >
-                      <option value="低">低</option>
-                      <option value="中">中</option>
-                      <option value="高">高</option>
-                    </select>
-                  </div>
-                  <div className="col-span-2">
-                    <span className="text-[10px] text-gray-500">质量敏感度</span>
-                    <select
-                      value={profileData.qualitySensitivity}
-                      onChange={(e) => setProfileData({ ...profileData, qualitySensitivity: e.target.value })}
-                      className="w-full px-2 py-1 text-xs border border-gray-200 rounded-lg"
-                    >
-                      <option value="低">低</option>
-                      <option value="中">中</option>
-                      <option value="高">高</option>
-                    </select>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-wrap gap-1.5">
-                  <span className="px-2 py-1 text-xs bg-red-100 text-red-600 rounded-full">
-                    价格敏感-{profileData.priceSensitivity}
-                  </span>
-                  <span className="px-2 py-1 text-xs bg-blue-100 text-blue-600 rounded-full">
-                    物流敏感-{profileData.logisticsSensitivity}
-                  </span>
-                  <span className="px-2 py-1 text-xs bg-purple-100 text-purple-600 rounded-full">
-                    真实性敏感-{profileData.authenticitySensitivity}
-                  </span>
-                  <span className="px-2 py-1 text-xs bg-green-100 text-green-600 rounded-full">
-                    付款安全敏感-{profileData.paymentSecuritySensitivity}
-                  </span>
-                  <span className="px-2 py-1 text-xs bg-amber-100 text-amber-600 rounded-full">
-                    质量敏感-{profileData.qualitySensitivity}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* 付款 & 信任 */}
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <span className="text-xs text-gray-600 mb-1 block font-medium">付款偏好</span>
-                {editingProfile ? (
-                  <select
-                    value={profileData.paymentPreference}
-                    onChange={(e) => setProfileData({ ...profileData, paymentPreference: e.target.value })}
-                    className="w-full px-2 py-1 text-xs border border-gray-200 rounded-lg"
-                  >
-                    <option value="PayPal">PayPal</option>
-                    <option value="信用卡">信用卡</option>
-                    <option value="银行转账">银行转账</option>
-                    <option value="西联汇款">西联汇款</option>
-                  </select>
-                ) : (
-                  <span className="px-2 py-1 text-xs bg-white text-gray-700 border border-gray-200 rounded-lg">
-                    {profileData.paymentPreference}
-                  </span>
-                )}
-              </div>
-              <div>
-                <span className="text-xs text-gray-600 mb-1 block font-medium">信任等级</span>
-                {editingProfile ? (
-                  <select
-                    value={profileData.trustLevel}
-                    onChange={(e) => setProfileData({ ...profileData, trustLevel: e.target.value })}
-                    className="w-full px-2 py-1 text-xs border border-gray-200 rounded-lg"
-                  >
-                    <option value="低">低</option>
-                    <option value="中">中</option>
-                    <option value="高">高</option>
-                  </select>
-                ) : (
-                  <span className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-lg">
-                    {profileData.trustLevel}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* 渠道 & 生命周期 */}
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <span className="text-xs text-gray-600 mb-1 block font-medium">渠道来源</span>
-                {editingProfile ? (
-                  <select
-                    value={profileData.channelSource}
-                    onChange={(e) => setProfileData({ ...profileData, channelSource: e.target.value })}
-                    className="w-full px-2 py-1 text-xs border border-gray-200 rounded-lg"
-                  >
-                    <option value="WhatsApp">WhatsApp</option>
-                    <option value="微信">微信</option>
-                    <option value="Telegram">Telegram</option>
-                    <option value="Instagram">Instagram</option>
-                    <option value="Facebook">Facebook</option>
-                  </select>
-                ) : (
-                  <span className="px-2 py-1 text-xs bg-white text-gray-700 border border-gray-200 rounded-lg">
-                    {profileData.channelSource}
-                  </span>
-                )}
-              </div>
-              <div>
-                <span className="text-xs text-gray-600 mb-1 block font-medium">生命周期</span>
-                {editingProfile ? (
-                  <select
-                    value={profileData.lifecycle}
-                    onChange={(e) => setProfileData({ ...profileData, lifecycle: e.target.value })}
-                    className="w-full px-2 py-1 text-xs border border-gray-200 rounded-lg"
-                  >
-                    <option value="新客户">新客户</option>
-                    <option value="潜在(B)">潜在(B)</option>
-                    <option value="活跃(A)">活跃(A)</option>
-                    <option value="流失风险">流失风险</option>
-                  </select>
-                ) : (
-                  <span className="px-2 py-1 text-xs bg-blue-100 text-blue-700 rounded-lg">
-                    {profileData.lifecycle}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* 紧迫度 */}
-            <div>
-              <span className="text-xs text-gray-600 mb-1 block font-medium">购买紧迫度</span>
-              {editingProfile ? (
-                <select
-                  value={profileData.urgency}
-                  onChange={(e) => setProfileData({ ...profileData, urgency: e.target.value })}
-                  className="w-full px-2 py-1 text-xs border border-gray-200 rounded-lg"
-                >
-                  <option value="本周">本周</option>
-                  <option value="本月">本月</option>
-                  <option value="近期">近期</option>
-                  <option value="观望中">观望中</option>
-                </select>
-              ) : (
-                <div className="flex items-center gap-2">
-                  <span className={`px-2 py-1 text-xs rounded-lg ${
-                    profileData.urgency === '本周' ? 'bg-[#FF6B35] text-white' :
-                    profileData.urgency === '本月' ? 'bg-amber-100 text-amber-700' :
-                    profileData.urgency === '近期' ? 'bg-blue-100 text-blue-700' :
-                    'bg-gray-100 text-gray-600'
-                  }`}>
-                    {profileData.urgency}
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    {profileData.urgency === '本周' ? '需优先跟进' :
-                     profileData.urgency === '本月' ? '保持联系' :
-                     profileData.urgency === '近期' ? '定期跟进' :
-                     '暂不急迫'}
-                  </span>
-                </div>
-              )}
-            </div>
+              );
+            })}
+            {profileFields.length === 0 && (
+              <p className="text-xs text-gray-400 text-center py-4">暂无画像字段，请在AI标签管理中配置</p>
+            )}
           </div>
         </div>
 
-        {/* 联系人信息 */}
+        {/* 联系人信息 - 动态读取AI标签 */}
         <div id="contact-info" className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border border-blue-100">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -883,140 +486,114 @@ export const CustomerAIProfile: React.FC<CustomerAIProfileProps> = ({ onClose })
               )}
             </button>
           </div>
-
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {/* 昵称 */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <User className="w-3.5 h-3.5 text-blue-400" />
-                <span className="text-xs text-gray-500">昵称</span>
-              </div>
+            <div>
+              <span className="text-xs text-gray-600 mb-1 block font-medium">昵称</span>
               {editingContact ? (
-                <input
-                  type="text"
-                  value={contactData.nickname}
-                  onChange={(e) => setContactData({ ...contactData, nickname: e.target.value })}
-                  className="w-32 px-2 py-1 text-sm border border-gray-200 rounded text-right"
-                />
+                <input type="text" value={contactData.nickname} onChange={(e) => setContactData({ ...contactData, nickname: e.target.value })} placeholder="请输入昵称" className="w-full px-2.5 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200" />
               ) : (
-                <span className="text-sm text-gray-700">{contactData.nickname}</span>
+                <span className="text-sm text-gray-700">{contactData.nickname || <span className="text-gray-300 italic text-xs">未填写</span>}</span>
               )}
             </div>
-
             {/* 邮箱 */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Mail className="w-3.5 h-3.5 text-blue-400" />
-                <span className="text-xs text-gray-500">邮箱</span>
-              </div>
+            <div>
+              <span className="text-xs text-gray-600 mb-1 block font-medium flex items-center gap-1"><Mail className="w-3 h-3" />邮箱</span>
               {editingContact ? (
-                <input
-                  type="email"
-                  value={contactData.email}
-                  onChange={(e) => setContactData({ ...contactData, email: e.target.value })}
-                  className="w-40 px-2 py-1 text-sm border border-gray-200 rounded text-right"
-                />
+                <input type="email" value={contactData.email} onChange={(e) => setContactData({ ...contactData, email: e.target.value })} placeholder="请输入邮箱" className="w-full px-2.5 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200" />
               ) : (
-                <span className="text-sm text-gray-700">{contactData.email}</span>
+                <span className="text-sm text-gray-700">{contactData.email || <span className="text-gray-300 italic text-xs">未填写</span>}</span>
               )}
             </div>
-
             {/* 电话 */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Phone className="w-3.5 h-3.5 text-blue-400" />
-                <span className="text-xs text-gray-500">电话</span>
-              </div>
+            <div>
+              <span className="text-xs text-gray-600 mb-1 block font-medium flex items-center gap-1"><Phone className="w-3 h-3" />电话</span>
               {editingContact ? (
-                <input
-                  type="tel"
-                  value={contactData.phone}
-                  onChange={(e) => setContactData({ ...contactData, phone: e.target.value })}
-                  className="w-36 px-2 py-1 text-sm border border-gray-200 rounded text-right"
-                />
+                <input type="tel" value={contactData.phone} onChange={(e) => setContactData({ ...contactData, phone: e.target.value })} placeholder="请输入电话" className="w-full px-2.5 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200" />
               ) : (
-                <span className="text-sm text-gray-700">{contactData.phone}</span>
+                <span className="text-sm text-gray-700">{contactData.phone || <span className="text-gray-300 italic text-xs">未填写</span>}</span>
               )}
             </div>
-
             {/* 地区 */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <MapPin className="w-3.5 h-3.5 text-blue-400" />
-                <span className="text-xs text-gray-500">地区</span>
-              </div>
+            <div>
+              <span className="text-xs text-gray-600 mb-1 block font-medium flex items-center gap-1"><MapPin className="w-3 h-3" />地区</span>
               {editingContact ? (
-                <input
-                  type="text"
-                  value={contactData.region}
-                  onChange={(e) => setContactData({ ...contactData, region: e.target.value })}
-                  className="w-32 px-2 py-1 text-sm border border-gray-200 rounded text-right"
-                />
+                <input type="text" value={contactData.region} onChange={(e) => setContactData({ ...contactData, region: e.target.value })} placeholder="请输入地区" className="w-full px-2.5 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200" />
               ) : (
-                <span className="text-sm text-gray-700">{contactData.region}</span>
+                <span className="text-sm text-gray-700">{contactData.region || <span className="text-gray-300 italic text-xs">未填写</span>}</span>
               )}
             </div>
-
             {/* 活跃度 */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Zap className="w-3.5 h-3.5 text-blue-400" />
-                <span className="text-xs text-gray-500">活跃度</span>
-              </div>
+            <div>
+              <span className="text-xs text-gray-600 mb-1.5 block font-medium">活跃度</span>
               {editingContact ? (
-                <select
-                  value={contactData.activityLevel}
-                  onChange={(e) => setContactData({ ...contactData, activityLevel: e.target.value })}
-                  className="w-24 px-2 py-1 text-xs border border-gray-200 rounded"
-                >
-                  <option value="已流失">已流失</option>
-                  <option value="低活跃">低活跃</option>
-                  <option value="中活跃">中活跃</option>
-                  <option value="高活跃">高活跃</option>
-                </select>
+                <div className="flex flex-wrap gap-1.5">
+                  {([
+                    { value: 'lost', label: '已流失', color: 'bg-gray-100 text-gray-500', activeColor: 'bg-gray-500 text-white' },
+                    { value: 'low', label: '低活跃', color: 'bg-amber-50 text-amber-600', activeColor: 'bg-amber-500 text-white' },
+                    { value: 'medium', label: '中活跃', color: 'bg-blue-50 text-blue-600', activeColor: 'bg-blue-500 text-white' },
+                    { value: 'high', label: '高活跃', color: 'bg-green-50 text-green-600', activeColor: 'bg-green-500 text-white' },
+                  ] as const).map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setContactData({ ...contactData, activity: opt.value })}
+                      className={`px-2.5 py-1 text-xs rounded-full transition-colors ${contactData.activity === opt.value ? opt.activeColor : opt.color}`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
               ) : (
-                <span className={`px-2 py-0.5 text-xs rounded ${
-                  contactData.activityLevel === '高活跃' ? 'bg-green-100 text-green-700' :
-                  contactData.activityLevel === '中活跃' ? 'bg-blue-100 text-blue-700' :
-                  contactData.activityLevel === '低活跃' ? 'bg-amber-100 text-amber-700' :
-                  'bg-gray-100 text-gray-500'
-                }`}>{contactData.activityLevel}</span>
+                <span className={`px-2.5 py-1 text-xs rounded-full inline-block ${
+                  contactData.activity === 'lost' ? 'bg-gray-100 text-gray-500' :
+                  contactData.activity === 'low' ? 'bg-amber-100 text-amber-600' :
+                  contactData.activity === 'medium' ? 'bg-blue-100 text-blue-600' :
+                  'bg-green-100 text-green-600'
+                }`}>
+                  {contactData.activity === 'lost' ? '已流失' : contactData.activity === 'low' ? '低活跃' : contactData.activity === 'medium' ? '中活跃' : '高活跃'}
+                </span>
               )}
             </div>
-
-            {/* 活跃时段 */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Clock className="w-3.5 h-3.5 text-blue-400" />
-                <span className="text-xs text-gray-500">活跃时段</span>
-              </div>
+            {/* 活跃时段（多选） */}
+            <div>
+              <span className="text-xs text-gray-600 mb-1 block font-medium flex items-center gap-1"><Clock className="w-3 h-3" />活跃时段</span>
               {editingContact ? (
-                <input
-                  type="text"
-                  value={contactData.activeHours}
-                  onChange={(e) => setContactData({ ...contactData, activeHours: e.target.value })}
-                  className="w-40 px-2 py-1 text-sm border border-gray-200 rounded text-right"
-                />
+                <div className="flex flex-wrap gap-1.5">
+                  {['早晨 6-9点', '上午 9-12点', '下午 12-17点', '傍晚 17-20点', '晚上 20-24点', '凌晨 0-6点'].map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setContactData({
+                        ...contactData,
+                        activeTime: contactData.activeTime.includes(t)
+                          ? contactData.activeTime.filter((v) => v !== t)
+                          : [...contactData.activeTime, t]
+                      })}
+                      className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${
+                        contactData.activeTime.includes(t)
+                          ? 'bg-violet-100 text-violet-700 border-violet-300'
+                          : 'bg-white text-gray-500 border-gray-200 hover:border-violet-300'
+                      }`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
               ) : (
-                <span className="text-sm text-gray-700">{contactData.activeHours}</span>
+                <span className="text-sm text-gray-700">
+                  {contactData.activeTime.length > 0
+                    ? contactData.activeTime.join('、')
+                    : <span className="text-gray-300 italic text-xs">未填写</span>}
+                </span>
               )}
             </div>
-
             {/* 备注 */}
-            <div className="pt-2 border-t border-blue-100">
-              <div className="flex items-center gap-2 mb-1">
-                <FileEdit className="w-3.5 h-3.5 text-blue-400" />
-                <span className="text-xs text-gray-500">备注</span>
-              </div>
+            <div>
+              <span className="text-xs text-gray-600 mb-1 block font-medium">备注</span>
               {editingContact ? (
-                <textarea
-                  value={contactData.notes}
-                  onChange={(e) => setContactData({ ...contactData, notes: e.target.value })}
-                  className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded-lg resize-none"
-                  rows={2}
-                />
+                <textarea value={contactData.remark} onChange={(e) => setContactData({ ...contactData, remark: e.target.value })} placeholder="请输入备注" rows={2} className="w-full px-2.5 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-200 resize-none" />
               ) : (
-                <p className="text-sm text-gray-600 bg-white/50 p-2 rounded-lg">{contactData.notes}</p>
+                <span className="text-sm text-gray-700">{contactData.remark || <span className="text-gray-300 italic text-xs">未填写</span>}</span>
               )}
             </div>
           </div>
@@ -1041,81 +618,41 @@ export const CustomerAIProfile: React.FC<CustomerAIProfileProps> = ({ onClose })
               )}
             </button>
           </div>
-
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {/* 公司名称 */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Building2 className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="text-xs text-gray-500">公司名称</span>
-              </div>
+            <div>
+              <span className="text-xs text-gray-600 mb-1 block font-medium">公司名称</span>
               {editingCompany ? (
-                <input
-                  type="text"
-                  value={companyData.companyName}
-                  onChange={(e) => setCompanyData({ ...companyData, companyName: e.target.value })}
-                  className="w-40 px-2 py-1 text-sm border border-gray-200 rounded text-right"
-                />
+                <input type="text" value={companyData.companyName} onChange={(e) => setCompanyData({ ...companyData, companyName: e.target.value })} placeholder="请输入公司名称" className="w-full px-2.5 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-200" />
               ) : (
-                <span className="text-sm text-gray-700">{companyData.companyName}</span>
+                <span className="text-sm text-gray-700">{companyData.companyName || <span className="text-gray-300 italic text-xs">未填写</span>}</span>
               )}
             </div>
-
             {/* 行业 */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Briefcase className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="text-xs text-gray-500">行业</span>
-              </div>
+            <div>
+              <span className="text-xs text-gray-600 mb-1 block font-medium">行业</span>
               {editingCompany ? (
-                <input
-                  type="text"
-                  value={companyData.industry}
-                  onChange={(e) => setCompanyData({ ...companyData, industry: e.target.value })}
-                  className="w-32 px-2 py-1 text-sm border border-gray-200 rounded text-right"
-                />
+                <input type="text" value={companyData.industry} onChange={(e) => setCompanyData({ ...companyData, industry: e.target.value })} placeholder="请输入行业" className="w-full px-2.5 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-200" />
               ) : (
-                <span className="text-sm text-gray-700">{companyData.industry}</span>
+                <span className="text-sm text-gray-700">{companyData.industry || <span className="text-gray-300 italic text-xs">未填写</span>}</span>
               )}
             </div>
-
             {/* 规模 */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Users className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="text-xs text-gray-500">规模</span>
-              </div>
+            <div>
+              <span className="text-xs text-gray-600 mb-1 block font-medium">规模</span>
               {editingCompany ? (
-                <select
-                  value={companyData.scale}
-                  onChange={(e) => setCompanyData({ ...companyData, scale: e.target.value })}
-                  className="w-32 px-2 py-1 text-xs border border-gray-200 rounded"
-                >
-                  <option value="1-10 员工">1-10 员工</option>
-                  <option value="10-50 员工">10-50 员工</option>
-                  <option value="50-200 员工">50-200 员工</option>
-                  <option value="200+ 员工">200+ 员工</option>
-                </select>
+                <input type="text" value={companyData.scale} onChange={(e) => setCompanyData({ ...companyData, scale: e.target.value })} placeholder="请输入公司规模" className="w-full px-2.5 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-200" />
               ) : (
-                <span className="text-sm text-gray-700">{companyData.scale}</span>
+                <span className="text-sm text-gray-700">{companyData.scale || <span className="text-gray-300 italic text-xs">未填写</span>}</span>
               )}
             </div>
-
             {/* 地址 */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <MapPin className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="text-xs text-gray-500">地址</span>
-              </div>
+            <div>
+              <span className="text-xs text-gray-600 mb-1 block font-medium flex items-center gap-1"><MapPin className="w-3 h-3" />地址</span>
               {editingCompany ? (
-                <input
-                  type="text"
-                  value={companyData.address}
-                  onChange={(e) => setCompanyData({ ...companyData, address: e.target.value })}
-                  className="w-32 px-2 py-1 text-sm border border-gray-200 rounded text-right"
-                />
+                <input type="text" value={companyData.address} onChange={(e) => setCompanyData({ ...companyData, address: e.target.value })} placeholder="请输入公司地址" className="w-full px-2.5 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-200" />
               ) : (
-                <span className="text-sm text-gray-700">{companyData.address}</span>
+                <span className="text-sm text-gray-700">{companyData.address || <span className="text-gray-300 italic text-xs">未填写</span>}</span>
               )}
             </div>
           </div>
@@ -1154,9 +691,9 @@ export const CustomerAIProfile: React.FC<CustomerAIProfileProps> = ({ onClose })
                 <p className="text-lg font-semibold text-gray-900">3.5</p>
                 <span className="text-xs text-gray-500">响应(分钟)</span>
               </div>
-              <div className="text-center p-2 bg-gray-50 rounded-lg">
-                <p className="text-lg font-semibold text-green-600">4.8</p>
-                <span className="text-xs text-gray-500">满意度</span>
+              <div className="text-center p-2 bg-purple-50 rounded-lg">
+                <p className="text-lg font-semibold text-purple-700">{aiMessageCount}</p>
+                <span className="text-xs text-purple-500">AI私信次数</span>
               </div>
             </div>
           )}
@@ -1165,5 +702,76 @@ export const CustomerAIProfile: React.FC<CustomerAIProfileProps> = ({ onClose })
     </div>
   );
 };
+
+// ============ DynamicFieldSection ============
+const DynamicFieldSection: React.FC<{
+  field: AILabel;
+  values: AILabel[];
+  selected: string[];
+  textVal: string;
+  editing: boolean;
+  onToggle: (valId: string) => void;
+  onTextChange: (text: string) => void;
+}> = ({ field, values, selected, textVal, editing, onToggle, onTextChange }) => (
+  <div>
+    <span className="text-xs text-gray-600 mb-1.5 block font-medium">{field.name}</span>
+    {field.inputType === 'text' ? (
+      editing ? (
+        <input
+          type="text"
+          value={textVal}
+          onChange={(e) => onTextChange(e.target.value)}
+          placeholder={`请输入${field.name}`}
+          className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20"
+        />
+      ) : (
+        <span className="text-sm text-gray-700">{textVal || <span className="text-gray-300 italic">未填写</span>}</span>
+      )
+    ) : editing ? (
+      <div className="flex flex-wrap gap-1.5">
+        {values.map((val) => {
+          const isSelected = selected.includes(val.id);
+          return (
+            <button
+              key={val.id}
+              onClick={() => onToggle(val.id)}
+              className={`px-2.5 py-1 text-xs rounded-full border transition-colors ${
+                isSelected
+                  ? 'text-white border-transparent'
+                  : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'
+              }`}
+              style={isSelected ? { backgroundColor: val.color, borderColor: val.color } : undefined}
+            >
+              {val.name}
+            </button>
+          );
+        })}
+        {values.length === 0 && (
+          <span className="text-xs text-gray-300 italic">暂无可选标签值</span>
+        )}
+      </div>
+    ) : (
+      <div className="flex flex-wrap gap-1.5">
+        {selected.length > 0 ? (
+          selected.map((valId) => {
+            const val = values.find((v) => v.id === valId);
+            if (!val) return null;
+            return (
+              <span
+                key={val.id}
+                className="px-2.5 py-1 text-xs rounded-full border"
+                style={{ backgroundColor: val.color + '15', borderColor: val.color + '30', color: val.color }}
+              >
+                {val.name}
+              </span>
+            );
+          })
+        ) : (
+          <span className="text-xs text-gray-300 italic">未选择</span>
+        )}
+      </div>
+    )}
+  </div>
+);
 
 export default CustomerAIProfile;

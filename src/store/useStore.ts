@@ -746,12 +746,12 @@ export const useStore = create<AppState>()(
         { id: 'kb_3', name: '售后政策', description: '退换货、保修、物流等售后相关政策', color: '#F59E0B', documentCount: 1, createdAt: '2025-02-01', updatedAt: '2025-02-05' },
       ] as KnowledgeBase[],
       knowledgeDocuments: [
-        { id: 'doc_1', knowledgeBaseId: 'kb_1', fileName: '2025产品目录.pdf', fileSize: 2456000, fileType: 'pdf', status: 'ready', enabled: true, uploadedAt: '2025-01-15', updatedAt: '2025-01-15' },
-        { id: 'doc_2', knowledgeBaseId: 'kb_1', fileName: '产品规格参数表.xlsx', fileSize: 890000, fileType: 'xlsx', status: 'ready', enabled: true, uploadedAt: '2025-01-18', updatedAt: '2025-01-18' },
-        { id: 'doc_3', knowledgeBaseId: 'kb_1', fileName: '价格体系说明.docx', fileSize: 345000, fileType: 'docx', status: 'ready', enabled: false, uploadedAt: '2025-01-20', updatedAt: '2025-01-20' },
-        { id: 'doc_4', knowledgeBaseId: 'kb_2', fileName: '常见问题汇总.pdf', fileSize: 1200000, fileType: 'pdf', status: 'ready', enabled: true, uploadedAt: '2025-01-20', updatedAt: '2025-01-20' },
-        { id: 'doc_5', knowledgeBaseId: 'kb_2', fileName: '标准回复模板.txt', fileSize: 56000, fileType: 'txt', status: 'processing', enabled: true, uploadedAt: '2025-01-28', updatedAt: '2025-01-28' },
-        { id: 'doc_6', knowledgeBaseId: 'kb_3', fileName: '售后服务政策2025.pdf', fileSize: 780000, fileType: 'pdf', status: 'ready', enabled: true, uploadedAt: '2025-02-01', updatedAt: '2025-02-01' },
+        { id: 'doc_1', knowledgeBaseId: 'kb_1', fileName: '2025产品目录.pdf', fileSize: 2456000, fileType: 'pdf', charCount: 128600, chunkCount: 86, status: 'ready', enabled: true, uploadedAt: '2025-01-15', updatedAt: '2025-01-15' },
+        { id: 'doc_2', knowledgeBaseId: 'kb_1', fileName: '产品规格参数表.xlsx', fileSize: 890000, fileType: 'xlsx', charCount: 45200, chunkCount: 32, status: 'ready', enabled: true, uploadedAt: '2025-01-18', updatedAt: '2025-01-18' },
+        { id: 'doc_3', knowledgeBaseId: 'kb_1', fileName: '价格体系说明.docx', fileSize: 345000, fileType: 'docx', charCount: 18900, chunkCount: 14, status: 'ready', enabled: false, uploadedAt: '2025-01-20', updatedAt: '2025-01-20' },
+        { id: 'doc_4', knowledgeBaseId: 'kb_2', fileName: '常见问题汇总.pdf', fileSize: 1200000, fileType: 'pdf', charCount: 67300, chunkCount: 45, status: 'ready', enabled: true, uploadedAt: '2025-01-20', updatedAt: '2025-01-20' },
+        { id: 'doc_5', knowledgeBaseId: 'kb_2', fileName: '标准回复模板.txt', fileSize: 56000, fileType: 'txt', charCount: 32100, status: 'embedding', enabled: true, uploadedAt: '2025-01-28', updatedAt: '2025-01-28' },
+        { id: 'doc_6', knowledgeBaseId: 'kb_3', fileName: '售后服务政策2025.pdf', fileSize: 780000, fileType: 'pdf', charCount: 41500, chunkCount: 28, status: 'ready', enabled: true, uploadedAt: '2025-02-01', updatedAt: '2025-02-01' },
       ] as KnowledgeDocument[],
       addKnowledgeBase: (kb) =>
         set((state) => ({ knowledgeBases: [...state.knowledgeBases, kb] })),
