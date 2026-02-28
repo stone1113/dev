@@ -1433,26 +1433,4 @@ export const mockAILabels: AILabel[] = [
   { id: 'field_scale', groupId: '', parentId: 'dim_company', level: 3, name: '规模', color: '#F59E0B', isSystem: true, order: 3, inputType: 'text' as const },
   // 三级字段：地址（文本框）
   { id: 'field_address', groupId: '', parentId: 'dim_company', level: 3, name: '地址', color: '#6366F1', isSystem: true, order: 4, inputType: 'text' as const },
-  // ========== 二级：会话标签 ==========
-  { id: 'dim_session', groupId: '', level: 2, name: '会话标签', color: '#10B981', isSystem: true, order: 4 },
-
-  // 三级字段：咨询类型
-  { id: 'field_inquiry_type', groupId: '', parentId: 'dim_session', level: 3, name: '咨询类型', color: '#10B981', isSystem: true, order: 1, selectMode: 'multiple' as const },
-  { id: 'lb_ss_inquiry', groupId: '', parentId: 'field_inquiry_type', level: 4, name: '产品咨询', color: '#10B981', isSystem: true, order: 1 },
-  { id: 'lb_ss_quote', groupId: '', parentId: 'field_inquiry_type', level: 4, name: '报价请求', color: '#10B981', isSystem: true, order: 2 },
-  { id: 'lb_ss_sample', groupId: '', parentId: 'field_inquiry_type', level: 4, name: '样品需求', color: '#10B981', isSystem: true, order: 3 },
-  { id: 'lb_ss_after', groupId: '', parentId: 'field_inquiry_type', level: 4, name: '售后服务', color: '#F97316', isSystem: true, order: 4 },
-  { id: 'lb_ss_complaint', groupId: '', parentId: 'field_inquiry_type', level: 4, name: '投诉建议', color: '#EF4444', isSystem: true, order: 5 },
-
-  // 三级字段：满意度
-  { id: 'field_satisfaction', groupId: '', parentId: 'dim_session', level: 3, name: '满意度', color: '#22C55E', isSystem: true, order: 2, selectMode: 'single' as const },
-  { id: 'lb_ss_sat_high', groupId: '', parentId: 'field_satisfaction', level: 4, name: '满意', color: '#22C55E', isSystem: true, order: 1 },
-  { id: 'lb_ss_sat_mid', groupId: '', parentId: 'field_satisfaction', level: 4, name: '一般', color: '#F59E0B', isSystem: true, order: 2 },
-  { id: 'lb_ss_sat_low', groupId: '', parentId: 'field_satisfaction', level: 4, name: '不满意', color: '#EF4444', isSystem: true, order: 3 },
-
-  // 三级字段：跟进状态
-  { id: 'field_follow_status', groupId: '', parentId: 'dim_session', level: 3, name: '跟进状态', color: '#3B82F6', isSystem: true, order: 3, selectMode: 'single' as const },
-  { id: 'lb_ss_follow_wait', groupId: '', parentId: 'field_follow_status', level: 4, name: '待跟进', color: '#F59E0B', isSystem: true, order: 1 },
-  { id: 'lb_ss_follow_ing', groupId: '', parentId: 'field_follow_status', level: 4, name: '跟进中', color: '#3B82F6', isSystem: true, order: 2 },
-  { id: 'lb_ss_follow_done', groupId: '', parentId: 'field_follow_status', level: 4, name: '已完结', color: '#9CA3AF', isSystem: true, order: 3 },
 ];

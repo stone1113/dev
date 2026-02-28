@@ -28,14 +28,12 @@ import {
   CheckCircle2,
   ChevronRight,
   User,
-  Globe,
   Zap,
   BookOpen,
   Tags,
   Filter,
   Plus,
   MapPin,
-  Phone,
   UserCircle,
   ClipboardList,
   Download,
@@ -51,7 +49,7 @@ import { KnowledgeBasePage } from './KnowledgeBasePage';
 import { CustomerAIProfile } from './CustomerAIProfile';
 import type { ActivationCode } from '@/types';
 
-type AdminSection = 'activation-codes' | 'org-settings' | 'members' | 'security' | 'statistics' | 'settings' | 'audit' | 'audit-report' | 'ai-settings' | 'ai-config' | 'ai-knowledge' | 'ai-scripts' | 'ai-labels' | 'customer-list' | 'customer-detail' | 'ticket-list';
+type AdminSection = 'activation-codes' | 'org-settings' | 'members' | 'security' | 'statistics' | 'settings' | 'audit' | 'audit-report' | 'ai-settings' | 'ai-config' | 'ai-config-detail' | 'ai-knowledge' | 'ai-scripts' | 'ai-labels' | 'customer-list' | 'customer-detail' | 'ticket-list';
 
 interface AdminLayoutProps {
   onBack?: () => void;
@@ -104,7 +102,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onBack }) => {
   const [customerMenuExpanded, setCustomerMenuExpanded] = useState(false);
   const [ticketMenuExpanded, setTicketMenuExpanded] = useState(false);
   const [orgMenuExpanded, setOrgMenuExpanded] = useState(false);
-  const isAiSection = activeSection === 'ai-config' || activeSection === 'ai-settings' || activeSection === 'ai-knowledge' || activeSection === 'ai-scripts' || activeSection === 'ai-labels';
+  const isAiSection = activeSection === 'ai-config' || activeSection === 'ai-config-detail' || activeSection === 'ai-settings' || activeSection === 'ai-knowledge' || activeSection === 'ai-scripts' || activeSection === 'ai-labels';
   const isAuditSection = activeSection === 'audit' || activeSection === 'audit-report';
   const isCustomerSection = activeSection === 'customer-list' || activeSection === 'customer-detail';
   const isTicketSection = activeSection === 'ticket-list';
@@ -128,6 +126,16 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onBack }) => {
   const handleBackToCustomerList = () => {
     setDetailCustomerId(null);
     setActiveSection('customer-list');
+  };
+
+  // AI员工列表 → 详情
+  const handleViewAIEmployee = (employeeId: string) => {
+    useStore.getState().selectAIEmployee(employeeId);
+    setActiveSection('ai-config-detail');
+  };
+
+  const handleBackToAIList = () => {
+    setActiveSection('ai-config');
   };
 
   return (
@@ -523,15 +531,17 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onBack }) => {
         <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0">
           <div>
             <h1 className="text-lg font-bold text-gray-900">
-              {menuItems.find(m => m.id === activeSection)?.name || aiSubMenuItems.find(m => m.id === activeSection)?.name || auditSubMenuItems.find(m => m.id === activeSection)?.name || customerSubMenuItems.find(m => m.id === activeSection)?.name || ticketSubMenuItems.find(m => m.id === activeSection)?.name || orgSubMenuItems.find(m => m.id === activeSection)?.name || (activeSection === 'customer-detail' ? '客户详情' : '')}
+              {menuItems.find(m => m.id === activeSection)?.name || aiSubMenuItems.find(m => m.id === activeSection)?.name || auditSubMenuItems.find(m => m.id === activeSection)?.name || customerSubMenuItems.find(m => m.id === activeSection)?.name || ticketSubMenuItems.find(m => m.id === activeSection)?.name || orgSubMenuItems.find(m => m.id === activeSection)?.name || (activeSection === 'customer-detail' ? '客户详情' : '') || (activeSection === 'ai-config-detail' ? 'AI员工配置' : '')}
             </h1>
             <p className="text-xs text-gray-500 mt-0.5">{organization.name}</p>
           </div>
         </header>
 
         {/* 页面内容 */}
-        <div className="flex-1 overflow-auto">
-          <AdminContent section={activeSection} onViewChat={handleViewChat} auditCode={auditCode} onClearAuditCode={() => setAuditCode(null)} onNavigateToKnowledge={() => setActiveSection('ai-knowledge')} onNavigateToScripts={() => setActiveSection('ai-scripts')} onNavigateToLabels={() => setActiveSection('ai-labels')} detailCustomerId={detailCustomerId} onViewCustomerDetail={handleViewCustomerDetail} onBackToCustomerList={handleBackToCustomerList} />
+        <div className="flex-1 min-h-0 relative">
+          <div className="absolute inset-0">
+            <AdminContent section={activeSection} onViewChat={handleViewChat} auditCode={auditCode} onClearAuditCode={() => setAuditCode(null)} detailCustomerId={detailCustomerId} onViewCustomerDetail={handleViewCustomerDetail} onBackToCustomerList={handleBackToCustomerList} onViewAIEmployee={handleViewAIEmployee} onBackToAIList={handleBackToAIList} />
+          </div>
         </div>
       </div>
     </div>
@@ -544,13 +554,12 @@ const AdminContent: React.FC<{
   onViewChat: (code: ActivationCode) => void;
   auditCode: ActivationCode | null;
   onClearAuditCode: () => void;
-  onNavigateToKnowledge: () => void;
-  onNavigateToScripts: () => void;
-  onNavigateToLabels: () => void;
   detailCustomerId: string | null;
   onViewCustomerDetail: (customerId: string) => void;
   onBackToCustomerList: () => void;
-}> = ({ section, onViewChat, auditCode, onClearAuditCode, onNavigateToKnowledge, onNavigateToScripts, onNavigateToLabels, detailCustomerId, onViewCustomerDetail, onBackToCustomerList }) => {
+  onViewAIEmployee: (employeeId: string) => void;
+  onBackToAIList: () => void;
+}> = ({ section, onViewChat, auditCode, onClearAuditCode, detailCustomerId, onViewCustomerDetail, onBackToCustomerList, onViewAIEmployee, onBackToAIList }) => {
   switch (section) {
     case 'activation-codes':
       return <AdminCenter onViewChat={onViewChat} />;
@@ -601,16 +610,26 @@ const AdminContent: React.FC<{
     case 'ai-settings':
       return <AISettingsPage />;
     case 'ai-config':
-      return <AIConfigPage onNavigateToKnowledge={onNavigateToKnowledge} onNavigateToScripts={onNavigateToScripts} onNavigateToLabels={onNavigateToLabels} />;
+      return <AIConfigListPage onViewEmployee={onViewAIEmployee} />;
+    case 'ai-config-detail':
+      return <AIConfigDetailPage onBack={onBackToAIList} />;
     case 'ai-knowledge':
       return <KnowledgeBasePage />;
     case 'ai-scripts':
       return (
-        <PlaceholderPage
-          icon={MessageSquare}
-          title="话术库配置"
-          description="管理AI员工的营销话术和回复模板"
-        />
+        <div className="h-full flex flex-col">
+          <div className="mx-6 mt-4 flex items-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 text-amber-500" />
+            <span>该功能还在完善中</span>
+          </div>
+          <div className="flex-1">
+            <PlaceholderPage
+              icon={MessageSquare}
+              title="话术库配置"
+              description="管理AI员工的营销话术和回复模板"
+            />
+          </div>
+        </div>
       );
     case 'ai-labels':
       return <AILabelsPage />;
@@ -1057,360 +1076,575 @@ const personaPreviewAnswers: Record<string, string> = {
   brand: '支持。我们与DHL国际物流深度合作，巴西全境可达，提供端到端物流追踪与签收确认服务。',
 };
 
-const AIConfigPage: React.FC<{ onNavigateToKnowledge?: () => void; onNavigateToScripts?: () => void; onNavigateToLabels?: () => void }> = ({ onNavigateToKnowledge, onNavigateToScripts, onNavigateToLabels }) => {
-  const aiConfig = useStore((s) => s.aiEmployeeConfig);
-  const updateAIConfig = useStore((s) => s.updateAIEmployeeConfig);
-  const [selectedPlatform, setSelectedPlatform] = useState(aiConfig.activePlatforms[0] || 'whatsapp');
+// ========== AI 员工列表页 ==========
+const AIConfigListPage: React.FC<{ onViewEmployee: (id: string) => void }> = ({ onViewEmployee }) => {
+  const aiEmployees = useStore((s) => s.aiEmployees);
+  const addAIEmployee = useStore((s) => s.addAIEmployee);
+  const deleteAIEmployee = useStore((s) => s.deleteAIEmployee);
+  const updateAIEmployeeById = useStore((s) => s.updateAIEmployeeById);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newPlatform, setNewPlatform] = useState('whatsapp');
 
-  const currentCapability = aiConfig.platformCapabilities.find(c => c.platformId === selectedPlatform);
+  const handleCreate = () => {
+    const id = `ai_emp_${Date.now()}`;
+    addAIEmployee({
+      id,
+      name: newName || `AI 员工 ${aiEmployees.length + 1}`,
+      language: 'en-US',
+      personaTemplate: 'sales',
+      status: 'online',
+      timezone: 'Asia/Shanghai',
+      workStartTime: '09:00',
+      workEndTime: '18:00',
+      workDays: [1, 2, 3, 4, 5],
+      activePlatforms: [newPlatform],
+      platformCapabilities: [
+        { platformId: newPlatform, aiSalesChat: true, aiProactiveMarketing: false, aiRecall: false, aiQualityCheck: false },
+      ],
+    });
+    setShowCreateModal(false);
+    setNewName('');
+    setNewPlatform('whatsapp');
+  };
 
-  const toggleCapability = (key: 'aiSalesChat' | 'aiProactiveMarketing' | 'aiRecall' | 'aiQualityCheck') => {
-    const updated = aiConfig.platformCapabilities.map(c =>
-      c.platformId === selectedPlatform ? { ...c, [key]: !c[key] } : c
+  const CreateEmployeeModal = () => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50" onClick={() => setShowCreateModal(false)} />
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 p-6">
+        <h3 className="text-base font-semibold text-gray-900 mb-4">创建 AI 员工</h3>
+        <div className="space-y-4">
+          <div>
+            <label className="text-xs font-medium text-gray-600 mb-1.5 block">员工名称</label>
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder={`AI 员工 ${aiEmployees.length + 1}`}
+              className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-600 mb-2 block">选择平台</label>
+            <div className="grid grid-cols-4 gap-2">
+              {platformConfigs.map(pc => {
+                const PIcon = platformIconMap[pc.icon];
+                const isActive = newPlatform === pc.id;
+                return (
+                  <button
+                    key={pc.id}
+                    onClick={() => setNewPlatform(pc.id)}
+                    className={cn(
+                      'flex flex-col items-center gap-1.5 p-3 rounded-xl border-2 transition-all text-center',
+                      isActive ? 'border-[#FF6B35] bg-[#FF6B35]/5' : 'border-gray-200 hover:border-gray-300'
+                    )}
+                  >
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: pc.color }}>
+                      {PIcon && <PIcon className="w-4 h-4 text-white" />}
+                    </div>
+                    <span className="text-[11px] text-gray-600 truncate w-full">{pc.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+        <div className="flex justify-end gap-3 mt-6">
+          <button onClick={() => setShowCreateModal(false)} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">取消</button>
+          <button onClick={handleCreate} className="px-5 py-2 text-sm font-medium bg-[#FF6B35] text-white rounded-lg hover:bg-[#E85A2A] transition-colors">创建</button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // 空状态
+  if (aiEmployees.length === 0) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center text-center px-6">
+        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#FF6B35]/10 to-[#FF6B35]/5 flex items-center justify-center mb-6">
+          <Bot className="w-10 h-10 text-[#FF6B35]/40" />
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">还没有 AI 员工</h3>
+        <p className="text-sm text-gray-500 mb-8 max-w-sm">创建一个 AI 员工，为指定平台自动回复客户消息</p>
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="flex items-center gap-2 px-6 py-3 bg-[#FF6B35] text-white text-sm font-medium rounded-xl hover:bg-[#E85A2A] transition-colors shadow-sm"
+        >
+          <Plus className="w-4 h-4" />
+          创建 AI 员工
+        </button>
+        {showCreateModal && <CreateEmployeeModal />}
+      </div>
     );
-    updateAIConfig({ platformCapabilities: updated });
-  };
-
-  const toggleWorkDay = (day: number) => {
-    const days = aiConfig.workDays.includes(day)
-      ? aiConfig.workDays.filter(d => d !== day)
-      : [...aiConfig.workDays, day].sort();
-    updateAIConfig({ workDays: days });
-  };
-
-  const dayLabels = [
-    { day: 1, label: 'Mon' }, { day: 2, label: 'Tue' }, { day: 3, label: 'Wed' },
-    { day: 4, label: 'Thu' }, { day: 5, label: 'Fri' }, { day: 6, label: 'Sat' }, { day: 0, label: 'Sun' },
-  ];
-
-  const activeFeatures = [
-    currentCapability?.aiSalesChat && { icon: MessageSquare, label: '客服' },
-    currentCapability?.aiProactiveMarketing && { icon: Zap, label: '营销' },
-    currentCapability?.aiRecall && { icon: Clock, label: '召回' },
-    currentCapability?.aiQualityCheck && { icon: CheckCircle2, label: '质检' },
-  ].filter(Boolean) as { icon: React.ComponentType<{ className?: string }>; label: string }[];
+  }
 
   return (
-    <div className="h-full flex">
-      {/* 左侧员工卡片 */}
-      <div className="w-80 flex-shrink-0 border-r border-gray-200 bg-gradient-to-b from-[#FF6B35]/5 to-white p-6 pt-10 flex flex-col items-center justify-center overflow-auto">
-        {/* 头像 */}
-        <div className="relative mb-6">
-          <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-[#FF6B35]/20 to-[#FF8F5E]/30 flex items-center justify-center overflow-hidden">
-            <Bot className="w-12 h-12 text-[#FF6B35]" />
-          </div>
-          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white" />
+    <div className="h-full flex flex-col overflow-hidden">
+      <div className="p-6 flex flex-col h-full space-y-4">
+        {/* 顶部操作栏 */}
+        <div className="flex items-center justify-between flex-shrink-0">
+          <p className="text-sm text-gray-500">共 {aiEmployees.length} 个 AI 员工</p>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-[#FF6B35] text-white text-sm font-medium rounded-lg hover:bg-[#E85A2A] transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            添加 AI 员工
+          </button>
         </div>
 
-        {/* 名称 + 人设标签 */}
-        <div className="text-center mb-2">
-          <h3 className="text-lg font-bold text-gray-900 mb-2">{aiConfig.name}</h3>
-          <span className="inline-block px-2.5 py-0.5 text-[10px] font-medium bg-[#FF6B35]/10 text-[#FF6B35] rounded-md">
-            {personaTemplates.find(p => p.id === aiConfig.personaTemplate)?.name || ''}
-          </span>
-        </div>
-
-        {/* 工作状态 */}
-        <div className="w-full mt-8 space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500">工作状态</span>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-green-500" />
-              <span className="text-xs font-medium text-green-600">在线接单中</span>
-            </div>
+        {/* 表格 */}
+        <div className="flex-1 min-h-0 bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col">
+          {/* 表头 */}
+          <div className="grid grid-cols-[2fr_1fr_1.5fr_1fr_1fr_120px] gap-4 px-5 py-3 bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-500 flex-shrink-0">
+            <span>员工名称</span>
+            <span>人设模板</span>
+            <span>绑定平台</span>
+            <span>工作时间</span>
+            <span>启用</span>
+            <span className="text-right">操作</span>
           </div>
-
-          {/* 已激活平台 */}
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500">已激活平台</span>
-            <div className="flex items-center gap-1">
-              {aiConfig.activePlatforms.slice(0, 4).map(pid => {
-                const pc = platformConfigs.find(p => p.id === pid);
-                const PIcon = pc ? platformIconMap[pc.icon] : null;
-                return pc && PIcon ? (
-                  <div key={pid} className="w-5 h-5 rounded flex items-center justify-center" style={{ backgroundColor: pc.color }}>
-                    <PIcon className="w-3 h-3 text-white" />
+          {/* 表体 */}
+          <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
+            {aiEmployees.map((emp) => {
+              const tpl = personaTemplates.find(p => p.id === emp.personaTemplate);
+              return (
+                <div key={emp.id} className="grid grid-cols-[2fr_1fr_1.5fr_1fr_1fr_120px] gap-4 px-5 py-3.5 items-center hover:bg-gray-50/60 transition-colors">
+                  {/* 员工名称 */}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="relative flex-shrink-0">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#FF6B35]/15 to-[#FF8F5E]/25 flex items-center justify-center">
+                        <Bot className="w-4.5 h-4.5 text-[#FF6B35]" />
+                      </div>
+                      <span className={cn(
+                        'absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white',
+                        emp.status === 'online' ? 'bg-green-500' : 'bg-gray-300'
+                      )} />
+                    </div>
+                    <span className="text-sm font-medium text-gray-900 truncate">{emp.name}</span>
                   </div>
-                ) : null;
-              })}
-              {aiConfig.activePlatforms.length > 4 && (
-                <span className="text-[10px] text-gray-400">+{aiConfig.activePlatforms.length - 4}</span>
-              )}
-            </div>
-          </div>
-
-          {/* 活跃功能 */}
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-500">活跃功能</span>
-            <div className="flex items-center gap-1">
-              {activeFeatures.map((f, i) => (
-                <f.icon key={i} className="w-4 h-4 text-gray-400" />
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* 分隔线 */}
-        <div className="w-full mt-10 border-t border-gray-200" />
-
-        {/* 语气预览 */}
-        <div className="w-full mt-6">
-          <p className="text-[10px] font-medium text-gray-400 uppercase tracking-wider mb-5">语气预览</p>
-          <div className="space-y-5">
-            <div className="flex items-start gap-2.5">
-              <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-gray-500">客</div>
-              <div className="max-w-[75%] bg-gray-100 rounded-2xl rounded-tl-sm px-4 py-2.5 text-xs text-gray-700 leading-relaxed">
-                {personaPreviewQuestion}
-              </div>
-            </div>
-            <div className="flex items-start gap-2.5 justify-end">
-              <div className="max-w-[75%] bg-[#FF6B35]/10 rounded-2xl rounded-tr-sm px-4 py-2.5 text-xs text-gray-700 leading-relaxed">
-                {personaPreviewAnswers[aiConfig.personaTemplate]}
-              </div>
-              <div className="w-7 h-7 rounded-full bg-[#FF6B35] flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-white">AI</div>
-            </div>
+                  {/* 人设模板 */}
+                  <div className="text-sm text-gray-600 truncate">
+                    {tpl ? <span>{tpl.icon} {tpl.name}</span> : <span className="text-gray-400">未设置</span>}
+                  </div>
+                  {/* 绑定平台 */}
+                  <div className="flex flex-wrap gap-1">
+                    {emp.activePlatforms.map(pid => {
+                      const pc = platformConfigs.find(p => p.id === pid);
+                      const PIcon = pc ? platformIconMap[pc.icon] : null;
+                      return pc ? (
+                        <div key={pid} className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-gray-50 border border-gray-100">
+                          <div className="w-3.5 h-3.5 rounded flex items-center justify-center" style={{ backgroundColor: pc.color }}>
+                            {PIcon && <PIcon className="w-2 h-2 text-white" />}
+                          </div>
+                          <span className="text-[11px] text-gray-500">{pc.name}</span>
+                        </div>
+                      ) : null;
+                    })}
+                  </div>
+                  {/* 工作时间 */}
+                  <div className="text-xs text-gray-500">
+                    {emp.workStartTime}-{emp.workEndTime}
+                  </div>
+                  {/* 启用开关 */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => updateAIEmployeeById(emp.id, { status: emp.status === 'online' ? 'offline' : 'online' })}
+                      className={cn(
+                        "w-9 h-5 rounded-full transition-colors relative flex-shrink-0",
+                        emp.status === 'online' ? "bg-[#FF6B35]" : "bg-gray-200"
+                      )}
+                    >
+                      <span className={cn(
+                        "absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform",
+                        emp.status === 'online' ? "left-[18px]" : "left-0.5"
+                      )} />
+                    </button>
+                    <span className={cn("text-[11px]", emp.status === 'online' ? "text-[#FF6B35]" : "text-gray-400")}>
+                      {emp.status === 'online' ? '已启用' : '未启用'}
+                    </span>
+                  </div>
+                  {/* 操作 */}
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      onClick={() => onViewEmployee(emp.id)}
+                      className="px-3 py-1.5 text-xs font-medium text-[#FF6B35] bg-[#FF6B35]/5 rounded-lg hover:bg-[#FF6B35]/10 transition-colors"
+                    >
+                      配置
+                    </button>
+                    <button
+                      onClick={() => setShowDeleteConfirm(emp.id)}
+                      className="px-2.5 py-1.5 text-xs text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      删除
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
 
-      {/* 右侧内容区 */}
-      <div className="flex-1 overflow-auto">
-        <div className="max-w-4xl py-6 px-8 space-y-6">
+      {/* 删除确认弹窗 */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowDeleteConfirm(null)} />
+          <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 p-6">
+            <h3 className="text-base font-semibold text-gray-900 mb-2">确认删除</h3>
+            <p className="text-sm text-gray-500 mb-6">删除后该 AI 员工的所有配置将丢失，确定要删除吗？</p>
+            <div className="flex justify-end gap-3">
+              <button onClick={() => setShowDeleteConfirm(null)} className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">取消</button>
+              <button onClick={() => { deleteAIEmployee(showDeleteConfirm); setShowDeleteConfirm(null); }} className="px-4 py-2 text-sm font-medium bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors">删除</button>
+            </div>
+          </div>
+        </div>
+      )}
 
-          {/* 平台标签栏 */}
-          <div className="flex items-center gap-1 bg-white rounded-xl border border-gray-200 p-1.5">
-            {aiConfig.activePlatforms.map(pid => {
-              const pc = platformConfigs.find(p => p.id === pid);
-              if (!pc) return null;
-              const isActive = selectedPlatform === pid;
-              return (
-                <button
-                  key={pid}
-                  onClick={() => setSelectedPlatform(pid)}
-                  className={cn(
-                    "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
-                    isActive
-                      ? "bg-white shadow-sm border border-gray-200 text-gray-900"
-                      : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
-                  )}
-                >
-                  <span className="w-2 h-2 rounded-full" style={{ backgroundColor: pc.color }} />
-                  {pc.name}
-                </button>
-              );
-            })}
+      {/* 创建弹窗 */}
+      {showCreateModal && <CreateEmployeeModal />}
+    </div>
+  );
+};
+
+// ========== AI 员工详情页 ==========
+const AIConfigDetailPage: React.FC<{
+  onBack: () => void;
+}> = ({ onBack }) => {
+  const selectedAIEmployeeId = useStore((s) => s.selectedAIEmployeeId);
+  const aiEmployees = useStore((s) => s.aiEmployees);
+  const updateAIEmployeeConfig = useStore((s) => s.updateAIEmployeeConfig);
+  const aiConfig = aiEmployees.find((e) => e.id === selectedAIEmployeeId);
+
+  const [selectedPlatform, setSelectedPlatform] = useState<string>(aiConfig?.activePlatforms[0] || 'whatsapp');
+  const [nicknameInput, setNicknameInput] = useState(aiConfig?.name || '');
+  const [nicknameSaved, setNicknameSaved] = useState(false);
+
+  useEffect(() => {
+    if (aiConfig) {
+      setNicknameInput(aiConfig.name);
+      if (aiConfig.activePlatforms.length > 0 && !aiConfig.activePlatforms.includes(selectedPlatform)) {
+        setSelectedPlatform(aiConfig.activePlatforms[0]);
+      }
+    }
+  }, [aiConfig?.id]);
+
+  if (!aiConfig) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center text-center px-6">
+        <p className="text-sm text-gray-500 mb-4">未找到该 AI 员工</p>
+        <button onClick={onBack} className="text-sm text-[#FF6B35] hover:underline">返回列表</button>
+      </div>
+    );
+  }
+
+  const currentTpl = personaTemplates.find((t) => t.id === aiConfig.personaTemplate);
+  const currentCap = aiConfig.platformCapabilities.find((c) => c.platformId === selectedPlatform);
+  const activeFeatures = currentCap
+    ? [currentCap.aiSalesChat && '智能销售', currentCap.aiProactiveMarketing && '主动营销', currentCap.aiRecall && '客户召回', currentCap.aiQualityCheck && '质量检测'].filter(Boolean)
+    : [];
+
+  const handleSaveNickname = () => {
+    updateAIEmployeeConfig({ name: nicknameInput });
+    setNicknameSaved(true);
+    setTimeout(() => setNicknameSaved(false), 2000);
+  };
+
+  const handleToggleCapability = (key: 'aiSalesChat' | 'aiProactiveMarketing' | 'aiRecall' | 'aiQualityCheck') => {
+    const caps = aiConfig.platformCapabilities.map((c) =>
+      c.platformId === selectedPlatform ? { ...c, [key]: !c[key] } : c
+    );
+    updateAIEmployeeConfig({ platformCapabilities: caps });
+  };
+
+  const handleSelectPersona = (id: 'sales' | 'support' | 'brand') => {
+    updateAIEmployeeConfig({ personaTemplate: id });
+  };
+
+  return (
+    <div className="h-full flex flex-col">
+      {/* 返回按钮 */}
+      <div className="flex-shrink-0 px-6 py-3 border-b border-gray-100 bg-white">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-[#FF6B35] transition-colors">
+          <ChevronLeft className="w-4 h-4" />
+          返回 AI 员工列表
+        </button>
+      </div>
+
+      {/* 主内容区 */}
+      <div className="flex-1 min-h-0 flex overflow-hidden">
+        {/* 左侧：员工信息卡 */}
+        <div className="w-72 flex-shrink-0 border-r border-gray-200 bg-white overflow-y-auto p-5 space-y-5">
+          {/* 头像 + 名称 */}
+          <div className="flex flex-col items-center text-center">
+            <div className="relative mb-3">
+              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#FF6B35]/20 to-[#FF8F5E]/30 flex items-center justify-center">
+                <Bot className="w-8 h-8 text-[#FF6B35]" />
+              </div>
+              <span className={cn(
+                'absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white',
+                aiConfig.status === 'online' ? 'bg-green-500' : 'bg-gray-300'
+              )} />
+            </div>
+            <h3 className="text-base font-semibold text-gray-900">{aiConfig.name}</h3>
+            {currentTpl && (
+              <span className="mt-1 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#FF6B35]/5 text-[11px] text-[#FF6B35] font-medium">
+                {currentTpl.icon} {currentTpl.name}
+              </span>
+            )}
           </div>
 
-          {/* AI 身份与人设 */}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-              <User className="w-4 h-4 text-[#FF6B35]" />
-              <h3 className="text-sm font-semibold text-gray-900">AI 身份与人设</h3>
+          {/* 状态切换 */}
+          <div className="flex items-center justify-between px-3 py-2.5 bg-gray-50 rounded-xl">
+            <span className="text-xs text-gray-600">启用状态</span>
+            <button
+              onClick={() => updateAIEmployeeConfig({ status: aiConfig.status === 'online' ? 'offline' : 'online' })}
+              className={cn(
+                "w-9 h-5 rounded-full transition-colors relative flex-shrink-0",
+                aiConfig.status === 'online' ? "bg-[#FF6B35]" : "bg-gray-200"
+              )}
+            >
+              <span className={cn(
+                "absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform",
+                aiConfig.status === 'online' ? "left-[18px]" : "left-0.5"
+              )} />
+            </button>
+          </div>
+
+          {/* 已激活平台 */}
+          <div>
+            <h4 className="text-xs font-medium text-gray-500 mb-2">已激活平台</h4>
+            <div className="flex flex-wrap gap-1.5">
+              {aiConfig.activePlatforms.map((pid) => {
+                const pc = platformConfigs.find((p) => p.id === pid);
+                const PIcon = pc ? platformIconMap[pc.icon] : null;
+                return pc ? (
+                  <div key={pid} className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-50 border border-gray-100">
+                    <div className="w-4 h-4 rounded flex items-center justify-center" style={{ backgroundColor: pc.color }}>
+                      {PIcon && <PIcon className="w-2.5 h-2.5 text-white" />}
+                    </div>
+                    <span className="text-[11px] text-gray-600">{pc.name}</span>
+                  </div>
+                ) : null;
+              })}
             </div>
-            <div className="px-6 py-5 space-y-5">
-              {/* 昵称 */}
-              <div>
-                <label className="text-xs font-medium text-gray-600 mb-1.5 block">AI 员工对外昵称</label>
+          </div>
+
+          {/* 已开启功能 */}
+          <div>
+            <h4 className="text-xs font-medium text-gray-500 mb-2">已开启功能</h4>
+            {activeFeatures.length > 0 ? (
+              <div className="flex flex-wrap gap-1.5">
+                {activeFeatures.map((f) => (
+                  <span key={f as string} className="px-2 py-0.5 text-[11px] bg-[#FF6B35]/5 text-[#FF6B35] rounded-full">{f as string}</span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[11px] text-gray-400">暂无开启功能</p>
+            )}
+          </div>
+
+          {/* 语气预览 */}
+          <div>
+            <h4 className="text-xs font-medium text-gray-500 mb-2">语气预览</h4>
+            <div className="bg-gray-50 rounded-xl p-3 space-y-2">
+              <div className="flex items-start gap-2">
+                <User className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                <p className="text-[11px] text-gray-600">{personaPreviewQuestion}</p>
+              </div>
+              <div className="flex items-start gap-2">
+                <Bot className="w-4 h-4 text-[#FF6B35] mt-0.5 flex-shrink-0" />
+                <p className="text-[11px] text-gray-700">{personaPreviewAnswers[aiConfig.personaTemplate]}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 右侧：配置区 */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-5">
+          {/* 平台选项卡 */}
+          {aiConfig.activePlatforms.length > 1 && (
+            <div className="flex gap-2 flex-wrap">
+              {aiConfig.activePlatforms.map((pid) => {
+                const pc = platformConfigs.find((p) => p.id === pid);
+                const PIcon = pc ? platformIconMap[pc.icon] : null;
+                return pc ? (
+                  <button
+                    key={pid}
+                    onClick={() => setSelectedPlatform(pid)}
+                    className={cn(
+                      'flex items-center gap-2 px-3 py-2 rounded-xl border text-sm transition-all',
+                      selectedPlatform === pid
+                        ? 'border-[#FF6B35] bg-[#FF6B35]/5 text-[#FF6B35] font-medium'
+                        : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                    )}
+                  >
+                    <div className="w-5 h-5 rounded flex items-center justify-center" style={{ backgroundColor: pc.color }}>
+                      {PIcon && <PIcon className="w-3 h-3 text-white" />}
+                    </div>
+                    {pc.name}
+                  </button>
+                ) : null;
+              })}
+            </div>
+          )}
+
+          {/* AI 身份 / 人设 */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
+            <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#FF6B35]" />
+              AI 身份 / 人设
+            </h3>
+            {/* 昵称 */}
+            <div>
+              <label className="text-xs text-gray-500 mb-1.5 block">AI 员工昵称</label>
+              <div className="flex gap-2">
                 <input
                   type="text"
-                  value={aiConfig.name}
-                  onChange={(e) => updateAIConfig({ name: e.target.value })}
-                  className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]"
+                  value={nicknameInput}
+                  onChange={(e) => setNicknameInput(e.target.value)}
+                  className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]"
                 />
-              </div>
-
-              {/* 人设模板选择 */}
-              <div>
-                <label className="text-xs font-medium text-gray-600 mb-2 block">选择人设模板</label>
-                <div className="grid grid-cols-3 gap-3">
-                  {personaTemplates.map(tpl => {
-                    const isSelected = aiConfig.personaTemplate === tpl.id;
-                    return (
-                      <button
-                        key={tpl.id}
-                        onClick={() => updateAIConfig({ personaTemplate: tpl.id })}
-                        className={cn(
-                          "relative text-left p-4 rounded-xl border-2 transition-all",
-                          isSelected
-                            ? "border-[#FF6B35] bg-[#FF6B35]/[0.03]"
-                            : "border-gray-200 hover:border-gray-300"
-                        )}
-                      >
-                        {isSelected && (
-                          <div className="absolute top-2 right-2">
-                            <CheckCircle2 className="w-4 h-4 text-[#FF6B35]" />
-                          </div>
-                        )}
-                        <span className="text-2xl mb-2 block">{tpl.icon}</span>
-                        <h4 className="text-sm font-semibold text-gray-900 mb-1">{tpl.name}</h4>
-                        <p className="text-[11px] text-gray-500 leading-relaxed mb-2">{tpl.description}</p>
-                        <div className="flex flex-wrap gap-1">
-                          {tpl.tags.map(tag => (
-                            <span key={tag} className="px-2 py-0.5 text-[10px] bg-gray-100 text-gray-500 rounded-md">{tag}</span>
-                          ))}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
+                <button
+                  onClick={handleSaveNickname}
+                  className={cn(
+                    "px-4 py-2 text-sm font-medium rounded-lg transition-colors",
+                    nicknameSaved
+                      ? "bg-green-50 text-green-600"
+                      : "bg-[#FF6B35] text-white hover:bg-[#E85A2A]"
+                  )}
+                >
+                  {nicknameSaved ? '已保存' : '保存'}
+                </button>
               </div>
             </div>
-          </div>
-
-          {/* 工作时间 (Schedule) */}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-              <Clock className="w-4 h-4 text-[#FF6B35]" />
-              <h3 className="text-sm font-semibold text-gray-900">工作时间 (Schedule)</h3>
-            </div>
-            <div className="px-6 py-5 space-y-5">
-              {/* 时区 + 在线时间段 */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-medium text-gray-600 mb-1.5 block">工作时区</label>
-                  <select
-                    value={aiConfig.timezone}
-                    onChange={(e) => updateAIConfig({ timezone: e.target.value })}
-                    className="w-full px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] bg-white"
+            {/* 人设模板选择 */}
+            <div>
+              <label className="text-xs text-gray-500 mb-2 block">人设模板</label>
+              <div className="grid grid-cols-3 gap-3">
+                {personaTemplates.map((tpl) => (
+                  <button
+                    key={tpl.id}
+                    onClick={() => handleSelectPersona(tpl.id)}
+                    className={cn(
+                      'p-3 rounded-xl border-2 text-left transition-all',
+                      aiConfig.personaTemplate === tpl.id
+                        ? 'border-[#FF6B35] bg-[#FF6B35]/5'
+                        : 'border-gray-200 hover:border-gray-300'
+                    )}
                   >
-                    <option value="America/New_York">GMT-05:00 (New York)</option>
-                    <option value="America/Chicago">GMT-06:00 (Chicago)</option>
-                    <option value="America/Los_Angeles">GMT-08:00 (Los Angeles)</option>
-                    <option value="Europe/London">GMT+00:00 (London)</option>
-                    <option value="Asia/Shanghai">GMT+08:00 (Shanghai)</option>
-                    <option value="Asia/Tokyo">GMT+09:00 (Tokyo)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-gray-600 mb-1.5 block">在线时间段</label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="time"
-                      value={aiConfig.workStartTime}
-                      onChange={(e) => updateAIConfig({ workStartTime: e.target.value })}
-                      className="flex-1 px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]"
-                    />
-                    <span className="text-xs text-gray-400">至</span>
-                    <input
-                      type="time"
-                      value={aiConfig.workEndTime}
-                      onChange={(e) => updateAIConfig({ workEndTime: e.target.value })}
-                      className="flex-1 px-3 py-2.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]"
-                    />
-                  </div>
-                </div>
-              </div>
-              {/* 提示 */}
-              <p className="text-[11px] text-gray-400 flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                根据目标客户所在区域选择，避免半夜营销骚扰。
-              </p>
-            </div>
-          </div>
-
-          {/* AI 能力配置 (Capabilities) */}
-          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Bot className="w-4 h-4 text-[#FF6B35]" />
-                <h3 className="text-sm font-semibold text-gray-900">AI 能力配置 (Capabilities)</h3>
-              </div>
-              <span className="text-xs text-gray-400">
-                当前应用: {platformConfigs.find(p => p.id === selectedPlatform)?.name}
-              </span>
-            </div>
-            <div className="px-6 py-5">
-              <div className="grid grid-cols-2 gap-4">
-                {/* AI 销售客服 */}
-                <CapabilityCard
-                  icon={MessageSquare}
-                  iconColor="text-[#FF6B35]"
-                  iconBg="bg-[#FF6B35]/10"
-                  title="AI 销售客服"
-                  description="自动接待新客咨询，解答产品问题，并在对话中识别意向进行留资引导。"
-                  enabled={!!currentCapability?.aiSalesChat}
-                  onToggle={() => toggleCapability('aiSalesChat')}
-                />
-                {/* AI 主动营销 */}
-                <CapabilityCard
-                  icon={Zap}
-                  iconColor="text-amber-500"
-                  iconBg="bg-amber-50"
-                  title="AI 主动营销"
-                  description="根据用户标签，向潜在客户主动发送个性化营销话术（SOP推送）。"
-                  enabled={!!currentCapability?.aiProactiveMarketing}
-                  onToggle={() => toggleCapability('aiProactiveMarketing')}
-                />
-                {/* AI 沉默召回 */}
-                <CapabilityCard
-                  icon={Clock}
-                  iconColor="text-emerald-500"
-                  iconBg="bg-emerald-50"
-                  title="AI 沉默召回"
-                  description="对超过 7 天未互动的客户进行探测性发信，根据回复意愿重新激活。"
-                  enabled={!!currentCapability?.aiRecall}
-                  onToggle={() => toggleCapability('aiRecall')}
-                />
-                {/* AI 会话质检 */}
-                <CapabilityCard
-                  icon={CheckCircle2}
-                  iconColor="text-rose-500"
-                  iconBg="bg-rose-50"
-                  title="AI 会话质检"
-                  description="实时监控对话情绪，识别违规词汇或消极怠工行为，并自动生成质检报告。"
-                  enabled={!!currentCapability?.aiQualityCheck}
-                  onToggle={() => toggleCapability('aiQualityCheck')}
-                />
+                    <div className="text-xl mb-1">{tpl.icon}</div>
+                    <h4 className="text-xs font-semibold text-gray-900">{tpl.name}</h4>
+                    <p className="text-[10px] text-gray-500 mt-0.5 line-clamp-2">{tpl.description}</p>
+                    <div className="flex gap-1 mt-2">
+                      {tpl.tags.map((tag) => (
+                        <span key={tag} className="px-1.5 py-0.5 text-[9px] bg-gray-100 text-gray-500 rounded">{tag}</span>
+                      ))}
+                    </div>
+                  </button>
+                ))}
               </div>
             </div>
           </div>
 
-          {/* 知识库、话术库、标签配置入口 */}
-          <div className="grid grid-cols-3 gap-4">
-            <button
-              onClick={onNavigateToKnowledge}
-              className="group bg-white rounded-xl border border-gray-200 p-5 text-left hover:border-[#FF6B35]/40 hover:shadow-md hover:shadow-[#FF6B35]/5 transition-all"
-            >
-              <div className="w-10 h-10 rounded-lg bg-[#FF6B35]/10 flex items-center justify-center mb-3 group-hover:bg-[#FF6B35]/15 transition-colors">
-                <BookOpen className="w-5 h-5 text-[#FF6B35]" />
+          {/* 工作时间 */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
+            <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <Clock className="w-4 h-4 text-blue-500" />
+              工作时间
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs text-gray-500 mb-1.5 block">开始时间</label>
+                <input
+                  type="time"
+                  value={aiConfig.workStartTime}
+                  onChange={(e) => updateAIEmployeeConfig({ workStartTime: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]"
+                />
               </div>
-              <h4 className="text-sm font-semibold text-gray-900 mb-1">知识库配置</h4>
-              <p className="text-[11px] text-gray-500 leading-relaxed mb-3">管理产品资料、FAQ、公司介绍等知识内容，让AI员工更懂你的业务。</p>
-              <div className="flex items-center text-xs text-[#FF6B35] font-medium">
-                前往配置
-                <ChevronRight className="w-3.5 h-3.5 ml-0.5 group-hover:translate-x-0.5 transition-transform" />
+              <div>
+                <label className="text-xs text-gray-500 mb-1.5 block">结束时间</label>
+                <input
+                  type="time"
+                  value={aiConfig.workEndTime}
+                  onChange={(e) => updateAIEmployeeConfig({ workEndTime: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]"
+                />
               </div>
-            </button>
-            <button
-              onClick={onNavigateToScripts}
-              className="group bg-white rounded-xl border border-gray-200 p-5 text-left hover:border-[#FF6B35]/40 hover:shadow-md hover:shadow-[#FF6B35]/5 transition-all"
-            >
-              <div className="w-10 h-10 rounded-lg bg-amber-50 flex items-center justify-center mb-3 group-hover:bg-amber-100/70 transition-colors">
-                <MessageSquare className="w-5 h-5 text-amber-500" />
+            </div>
+            <div>
+              <label className="text-xs text-gray-500 mb-2 block">工作日</label>
+              <div className="flex gap-2">
+                {['日', '一', '二', '三', '四', '五', '六'].map((d, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      const days = aiConfig.workDays.includes(i)
+                        ? aiConfig.workDays.filter((x) => x !== i)
+                        : [...aiConfig.workDays, i].sort();
+                      updateAIEmployeeConfig({ workDays: days });
+                    }}
+                    className={cn(
+                      'w-9 h-9 rounded-lg text-xs font-medium transition-colors',
+                      aiConfig.workDays.includes(i)
+                        ? 'bg-[#FF6B35] text-white'
+                        : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                    )}
+                  >
+                    {d}
+                  </button>
+                ))}
               </div>
-              <h4 className="text-sm font-semibold text-gray-900 mb-1">话术库配置</h4>
-              <p className="text-[11px] text-gray-500 leading-relaxed mb-3">配置营销话术、回复模板和SOP流程，提升AI员工的沟通转化能力。</p>
-              <div className="flex items-center text-xs text-[#FF6B35] font-medium">
-                前往配置
-                <ChevronRight className="w-3.5 h-3.5 ml-0.5 group-hover:translate-x-0.5 transition-transform" />
-              </div>
-            </button>
-            <button
-              onClick={onNavigateToLabels}
-              className="group bg-white rounded-xl border border-gray-200 p-5 text-left hover:border-[#FF6B35]/40 hover:shadow-md hover:shadow-[#FF6B35]/5 transition-all"
-            >
-              <div className="w-10 h-10 rounded-lg bg-violet-50 flex items-center justify-center mb-3 group-hover:bg-violet-100/70 transition-colors">
-                <Tags className="w-5 h-5 text-violet-500" />
-              </div>
-              <h4 className="text-sm font-semibold text-gray-900 mb-1">AI标签配置</h4>
-              <p className="text-[11px] text-gray-500 leading-relaxed mb-3">配置AI自动打标规则与客户分类标签，实现精准客户画像管理。</p>
-              <div className="flex items-center text-xs text-[#FF6B35] font-medium">
-                前往配置
-                <ChevronRight className="w-3.5 h-3.5 ml-0.5 group-hover:translate-x-0.5 transition-transform" />
-              </div>
-            </button>
+            </div>
           </div>
 
+          {/* AI 能力 */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
+            <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <Zap className="w-4 h-4 text-amber-500" />
+              AI 能力
+            </h3>
+            <div className="grid grid-cols-2 gap-3">
+              <CapabilityCard
+                icon={MessageCircle}
+                iconColor="text-[#FF6B35]"
+                iconBg="bg-[#FF6B35]/10"
+                title="智能销售对话"
+                description="自动识别客户意图，智能推荐产品并引导下单"
+                enabled={currentCap?.aiSalesChat ?? false}
+                onToggle={() => handleToggleCapability('aiSalesChat')}
+              />
+              <CapabilityCard
+                icon={Send}
+                iconColor="text-blue-500"
+                iconBg="bg-blue-50"
+                title="主动营销触达"
+                description="根据客户画像自动发送个性化营销消息"
+                enabled={currentCap?.aiProactiveMarketing ?? false}
+                onToggle={() => handleToggleCapability('aiProactiveMarketing')}
+              />
+              <CapabilityCard
+                icon={User}
+                iconColor="text-purple-500"
+                iconBg="bg-purple-50"
+                title="客户召回"
+                description="自动识别沉默客户并发送召回消息"
+                enabled={currentCap?.aiRecall ?? false}
+                onToggle={() => handleToggleCapability('aiRecall')}
+              />
+              <CapabilityCard
+                icon={CheckCircle2}
+                iconColor="text-green-500"
+                iconBg="bg-green-50"
+                title="质量检测"
+                description="自动检测对话质量并生成改进建议"
+                enabled={currentCap?.aiQualityCheck ?? false}
+                onToggle={() => handleToggleCapability('aiQualityCheck')}
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1460,8 +1694,6 @@ const CUSTOMER_STATUS_MAP: Record<string, { label: string; cls: string }> = {
   deleted: { label: '已删除', cls: 'bg-red-50 text-red-500 border-red-200' },
 };
 
-const ACTIVITY_LEVELS = ['高', '中', '低'] as const;
-
 const getActivityLevel = (customer: import('@/types').CustomerProfile) => {
   const days = customer.lastContactAt
     ? Math.floor((Date.now() - new Date(customer.lastContactAt).getTime()) / 86400000)
@@ -1471,7 +1703,7 @@ const getActivityLevel = (customer: import('@/types').CustomerProfile) => {
   return { level: '低' as const, cls: 'text-gray-400' };
 };
 
-const getCustomerStatus = (customer: import('@/types').CustomerProfile) => {
+const getCustomerStatus = (_customer: import('@/types').CustomerProfile) => {
   // 默认都是正常状态，取消跟进和已删除需要业务操作触发
   return 'normal';
 };
@@ -2046,7 +2278,7 @@ const AdminCustomerDetailPage: React.FC<{
           </span>
           {conversation && (
             <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
-              {platformConfigs[conversation.platform]?.name ?? conversation.platform}
+              {platformConfigs.find(p => p.id === conversation.platform)?.name ?? conversation.platform}
             </span>
           )}
         </div>

@@ -12,7 +12,6 @@ import {
   Loader2,
   AlertCircle,
   FolderOpen,
-  MoreHorizontal,
   FileEdit,
   CheckCircle2,
   ChevronRight,
@@ -63,7 +62,7 @@ export const KnowledgeBasePage: React.FC = () => {
   const [newKbColor, setNewKbColor] = useState('#3B82F6');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showUploadWizard, setShowUploadWizard] = useState(false);
-  const [wizardFiles, setWizardFiles] = useState<File[]>([]);
+  const [, setWizardFiles] = useState<File[]>([]);
 
   const PRESET_COLORS = [
     '#3B82F6', '#22C55E', '#F59E0B', '#EF4444', '#8B5CF6',
@@ -182,6 +181,11 @@ export const KnowledgeBasePage: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col bg-gray-50/50">
+      {/* 功能完善提示 */}
+      <div className="mx-6 mt-4 mb-0 flex items-center gap-2 px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-700">
+        <AlertCircle className="w-4 h-4 flex-shrink-0 text-amber-500" />
+        <span>该功能还在完善中</span>
+      </div>
       {/* 顶部栏 */}
       <div className="px-6 py-4 flex items-center justify-between flex-shrink-0 bg-white border-b border-gray-100">
         <div className="flex items-center gap-3">

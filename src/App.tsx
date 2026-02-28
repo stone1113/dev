@@ -55,7 +55,7 @@ import {
   Smartphone,
   Music,
   Twitter,
-  ShoppingBag
+  ShoppingBag,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -643,7 +643,7 @@ function getTimezoneLabel(tz: string): string {
 // AI员工绑定页面
 function AIBindingPage({ platformAccounts, aiEmployeeConfig, iconMap, onBack, onGoToConversations, onToggleAI, activationCode, orgAiSeats }: {
   platformAccounts: PlatformAccount[];
-  aiEmployeeConfig: AIEmployeeConfig;
+  aiEmployeeConfig: AIEmployeeConfig | null;
   iconMap: Record<string, React.ComponentType<{ className?: string }>>;
   onBack: () => void;
   onGoToConversations: () => void;
@@ -651,6 +651,9 @@ function AIBindingPage({ platformAccounts, aiEmployeeConfig, iconMap, onBack, on
   activationCode: ActivationCode | null;
   orgAiSeats?: { total: number; used: number };
 }) {
+  const ai = aiEmployeeConfig ?? {
+    name: 'AI 员工', status: 'offline' as const, workStartTime: '09:00', workEndTime: '18:00', timezone: 'Asia/Shanghai',
+  };
   // 过滤掉未登录账号（status 不是 online/offline/busy 的账号）
   const loggedInAccounts = platformAccounts.filter(a => a.status === 'online' || a.status === 'offline' || a.status === 'busy');
   const notLoggedInCount = platformAccounts.length - loggedInAccounts.length;
@@ -678,16 +681,16 @@ function AIBindingPage({ platformAccounts, aiEmployeeConfig, iconMap, onBack, on
               <Bot className="w-7 h-7 text-white" />
             </div>
             <div className="flex-1">
-              <h2 className="text-lg font-semibold">{aiEmployeeConfig.name}</h2>
+              <h2 className="text-lg font-semibold">{ai.name}</h2>
               <p className="text-sm text-white/70 mt-0.5">
-                {aiEmployeeConfig.status === 'online' ? '在线工作中' : '离线'} · 已绑定 {boundCount} 个账号
+                {ai.status === 'online' ? '在线工作中' : '离线'} · 已绑定 {boundCount} 个账号
               </p>
             </div>
             <div className="text-right">
               <p className="text-xs text-white/60">工作时间</p>
-              <p className="text-sm font-medium">{aiEmployeeConfig.workStartTime} - {aiEmployeeConfig.workEndTime}</p>
+              <p className="text-sm font-medium">{ai.workStartTime} - {ai.workEndTime}</p>
               <p className="text-[10px] text-white/50 mt-0.5">
-                {getTimezoneLabel(aiEmployeeConfig.timezone)} · 自动适配客户时区
+                {getTimezoneLabel(ai.timezone)} · 自动适配客户时区
               </p>
             </div>
           </div>
@@ -858,7 +861,8 @@ function AIBindingRow({ account, platformConfig, PIcon, onToggle }: {
 
 // Dashboard View
 function DashboardView({ onGoToConversations }: { onGoToConversations: () => void }) {
-  const { conversations, getFilteredConversations, aiStats, organization, platformAccounts, aiEmployeeConfig, updatePlatformAccount, activationCodes, currentActivationCodeId } = useStore();
+  const { conversations, getFilteredConversations, aiStats, organization, platformAccounts, aiEmployees, selectedAIEmployeeId, updatePlatformAccount, activationCodes, currentActivationCodeId } = useStore();
+  const aiEmployeeConfig = aiEmployees.find(e => e.id === selectedAIEmployeeId) ?? aiEmployees[0] ?? null;
   const [showAIBinding, setShowAIBinding] = useState(false);
   const stats = {
     total: conversations.length,
@@ -978,7 +982,7 @@ function DashboardView({ onGoToConversations }: { onGoToConversations: () => voi
       {/* AI员工绑定 + AI智能客服 并排 */}
       <div className="grid grid-cols-2 gap-4">
         {/* AI员工绑定入口 */}
-        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl p-4 text-white shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
+        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl p-5 text-white shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
           onClick={() => setShowAIBinding(true)}
         >
           <div className="flex items-center justify-between">
@@ -993,7 +997,7 @@ function DashboardView({ onGoToConversations }: { onGoToConversations: () => voi
                 <div className="flex items-center gap-2">
                   <h2 className="text-sm font-semibold">AI员工绑定</h2>
                   <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-white/20 truncate max-w-[120px]">
-                    {aiEmployeeConfig.name}
+                    {aiEmployeeConfig?.name || 'AI 员工'}
                   </span>
                 </div>
                 <p className="text-xs text-white/70 mt-0.5">
@@ -1020,10 +1024,20 @@ function DashboardView({ onGoToConversations }: { onGoToConversations: () => voi
               </button>
             </div>
           </div>
+          <div className="mt-3 pt-3 border-t border-white/15 flex items-center gap-4">
+            <div className="flex items-center gap-1.5 text-xs text-white/60">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+              在线 {platformAccounts.filter(a => a.status === 'online').length}
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-white/60">
+              <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+              离线 {platformAccounts.filter(a => a.status === 'offline').length}
+            </div>
+          </div>
         </div>
 
         {/* AI客服状态卡片 */}
-        <div className="bg-gradient-to-r from-[#FF6B35] to-[#E85A2A] rounded-xl p-4 text-white shadow-lg">
+        <div className="bg-gradient-to-r from-[#FF6B35] to-[#E85A2A] rounded-xl p-5 text-white shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="relative flex-shrink-0">
@@ -1045,21 +1059,11 @@ function DashboardView({ onGoToConversations }: { onGoToConversations: () => voi
                 </p>
               </div>
             </div>
-            <div className="hidden lg:flex items-center gap-3 flex-shrink-0">
-              <div className="text-center">
-                <p className="text-xl font-bold">{aiStats.realtime.currentChats}</p>
-                <p className="text-[10px] text-white/70">当前对话</p>
-              </div>
-              <div className="w-px h-8 bg-white/20" />
-              <div className="text-center">
-                <p className="text-xl font-bold">{aiStats.realtime.queueLength}</p>
-                <p className="text-[10px] text-white/70">排队人数</p>
-              </div>
-              <div className="w-px h-8 bg-white/20" />
-              <div className="text-center">
-                <p className="text-xl font-bold">{aiStats.today.satisfactionRate}%</p>
-                <p className="text-[10px] text-white/70">满意度</p>
-              </div>
+          </div>
+          <div className="mt-3 pt-3 border-t border-white/15 flex items-center gap-4">
+            <div className="flex items-center gap-1.5 text-xs text-white/60">
+              <Zap className="w-3 h-3" />
+              平均响应 {aiStats.today.avgResponseTime}s
             </div>
           </div>
         </div>

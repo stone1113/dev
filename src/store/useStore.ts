@@ -30,7 +30,6 @@ import {
   mockPlatformAccounts,
   mockDepartments,
   mockActivationCodes,
-  mockAIEmployeeConfig,
   mockAILabelGroups,
   mockAILabels
 } from '@/data/mockData';
@@ -133,8 +132,13 @@ interface AppState {
   setCurrentLanguage: (lang: string) => void;
   
   // AI员工配置
-  aiEmployeeConfig: AIEmployeeConfig;
+  aiEmployees: AIEmployeeConfig[];
+  selectedAIEmployeeId: string | null;
+  addAIEmployee: (employee: AIEmployeeConfig) => void;
+  deleteAIEmployee: (id: string) => void;
+  selectAIEmployee: (id: string | null) => void;
   updateAIEmployeeConfig: (updates: Partial<AIEmployeeConfig>) => void;
+  updateAIEmployeeById: (id: string, updates: Partial<AIEmployeeConfig>) => void;
 
   // AI标签管理
   aiLabelGroups: AILabelGroup[];
@@ -704,10 +708,35 @@ export const useStore = create<AppState>()(
       setCurrentLanguage: (lang) => set({ currentLanguage: lang }),
       
       // AI员工配置
-      aiEmployeeConfig: mockAIEmployeeConfig,
+      aiEmployees: [],
+      selectedAIEmployeeId: null,
+      addAIEmployee: (employee) =>
+        set((state) => ({
+          aiEmployees: [...state.aiEmployees, employee],
+          selectedAIEmployeeId: employee.id,
+        })),
+      deleteAIEmployee: (id) =>
+        set((state) => {
+          const filtered = state.aiEmployees.filter((e) => e.id !== id);
+          return {
+            aiEmployees: filtered,
+            selectedAIEmployeeId: state.selectedAIEmployeeId === id
+              ? (filtered[0]?.id ?? null)
+              : state.selectedAIEmployeeId,
+          };
+        }),
+      selectAIEmployee: (id) => set({ selectedAIEmployeeId: id }),
       updateAIEmployeeConfig: (updates) =>
         set((state) => ({
-          aiEmployeeConfig: { ...state.aiEmployeeConfig, ...updates }
+          aiEmployees: state.aiEmployees.map((e) =>
+            e.id === state.selectedAIEmployeeId ? { ...e, ...updates } : e
+          ),
+        })),
+      updateAIEmployeeById: (id, updates) =>
+        set((state) => ({
+          aiEmployees: state.aiEmployees.map((e) =>
+            e.id === id ? { ...e, ...updates } : e
+          ),
         })),
 
       // AI标签管理
