@@ -18,17 +18,14 @@ import {
   Video,
   Smile,
   Paperclip,
-  Mic,
   SendHorizonal,
-  Languages,
   Sparkles,
+  Languages,
   User,
   Bot,
   Check,
   CheckCheck,
   Clock,
-  X,
-  ArrowRightLeft,
   Wand2,
   RefreshCw,
   ThumbsUp,
@@ -201,41 +198,6 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
     
     addMessage(conversation.id, newMessage);
     setInputMessage('');
-    setInputTranslation(null);
-  };
-  
-  // 翻译输入框内容 - 使用用户的翻译设置
-  const handleTranslateInput = async () => {
-    if (!inputMessage.trim() || isTranslating) return;
-    
-    const translationSettings = userSettings.preferences.translation;
-    const targetLang = translationSettings.enabled 
-      ? translationSettings.sendLanguage 
-      : (conversation.customer.language || 'en');
-    
-    const result = await translateMessage(
-      inputMessage,
-      translationSettings.receiveLanguage, // 源语言
-      targetLang                           // 目标语言
-    );
-    
-    setInputTranslation({
-      original: inputMessage,
-      translated: result.translatedText,
-      targetLang: targetLang
-    });
-  };
-  
-  // 使用翻译后的内容
-  const handleUseTranslation = () => {
-    if (inputTranslation) {
-      setInputMessage(inputTranslation.translated);
-      setInputTranslation(null);
-    }
-  };
-  
-  // 取消翻译
-  const handleCancelTranslation = () => {
     setInputTranslation(null);
   };
 
@@ -705,37 +667,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
           </div>
         )}
         
-        {/* Translation Preview */}
-        {inputTranslation && (
-          <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-xl">
-            <div className="flex items-center gap-2 mb-2">
-              <div className="flex items-center gap-1 text-xs text-blue-600">
-                <ArrowRightLeft className="w-3 h-3" />
-                <span>中文</span>
-                <span>→</span>
-                <span>{customerLanguage.flag} {customerLanguage.name}</span>
-              </div>
-            </div>
-            <p className="text-sm text-gray-700 mb-3">{inputTranslation.translated}</p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleUseTranslation}
-                className="flex items-center gap-1 px-3 py-1.5 bg-[#FF6B35] text-white text-xs font-medium rounded-lg hover:bg-[#E85A2A] transition-colors"
-              >
-                <Check className="w-3 h-3" />
-                <span>使用翻译</span>
-              </button>
-              <button
-                onClick={handleCancelTranslation}
-                className="flex items-center gap-1 px-3 py-1.5 bg-white border border-gray-200 text-gray-600 text-xs font-medium rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <X className="w-3 h-3" />
-                <span>取消</span>
-              </button>
-            </div>
-          </div>
-        )}
-        
+
         <div className="flex items-end gap-2">
           <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
             <Smile className="w-5 h-5 text-gray-500" />
@@ -760,37 +692,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
               style={{ minHeight: '44px', maxHeight: '120px' }}
             />
           </div>
-          
-          {/* Translate Button */}
-          <button
-            onClick={handleTranslateInput}
-            disabled={!inputMessage.trim() || isTranslating || inputTranslation !== null}
-            className={cn(
-              "p-2 rounded-lg transition-all relative",
-              inputMessage.trim() && !inputTranslation
-                ? "bg-[#FF6B35]/10 text-[#FF6B35] hover:bg-[#FF6B35]/20"
-                : "bg-gray-100 text-gray-400"
-            )}
-            title="翻译成客户语言"
-          >
-            {isTranslating ? (
-              <div className="w-5 h-5 border-2 border-[#FF6B35] border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <Languages className="w-5 h-5" />
-            )}
-            
-            {/* Language Badge */}
-            {inputMessage.trim() && !inputTranslation && !isTranslating && (
-              <span className="absolute -top-1 -right-1 w-3 h-3 bg-[#FF6B35] text-white text-[8px] rounded-full flex items-center justify-center">
-                {customerLanguage.flag}
-              </span>
-            )}
-          </button>
-          
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <Mic className="w-5 h-5 text-gray-500" />
-          </button>
-          
+
           <button
             onClick={handleSendMessage}
             disabled={!inputMessage.trim()}

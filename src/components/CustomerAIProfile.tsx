@@ -21,7 +21,9 @@ import {
   Check,
   Loader2,
   Brain,
-  ArrowRight
+  ArrowRight,
+  AlertTriangle,
+  RefreshCw
 } from 'lucide-react';
 
 interface CustomerAIProfileProps {
@@ -69,6 +71,15 @@ export const CustomerAIProfile: React.FC<CustomerAIProfileProps> = ({ onClose })
     return (conversation.messages || []).filter(m => m.senderType === 'ai' || m.isAIGenerated).length;
   }, [conversation]);
 
+  // 对话轮次计算（一问一答计为1轮）
+  const dialogRounds = useMemo(() => {
+    if (!conversation) return 0;
+    const messages = conversation.messages || [];
+    const customerMessages = messages.filter(m => m.senderType === 'customer').length;
+    const replyMessages = messages.filter(m => m.senderType === 'agent' || m.senderType === 'ai' || m.isAIGenerated).length;
+    return Math.min(customerMessages, replyMessages);
+  }, [conversation]);
+
   // 编辑状态
   const [editingProfile, setEditingProfile] = useState(false);
   const [editingContact, setEditingContact] = useState(false);
@@ -76,6 +87,8 @@ export const CustomerAIProfile: React.FC<CustomerAIProfileProps> = ({ onClose })
 
   // AI会话总结加载状态（仅用于加载动画）
   const [aiSummaryLoading, setAiSummaryLoading] = useState(false);
+  // 轮次不足提示状态
+  const [showLowRoundWarning, setShowLowRoundWarning] = useState(false);
 
   // AI智能分析面板展开状态
   const [_aiAnalysisExpanded, _setAiAnalysisExpanded] = useState(true);
@@ -280,6 +293,15 @@ export const CustomerAIProfile: React.FC<CustomerAIProfileProps> = ({ onClose })
 
             {/* 内容区域 */}
             <div className="border-t border-gray-100">
+              {conversation?.isGroup ? (
+                /* 群聊占位提示 */
+                <div className="flex flex-col items-center justify-center py-12 px-4 text-gray-400">
+                  <Brain className="w-10 h-10 mb-3 opacity-20" />
+                  <p className="text-sm font-medium text-gray-500 mb-1">群聊暂不支持 AI 总结</p>
+                  <p className="text-xs text-gray-400">该功能即将上线，敬请期待</p>
+                </div>
+              ) : (
+                <>
                 {/* Tab 切换 */}
                 <div className="flex border-b border-gray-100">
                   <button
@@ -315,17 +337,62 @@ export const CustomerAIProfile: React.FC<CustomerAIProfileProps> = ({ onClose })
                   {aiAnalysisTab === 'summary' ? (
                     /* 会话总结内容 */
                     <div className="space-y-4">
-                      {!aiSummaryGenerated ? (
+                      {/* 轮次不足提示弹层 */}
+                      {showLowRoundWarning && (
+                        <div className="animate-in fade-in slide-in-from-top-2 duration-200">
+                          <div className="p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                            <div className="flex items-start gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center flex-shrink-0">
+                                <AlertTriangle className="w-4 h-4 text-amber-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs font-medium text-amber-800 mb-1">对话轮次较少</p>
+                                <p className="text-[11px] text-amber-600 leading-relaxed">
+                                  当前会话仅 {dialogRounds} 轮对话，生成的内容总结可能不够准确。建议在更多对话后再生成。
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex gap-2 mt-3 ml-11">
+                              <button
+                                onClick={() => {
+                                  setShowLowRoundWarning(false);
+                                  if (!conversation) return;
+                                  setAiSummaryLoading(true);
+                                  setTimeout(() => {
+                                    setAiSummaryLoading(false);
+                                    updateConversation(conversation.id, { aiAnalysisGenerated: true });
+                                  }, 1500);
+                                }}
+                                className="px-3 py-1.5 text-[11px] font-medium bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
+                              >
+                                仍然生成
+                              </button>
+                              <button
+                                onClick={() => setShowLowRoundWarning(false)}
+                                className="px-3 py-1.5 text-[11px] font-medium text-amber-700 bg-amber-100 rounded-lg hover:bg-amber-200 transition-colors"
+                              >
+                                取消
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {!aiSummaryGenerated && !showLowRoundWarning ? (
                         <div className="flex flex-col items-center justify-center py-10 text-gray-400">
                           <Sparkles className="w-10 h-10 mb-3 opacity-30" />
-                          <p className="text-xs mb-4">点击生成，AI将分析会话内容</p>
+                          <p className="text-xs mb-1">点击生成，AI将分析会话内容</p>
+                          <p className="text-[11px] text-gray-300 mb-4">当前 {dialogRounds} 轮对话</p>
                           <button
                             onClick={() => {
                               if (!conversation) return;
+                              if (dialogRounds <= 5) {
+                                setShowLowRoundWarning(true);
+                                return;
+                              }
                               setAiSummaryLoading(true);
                               setTimeout(() => {
                                 setAiSummaryLoading(false);
-                                // 持久化到会话数据
                                 updateConversation(conversation.id, { aiAnalysisGenerated: true });
                               }, 1500);
                             }}
@@ -345,7 +412,7 @@ export const CustomerAIProfile: React.FC<CustomerAIProfileProps> = ({ onClose })
                             )}
                           </button>
                         </div>
-                      ) : (
+                      ) : aiSummaryGenerated ? (
                         <div className="space-y-4">
                           {/* 会话摘要 */}
                           <div>
@@ -382,8 +449,41 @@ export const CustomerAIProfile: React.FC<CustomerAIProfileProps> = ({ onClose })
                               </div>
                             </div>
                           </div>
+
+                          {/* 重新生成按钮 */}
+                          <div className="pt-3 border-t border-gray-100">
+                            <button
+                              onClick={() => {
+                                if (!conversation) return;
+                                if (dialogRounds <= 5) {
+                                  setShowLowRoundWarning(true);
+                                  return;
+                                }
+                                setAiSummaryLoading(true);
+                                updateConversation(conversation.id, { aiAnalysisGenerated: false });
+                                setTimeout(() => {
+                                  setAiSummaryLoading(false);
+                                  updateConversation(conversation.id, { aiAnalysisGenerated: true });
+                                }, 1500);
+                              }}
+                              disabled={aiSummaryLoading}
+                              className="w-full py-2 text-xs font-medium text-purple-600 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+                            >
+                              {aiSummaryLoading ? (
+                                <>
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  重新生成中...
+                                </>
+                              ) : (
+                                <>
+                                  <RefreshCw className="w-3.5 h-3.5" />
+                                  重新生成
+                                </>
+                              )}
+                            </button>
+                          </div>
                         </div>
-                      )}
+                      ) : null}
                     </div>
                   ) : (
                     /* 行为预测内容 */
@@ -417,11 +517,25 @@ export const CustomerAIProfile: React.FC<CustomerAIProfileProps> = ({ onClose })
                     </div>
                   )}
                 </div>
-              </div>
+              </>
+              )}
+            </div>
           </div>
         </div>
-
         {/* AI画像标签 */}
+        {conversation?.isGroup ? (
+          <div id="ai-profile" className="p-4 bg-gradient-to-br from-orange-50/80 to-amber-50/50 rounded-xl border border-orange-100/60">
+            <div className="flex items-center gap-2 mb-3">
+              <Tag className="w-4 h-4 text-[#FF6B35]" />
+              <span className="text-sm font-medium text-[#FF6B35]">AI画像标签</span>
+            </div>
+            <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+              <Tag className="w-8 h-8 mb-2 opacity-20" />
+              <p className="text-xs font-medium text-gray-500 mb-1">群聊暂不支持 AI 画像</p>
+              <p className="text-[11px] text-gray-400">该功能即将上线，敬请期待</p>
+            </div>
+          </div>
+        ) : (
         <div id="ai-profile" className="p-4 bg-gradient-to-br from-orange-50/80 to-amber-50/50 rounded-xl border border-orange-100/60">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -466,6 +580,7 @@ export const CustomerAIProfile: React.FC<CustomerAIProfileProps> = ({ onClose })
             )}
           </div>
         </div>
+        )}
 
         {/* 联系人信息 - 动态读取AI标签 */}
         <div id="contact-info" className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border border-blue-100">
@@ -665,35 +780,41 @@ export const CustomerAIProfile: React.FC<CustomerAIProfileProps> = ({ onClose })
             <span className="text-sm font-medium text-gray-900">互动统计</span>
           </div>
           {conversation?.isGroup ? (
-            /* 群聊统计 */
-            <div className="grid grid-cols-3 gap-2">
-              <div className="text-center p-2 bg-gray-50 rounded-lg">
-                <p className="text-lg font-semibold text-gray-900">{conversation.groupMemberCount || 0}</p>
-                <span className="text-xs text-gray-500">群成员</span>
-              </div>
-              <div className="text-center p-2 bg-gray-50 rounded-lg">
-                <p className="text-lg font-semibold text-gray-900">156</p>
-                <span className="text-xs text-gray-500">消息总数</span>
-              </div>
-              <div className="text-center p-2 bg-gray-50 rounded-lg">
-                <p className="text-lg font-semibold text-green-600">72%</p>
-                <span className="text-xs text-gray-500">活跃率</span>
-              </div>
+            /* 群聊占位提示 */
+            <div className="flex flex-col items-center justify-center py-8 text-gray-400">
+              <MessageSquare className="w-8 h-8 mb-2 opacity-20" />
+              <p className="text-xs font-medium text-gray-500 mb-1">群聊统计即将上线</p>
+              <p className="text-[11px] text-gray-400">敬请期待</p>
             </div>
           ) : (
             /* 单聊统计 */
-            <div className="grid grid-cols-3 gap-2">
-              <div className="text-center p-2 bg-gray-50 rounded-lg">
-                <p className="text-lg font-semibold text-gray-900">12</p>
-                <span className="text-xs text-gray-500">对话次数</span>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-2">
+                <div className="text-center p-2 bg-gray-50 rounded-lg">
+                  <p className="text-lg font-semibold text-gray-900">12</p>
+                  <span className="text-xs text-gray-500">对话次数</span>
+                </div>
+                <div className="text-center p-2 bg-purple-50 rounded-lg">
+                  <p className="text-lg font-semibold text-purple-700">{aiMessageCount}</p>
+                  <span className="text-xs text-purple-500">AI 私信次数</span>
+                </div>
               </div>
-              <div className="text-center p-2 bg-gray-50 rounded-lg">
-                <p className="text-lg font-semibold text-gray-900">3.5</p>
-                <span className="text-xs text-gray-500">响应(分钟)</span>
-              </div>
-              <div className="text-center p-2 bg-purple-50 rounded-lg">
-                <p className="text-lg font-semibold text-purple-700">{aiMessageCount}</p>
-                <span className="text-xs text-purple-500">AI私信次数</span>
+              {/* 响应时长 - 区分人工和AI */}
+              <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-100/60">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Clock className="w-3.5 h-3.5 text-blue-500" />
+                  <span className="text-xs font-medium text-blue-700">平均响应时长</span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">3.5 <span className="text-xs font-normal text-gray-500">分钟</span></p>
+                    <span className="text-[11px] text-blue-500">人工响应</span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-purple-700">0.2 <span className="text-xs font-normal text-gray-500">分钟</span></p>
+                    <span className="text-[11px] text-purple-500">AI 响应</span>
+                  </div>
+                </div>
               </div>
             </div>
           )}

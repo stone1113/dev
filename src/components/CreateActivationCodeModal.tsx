@@ -1,0 +1,388 @@
+import React, { useState } from 'react';
+import { X, ChevronRight, Check, Search } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+interface Platform {
+  id: string;
+  name: string;
+  icon: string;
+}
+
+const PLATFORMS: Platform[] = [
+  { id: 'whatsapp', name: 'WhatsApp', icon: '💬' },
+  { id: 'telegram', name: 'Telegram', icon: '✈️' },
+  { id: 'line', name: 'Line', icon: '💚' },
+  { id: 'instagram', name: 'Instagram', icon: '📷' },
+  { id: 'facebook', name: 'Facebook', icon: '👥' },
+  { id: 'wechat', name: 'WeChat', icon: '💬' },
+  { id: 'email', name: 'Email', icon: '📧' },
+  { id: 'sms', name: 'SMS', icon: '💬' },
+  { id: 'tiktok', name: 'TikTok', icon: '🎵' },
+  { id: 'twitter', name: 'Twitter', icon: '🐦' },
+  { id: 'shopify', name: 'Shopify', icon: '🛍️' },
+  { id: 'messenger', name: 'Messenger', icon: '💬' },
+  { id: 'viber', name: 'Viber', icon: '📞' },
+  { id: 'kakao', name: 'KakaoTalk', icon: '💛' },
+  { id: 'zalo', name: 'Zalo', icon: '💙' },
+  { id: 'skype', name: 'Skype', icon: '📞' },
+];
+
+interface CreateActivationCodeModalProps {
+  onClose: () => void;
+  onSave: (data: any) => void;
+}
+
+export const CreateActivationCodeModal: React.FC<CreateActivationCodeModalProps> = ({ onClose, onSave }) => {
+  const [formData, setFormData] = useState({
+    platforms: [] as string[],
+    portAllocation: 'dynamic' as 'dynamic' | 'fixed',
+    portLimit: 1,
+    workingHours: 'none' as 'none' | 'fixed',
+    dedupeScope: 'current' as 'current' | 'account' | 'related',
+    multiDevice: false,
+    profileSharing: true,
+    autoReplyKeyword: false,
+    autoReplyWelcome: false,
+    chatBackup: true,
+    dataMasking: false,
+    remark: '',
+  });
+  const [platformSearch, setPlatformSearch] = useState('');
+
+  const filteredPlatforms = PLATFORMS.filter(p =>
+    p.name.toLowerCase().includes(platformSearch.toLowerCase())
+  );
+
+  const togglePlatform = (id: string) => {
+    setFormData(prev => ({
+      ...prev,
+      platforms: prev.platforms.includes(id)
+        ? prev.platforms.filter(p => p !== id)
+        : [...prev.platforms, id]
+    }));
+  };
+
+  const handleSubmit = () => {
+    onSave(formData);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <h3 className="text-lg font-semibold text-gray-900">新建激活码</h3>
+          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
+            <X className="w-5 h-5 text-gray-400" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="px-6 py-5 max-h-[600px] overflow-y-auto">
+          <div className="space-y-5">
+            {/* 社交平台 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-3">社交平台</label>
+              <div className="relative mb-3">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="搜索平台..."
+                  value={platformSearch}
+                  onChange={(e) => setPlatformSearch(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/30"
+                />
+              </div>
+              <div className="grid grid-cols-4 gap-2 max-h-[180px] overflow-y-auto p-1 border border-gray-100 rounded-lg">
+                {filteredPlatforms.map(platform => (
+                  <button
+                    key={platform.id}
+                    onClick={() => togglePlatform(platform.id)}
+                    className={cn(
+                      "p-2 rounded-lg border-2 transition-all text-center",
+                      formData.platforms.includes(platform.id)
+                        ? "border-[#FF6B35] bg-[#FF6B35]/5"
+                        : "border-gray-200 hover:border-gray-300"
+                    )}
+                  >
+                    <div className="text-xl mb-0.5">{platform.icon}</div>
+                    <div className="text-[10px] font-medium text-gray-700">{platform.name}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* 端口分配 */}
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">端口分配</label>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={formData.portAllocation === 'dynamic'}
+                    onChange={() => setFormData({ ...formData, portAllocation: 'dynamic' })}
+                    className="w-4 h-4 text-[#FF6B35]"
+                  />
+                  <span className="text-sm text-gray-700">动态分配</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={formData.portAllocation === 'fixed'}
+                    onChange={() => setFormData({ ...formData, portAllocation: 'fixed' })}
+                    className="w-4 h-4 text-[#FF6B35]"
+                  />
+                  <span className="text-sm text-gray-700">固定分配</span>
+                </label>
+              </div>
+            </div>
+
+            {/* 端口上限 */}
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">端口上限</label>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setFormData({ ...formData, portLimit: Math.max(1, formData.portLimit - 1) })}
+                  className="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-lg hover:bg-gray-50"
+                >
+                  −
+                </button>
+                <input
+                  type="number"
+                  min={1}
+                  value={formData.portLimit}
+                  onChange={(e) => setFormData({ ...formData, portLimit: parseInt(e.target.value) || 1 })}
+                  className="w-20 px-3 py-2 text-sm text-center border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/30"
+                />
+                <button
+                  onClick={() => setFormData({ ...formData, portLimit: formData.portLimit + 1 })}
+                  className="w-8 h-8 flex items-center justify-center border border-gray-200 rounded-lg hover:bg-gray-50"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            {/* 激活码工作时间 */}
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">激活码工作时间</label>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={formData.workingHours === 'none'}
+                    onChange={() => setFormData({ ...formData, workingHours: 'none' })}
+                    className="w-4 h-4 text-[#FF6B35]"
+                  />
+                  <span className="text-sm text-gray-700">暂不设置</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={formData.workingHours === 'fixed'}
+                    onChange={() => setFormData({ ...formData, workingHours: 'fixed' })}
+                    className="w-4 h-4 text-[#FF6B35]"
+                  />
+                  <span className="text-sm text-gray-700">固定时间</span>
+                </label>
+              </div>
+            </div>
+
+            {/* 粉丝去重范围 */}
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">粉丝去重范围</label>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={formData.dedupeScope === 'current'}
+                    onChange={() => setFormData({ ...formData, dedupeScope: 'current' })}
+                    className="w-4 h-4 text-[#FF6B35]"
+                  />
+                  <span className="text-sm text-gray-700">当前工单</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={formData.dedupeScope === 'account'}
+                    onChange={() => setFormData({ ...formData, dedupeScope: 'account' })}
+                    className="w-4 h-4 text-[#FF6B35]"
+                  />
+                  <span className="text-sm text-gray-700">账号下全部工单</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={formData.dedupeScope === 'related'}
+                    onChange={() => setFormData({ ...formData, dedupeScope: 'related' })}
+                    className="w-4 h-4 text-[#FF6B35]"
+                  />
+                  <span className="text-sm text-gray-700">关联账号下全部工单</span>
+                </label>
+              </div>
+            </div>
+
+            {/* 多设备登录 */}
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">多设备登录</label>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={formData.multiDevice === true}
+                    onChange={() => setFormData({ ...formData, multiDevice: true })}
+                    className="w-4 h-4 text-[#FF6B35]"
+                  />
+                  <span className="text-sm text-gray-700">开启</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={formData.multiDevice === false}
+                    onChange={() => setFormData({ ...formData, multiDevice: false })}
+                    className="w-4 h-4 text-[#FF6B35]"
+                  />
+                  <span className="text-sm text-gray-700">关闭</span>
+                </label>
+              </div>
+            </div>
+
+            {/* 客户画像共享 */}
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">客户画像共享</label>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={formData.profileSharing === true}
+                    onChange={() => setFormData({ ...formData, profileSharing: true })}
+                    className="w-4 h-4 text-[#FF6B35]"
+                  />
+                  <span className="text-sm text-gray-700">共享</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={formData.profileSharing === false}
+                    onChange={() => setFormData({ ...formData, profileSharing: false })}
+                    className="w-4 h-4 text-[#FF6B35]"
+                  />
+                  <span className="text-sm text-gray-700">不共享</span>
+                </label>
+              </div>
+            </div>
+
+            {/* 自动回复 */}
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">自动回复</label>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.autoReplyKeyword}
+                    onChange={(e) => setFormData({ ...formData, autoReplyKeyword: e.target.checked })}
+                    className="w-4 h-4 text-[#FF6B35] rounded"
+                  />
+                  <span className="text-sm text-gray-700">关键词回复</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.autoReplyWelcome}
+                    onChange={(e) => setFormData({ ...formData, autoReplyWelcome: e.target.checked })}
+                    className="w-4 h-4 text-[#FF6B35] rounded"
+                  />
+                  <span className="text-sm text-gray-700">欢迎语回复</span>
+                </label>
+              </div>
+            </div>
+
+            {/* 聊天备份 */}
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">聊天备份</label>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={formData.chatBackup === true}
+                    onChange={() => setFormData({ ...formData, chatBackup: true })}
+                    className="w-4 h-4 text-[#FF6B35]"
+                  />
+                  <span className="text-sm text-gray-700">开启</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={formData.chatBackup === false}
+                    onChange={() => setFormData({ ...formData, chatBackup: false })}
+                    className="w-4 h-4 text-[#FF6B35]"
+                  />
+                  <span className="text-sm text-gray-700">关闭</span>
+                </label>
+              </div>
+            </div>
+
+            {/* 数据脱敏 */}
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">数据脱敏</label>
+              <div className="flex items-center gap-4">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={formData.dataMasking === true}
+                    onChange={() => setFormData({ ...formData, dataMasking: true })}
+                    className="w-4 h-4 text-[#FF6B35]"
+                  />
+                  <span className="text-sm text-gray-700">开启</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={formData.dataMasking === false}
+                    onChange={() => setFormData({ ...formData, dataMasking: false })}
+                    className="w-4 h-4 text-[#FF6B35]"
+                  />
+                  <span className="text-sm text-gray-700">关闭</span>
+                </label>
+              </div>
+            </div>
+
+            {/* 备注说明 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">备注说明</label>
+              <textarea
+                value={formData.remark}
+                onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
+                placeholder="请输入备注说明"
+                rows={3}
+                maxLength={200}
+                className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/30 resize-none"
+              />
+              <div className="text-xs text-gray-400 text-right mt-1">
+                {formData.remark.length} / 200
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            取消
+          </button>
+          <button
+            onClick={handleSubmit}
+            className="px-4 py-2 text-sm font-medium text-white bg-[#FF6B35] hover:bg-[#E85A2A] rounded-lg transition-colors"
+          >
+            创建
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};

@@ -43,7 +43,7 @@ const statusOptions = [
 ] as const;
 
 // 会话标签选项
-const conversationTagOptions = ['售后', '询价', '投诉', '物流', '退款', '技术支持', '产品咨询', '支付问题'];
+const conversationTagOptions = ['售后', '询价', '投诉', '物流', '退款', '技术支持', '产品咨询', '支付问题', '转人工', 'AI接管', 'AI辅助'];
 
 // 客户标签筛选选项配置
 const customerFilterOptions = {

@@ -59,7 +59,8 @@ export const ConversationList: React.FC<ConversationListProps> = ({
     setSearchQuery,
     filterCriteria,
     setFilterCriteria,
-    userSettings
+    userSettings,
+    platformAccounts
   } = useStore();
 
   const conversations = getFilteredConversations();
@@ -202,6 +203,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
               const { Icon, color } = getPlatformIcon(conversation.platform);
               const isSelected = selectedConversationId === conversation.id;
               const hasUnread = conversation.unreadCount > 0;
+              const accountAiEnabled = platformAccounts.find(a => a.platformId === conversation.platform && a.aiEnabled);
               
               return (
                 <button
@@ -272,7 +274,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                       
                       <div className="flex items-center gap-1.5">
                         {/* AI Takeover Badge - 仅图标，hover显示tooltip */}
-                        {userSettings.preferences.ai.enabled && userSettings.preferences.ai.autoReply && (
+                        {accountAiEnabled && userSettings.preferences.ai.enabled && userSettings.preferences.ai.autoReply && (
                           <span
                             className="flex items-center justify-center w-5 h-5 bg-amber-100 text-amber-600 rounded-full"
                             title="AI接管中"
@@ -282,7 +284,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({
                         )}
 
                         {/* AI Assist Badge - 仅图标，hover显示tooltip */}
-                        {userSettings.preferences.ai.enabled && !userSettings.preferences.ai.autoReply && (
+                        {accountAiEnabled && userSettings.preferences.ai.enabled && !userSettings.preferences.ai.autoReply && (
                           <span
                             className="flex items-center justify-center w-5 h-5 bg-[#FF6B35]/10 text-[#FF6B35] rounded-full"
                             title="AI辅助"

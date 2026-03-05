@@ -25,16 +25,13 @@ import {
   User,
   Sparkles,
   Clock,
-  ThumbsUp,
   Languages,
   BarChart3,
   Lightbulb,
   Target,
   Zap,
   AlertTriangle,
-  MapPin,
   Bot,
-  CheckCircle2,
   SlidersHorizontal,
   ChevronDown,
   Inbox,
@@ -56,6 +53,7 @@ import {
   Music,
   Twitter,
   ShoppingBag,
+  FileText,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -257,6 +255,7 @@ function App() {
           }}
           onLogout={handleLogout}
           onOpenAdminCenter={() => setShowAdminCenter(true)}
+          onOpenProxy={() => setActiveRightPanel('proxy')}
         />
       </div>
       
@@ -654,10 +653,16 @@ function AIBindingPage({ platformAccounts, aiEmployeeConfig, iconMap, onBack, on
   const ai = aiEmployeeConfig ?? {
     name: 'AI 员工', status: 'offline' as const, workStartTime: '09:00', workEndTime: '18:00', timezone: 'Asia/Shanghai',
   };
-  // 过滤掉未登录账号（status 不是 online/offline/busy 的账号）
-  const loggedInAccounts = platformAccounts.filter(a => a.status === 'online' || a.status === 'offline' || a.status === 'busy');
-  const notLoggedInCount = platformAccounts.length - loggedInAccounts.length;
+  // 仅显示当前支持的平台（WhatsApp 和 Telegram）
+  const supportedPlatforms = ['whatsapp', 'telegram'];
+  const filteredAccounts = platformAccounts.filter(a => supportedPlatforms.includes(a.platformId));
+  // 过滤掉未登录账号
+  const loggedInAccounts = filteredAccounts.filter(a => a.status === 'online' || a.status === 'offline' || a.status === 'busy');
+  const notLoggedInCount = filteredAccounts.length - loggedInAccounts.length;
   const boundCount = loggedInAccounts.filter(a => a.aiEnabled).length;
+  const platformIds = [...new Set(loggedInAccounts.map(a => a.platformId))];
+  const [activePlatformTab, setActivePlatformTab] = useState<string>(platformIds[0] ?? '');
+  const [confirmDisableAI, setConfirmDisableAI] = useState<string | null>(null);
 
   return (
     <div className="h-full overflow-y-auto">
@@ -702,41 +707,88 @@ function AIBindingPage({ platformAccounts, aiEmployeeConfig, iconMap, onBack, on
           </div>
         </div>
 
-        {/* 坐席配额卡片 */}
+        {/* 坐席配额卡片 — 按平台分行 */}
         {activationCode && (
           <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <Key className="w-4 h-4 text-[#FF6B35]" />
                 <h3 className="text-sm font-semibold text-gray-900">AI坐席配额</h3>
               </div>
               <span className="text-xs text-gray-400 font-mono">{activationCode.code}</span>
             </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="bg-gray-50 rounded-lg p-3 text-center">
-                <p className="text-xl font-bold text-gray-900">{activationCode.aiSeatLimit ?? 0}</p>
-                <p className="text-[10px] text-gray-500 mt-0.5">本码上限</p>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-3 text-center">
-                <p className="text-xl font-bold text-[#FF6B35]">{activationCode.aiSeatUsed ?? 0}</p>
-                <p className="text-[10px] text-gray-500 mt-0.5">已使用</p>
-              </div>
-              <div className="bg-gray-50 rounded-lg p-3 text-center">
-                <p className={cn("text-xl font-bold", (activationCode.aiSeatLimit ?? 0) - (activationCode.aiSeatUsed ?? 0) > 0 ? "text-green-600" : "text-red-500")}>
-                  {(activationCode.aiSeatLimit ?? 0) - (activationCode.aiSeatUsed ?? 0)}
-                </p>
-                <p className="text-[10px] text-gray-500 mt-0.5">剩余可用</p>
-              </div>
-            </div>
-            {orgAiSeats && (
-              <p className="text-[10px] text-gray-400 mt-3 text-right">
-                组织总配额：{orgAiSeats.used}/{orgAiSeats.total}
-              </p>
-            )}
+            {/* 按平台显示坐席 */}
+            {(() => {
+              const platforms = activationCode.platforms ?? [];
+              const aiPlatforms = activationCode.aiPlatforms ?? [];
+              const groupedPlatforms = platforms.map(pid => {
+                const pc = platformConfigs.find(p => p.id === pid);
+                const PIcon = pc ? iconMap[pc.icon] || MessageCircle : MessageCircle;
+                const accts = loggedInAccounts.filter(a => a.platformId === pid);
+                const enabledCount = accts.filter(a => a.aiEnabled).length;
+                const aiCfg = aiPlatforms.find(ap => ap.platformId === pid);
+                const capabilities = [
+                  aiCfg?.aiSalesChat && '智能销售对话',
+                  aiCfg?.aiProactiveMarketing && '主动营销触达',
+                  aiCfg?.aiRecall && '客户召回',
+                  aiCfg?.aiQualityCheck && '质量检测',
+                ].filter(Boolean);
+                return { pid, pc, PIcon, accts, enabledCount, totalAccts: accts.length, capabilities };
+              });
+              return (
+                <div className="space-y-3">
+                  {/* 表头 */}
+                  <div className="grid grid-cols-3 items-center px-1 pb-2 border-b border-gray-100">
+                    <span className="text-[11px] font-medium text-gray-400">平台</span>
+                    <span className="text-[11px] font-medium text-gray-400 text-center">坐席使用</span>
+                    <span className="text-[11px] font-medium text-gray-400 text-center">AI能力</span>
+                  </div>
+                  {groupedPlatforms.map(({ pid, pc, PIcon, enabledCount, totalAccts, capabilities }) => (
+                    <div key={pid} className="grid grid-cols-3 items-center px-1 py-1.5">
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                          style={{ backgroundColor: `${pc?.color || '#666'}15` }}
+                        >
+                          <PIcon className="w-4 h-4" style={{ color: pc?.color || '#666' }} />
+                        </div>
+                        <span className="text-sm font-medium text-gray-900">{pc?.name || pid}</span>
+                      </div>
+                      <div className="text-center">
+                        <span className="text-sm font-semibold text-[#FF6B35]">{enabledCount}</span>
+                        <span className="text-xs text-gray-400">/{totalAccts}</span>
+                      </div>
+                      <div className="flex justify-center">
+                        {capabilities.length > 0 ? (
+                          <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+                            {capabilities.map((cap, i) => (
+                              <span key={i} className="text-[10px] text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full text-center whitespace-nowrap">{cap}</span>
+                            ))}
+                          </div>
+                        ) : (
+                          <span className="text-[10px] text-gray-400">未配置</span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {/* 汇总行 */}
+                  <div className="pt-3 mt-1 border-t border-gray-100 flex items-center justify-between px-1">
+                    <span className="text-xs text-gray-500">
+                      合计：<span className="font-semibold text-[#FF6B35]">{boundCount}</span>/{loggedInAccounts.length} 已绑定
+                    </span>
+                    {orgAiSeats && (
+                      <span className="text-[10px] text-gray-400">
+                        组织总配额：{orgAiSeats.used}/{orgAiSeats.total}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
 
-        {/* 账号列表 */}
+        {/* 账号列表 — 平台 tab 切换 */}
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -767,27 +819,66 @@ function AIBindingPage({ platformAccounts, aiEmployeeConfig, iconMap, onBack, on
             </div>
           )}
 
-          {/* 表头 */}
-          <div className="grid grid-cols-[1fr_2fr_auto] items-center px-5 py-3 border-b border-gray-100 bg-gray-50/50">
-            <span className="text-xs font-medium text-gray-500">平台</span>
-            <span className="text-xs font-medium text-gray-500">客服账号</span>
-            <span className="text-xs font-medium text-gray-500 text-right">操作</span>
-          </div>
+          {/* 平台 tab 栏 */}
+          {platformIds.length > 0 && (
+            <div className="flex items-center gap-1 px-5 pt-3 pb-0 overflow-x-auto">
+              {platformIds.map((pid) => {
+                const pc = platformConfigs.find(p => p.id === pid);
+                const PIcon = pc ? iconMap[pc.icon] || MessageCircle : MessageCircle;
+                const accts = loggedInAccounts.filter(a => a.platformId === pid);
+                const enabledCount = accts.filter(a => a.aiEnabled).length;
+                const isActive = (activePlatformTab || platformIds[0]) === pid;
+                return (
+                  <button
+                    key={pid}
+                    onClick={() => setActivePlatformTab(pid)}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-t-lg border border-b-0 transition-colors flex-shrink-0",
+                      isActive
+                        ? "bg-white text-gray-900 border-gray-200 relative after:absolute after:bottom-[-1px] after:left-0 after:right-0 after:h-[1px] after:bg-white"
+                        : "bg-transparent text-gray-500 border-transparent hover:text-gray-700 hover:bg-gray-50"
+                    )}
+                  >
+                    <PIcon className="w-3.5 h-3.5" style={{ color: isActive ? (pc?.color || '#666') : undefined }} />
+                    <span>{pc?.name || pid}</span>
+                    <span className={cn(
+                      "text-[10px] px-1.5 py-0.5 rounded-full",
+                      enabledCount > 0 ? "bg-[#FF6B35]/10 text-[#FF6B35]" : "bg-gray-100 text-gray-400"
+                    )}>{enabledCount}/{accts.length}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
-          <div className="divide-y divide-gray-100">
-            {loggedInAccounts.map((account) => {
-              const pc = platformConfigs.find(p => p.id === account.platformId);
+          {/* 当前 tab 的账号列表 */}
+          <div className="border-t border-gray-200">
+            {(() => {
+              const currentPid = activePlatformTab || platformIds[0];
+              const pc = platformConfigs.find(p => p.id === currentPid);
               const PIcon = pc ? iconMap[pc.icon] || MessageCircle : MessageCircle;
+              const accts = loggedInAccounts.filter(a => a.platformId === currentPid);
+              if (accts.length === 0) {
+                return (
+                  <div className="flex flex-col items-center justify-center py-10 text-gray-400">
+                    <p className="text-sm">该平台暂无已登录账号</p>
+                  </div>
+                );
+              }
               return (
-                <AIBindingRow
-                  key={account.id}
-                  account={account}
-                  platformConfig={pc}
-                  PIcon={PIcon}
-                  onToggle={() => onToggleAI(account.id, !account.aiEnabled)}
-                />
+                <div className="divide-y divide-gray-100">
+                  {accts.map((account) => (
+                    <AIBindingRow
+                      key={account.id}
+                      account={account}
+                      platformConfig={pc}
+                      PIcon={PIcon}
+                      onToggle={() => account.aiEnabled ? setConfirmDisableAI(account.id) : onToggleAI(account.id, true)}
+                    />
+                  ))}
+                </div>
               );
-            })}
+            })()}
           </div>
 
           {platformAccounts.length === 0 && (
@@ -800,6 +891,29 @@ function AIBindingPage({ platformAccounts, aiEmployeeConfig, iconMap, onBack, on
         </div>
 
       </div>
+
+      {/* 关闭AI员工确认弹框 */}
+      {confirmDisableAI && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setConfirmDisableAI(null)} />
+          <div className="relative bg-white rounded-xl p-5 shadow-2xl w-80">
+            <div className="flex items-center justify-center w-12 h-12 mx-auto mb-3 bg-amber-100 rounded-full">
+              <AlertTriangle className="w-6 h-6 text-amber-500" />
+            </div>
+            <h4 className="text-center font-medium text-gray-900 mb-2">确认关闭AI员工</h4>
+            <p className="text-xs text-gray-500 text-center mb-3">关闭后该账号将无法使用以下AI能力：</p>
+            <div className="grid grid-cols-2 gap-1.5 mb-4">
+              {['智能销售对话', '主动营销触达', '客户召回', '质量检测'].map(cap => (
+                <span key={cap} className="text-[10px] text-center text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded-md">{cap}</span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmDisableAI(null)} className="flex-1 px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">取消</button>
+              <button onClick={() => { onToggleAI(confirmDisableAI, false); setConfirmDisableAI(null); }} className="flex-1 px-3 py-2 text-sm text-white bg-amber-500 rounded-lg hover:bg-amber-600">确定关闭</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -812,8 +926,8 @@ function AIBindingRow({ account, platformConfig, PIcon, onToggle }: {
   onToggle: () => void;
 }) {
   const isEnabled = !!account.aiEnabled;
-  const statusText = account.status === 'online' ? '在线' : account.status === 'offline' ? '离线' : '忙碌';
-  const statusColor = account.status === 'online' ? 'text-green-600 bg-green-50' : account.status === 'busy' ? 'text-amber-600 bg-amber-50' : 'text-gray-500 bg-gray-100';
+  const statusText = account.status === 'online' ? '在线' : '离线';
+  const statusColor = account.status === 'online' ? 'text-green-600 bg-green-50' : 'text-gray-500 bg-gray-100';
 
   return (
     <div className="grid grid-cols-[1fr_2fr_auto] items-center px-5 py-4 hover:bg-gray-50/50 transition-colors">
@@ -834,7 +948,11 @@ function AIBindingRow({ account, platformConfig, PIcon, onToggle }: {
         <span className={cn("px-1.5 py-0.5 text-[10px] font-medium rounded-full flex-shrink-0", statusColor)}>
           {statusText}
         </span>
-        <span className="text-xs text-gray-400 truncate">{account.accountId}</span>
+        {account.proxyRegion && (
+          <span className="text-xs text-gray-400 flex-shrink-0">
+            {account.proxyRegion}{account.ip ? ` ${account.ip}` : ''}
+          </span>
+        )}
       </div>
 
       {/* 操作 */}
@@ -861,9 +979,13 @@ function AIBindingRow({ account, platformConfig, PIcon, onToggle }: {
 
 // Dashboard View
 function DashboardView({ onGoToConversations }: { onGoToConversations: () => void }) {
-  const { conversations, getFilteredConversations, aiStats, organization, platformAccounts, aiEmployees, selectedAIEmployeeId, updatePlatformAccount, activationCodes, currentActivationCodeId } = useStore();
+  const { conversations, aiStats, organization, platformAccounts, aiEmployees, selectedAIEmployeeId, updatePlatformAccount, activationCodes, currentActivationCodeId } = useStore();
   const aiEmployeeConfig = aiEmployees.find(e => e.id === selectedAIEmployeeId) ?? aiEmployees[0] ?? null;
   const [showAIBinding, setShowAIBinding] = useState(false);
+  const [aiDataTimeRange, setAiDataTimeRange] = useState<'today' | 'weekly' | 'monthly'>('today');
+  const [aiReceptionTimeRange, setAiReceptionTimeRange] = useState<'today' | 'weekly' | 'monthly'>('today');
+  const dashTimeLabels = { today: '今日', weekly: '本周', monthly: '本月' };
+  const aiDataPeriod = aiStats[aiDataTimeRange];
   const stats = {
     total: conversations.length,
     active: conversations.filter(c => c.status === 'active').length,
@@ -871,17 +993,9 @@ function DashboardView({ onGoToConversations }: { onGoToConversations: () => voi
     resolved: conversations.filter(c => c.status === 'resolved').length,
     unread: conversations.reduce((sum, c) => sum + c.unreadCount, 0),
   };
-  
-  const recentConversations = getFilteredConversations().slice(0, 5);
-  
+
+
   // AI状态配置
-  const aiStatusConfig = {
-    online: { text: '在线', color: 'bg-green-500', dotColor: 'bg-green-400' },
-    offline: { text: '离线', color: 'bg-gray-500', dotColor: 'bg-gray-400' },
-    busy: { text: '忙碌', color: 'bg-red-500', dotColor: 'bg-red-400' },
-    pause: { text: '暂停', color: 'bg-amber-500', dotColor: 'bg-amber-400' },
-  };
-  const aiStatus = aiStatusConfig[aiStats.status];
 
   // 平台图标映射
   const dashIconMap: Record<string, React.ComponentType<{ className?: string }>> = {
@@ -1044,15 +1158,9 @@ function DashboardView({ onGoToConversations }: { onGoToConversations: () => voi
                 <div className="w-11 h-11 bg-white/20 rounded-full flex items-center justify-center">
                   <Sparkles className="w-5.5 h-5.5 text-white" />
                 </div>
-                <div className={cn("absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-[#FF6B35]", aiStatus.dotColor)} />
               </div>
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h2 className="text-sm font-semibold">AI智能客服</h2>
-                  <span className="px-1.5 py-0.5 text-[10px] font-medium rounded-full bg-white/20">
-                    {aiStatus.text}
-                  </span>
-                </div>
+                <h2 className="text-sm font-semibold">AI智能客服</h2>
                 <p className="text-xs text-white/70 mt-0.5">
                   今日已接待 <span className="font-semibold text-white">{aiStats.today.customersServed}</span> 位客户，
                   回复 <span className="font-semibold text-white">{aiStats.today.messagesReplied}</span> 条消息
@@ -1062,8 +1170,20 @@ function DashboardView({ onGoToConversations }: { onGoToConversations: () => voi
           </div>
           <div className="mt-3 pt-3 border-t border-white/15 flex items-center gap-4">
             <div className="flex items-center gap-1.5 text-xs text-white/60">
-              <Zap className="w-3 h-3" />
-              平均响应 {aiStats.today.avgResponseTime}s
+              <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+              在线 {platformAccounts.filter(a => a.status === 'online').length}
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-white/60">
+              <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+              离线 {platformAccounts.filter(a => a.status === 'offline').length}
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-white/60">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-300" />
+              启用 {platformAccounts.filter(a => a.status === 'online' && a.aiEnabled).length}
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-white/60">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+              关闭 {platformAccounts.filter(a => a.status === 'online' && !a.aiEnabled).length}
             </div>
           </div>
         </div>
@@ -1128,19 +1248,35 @@ function DashboardView({ onGoToConversations }: { onGoToConversations: () => voi
         </div>
       </div>
       
-      {/* AI今日数据 */}
+      {/* AI数据统计 */}
       <div className="bg-white rounded-xl shadow-sm p-4">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-gray-900">AI客服今日数据</h3>
-          <span className="text-xs text-gray-400">{new Date().toLocaleDateString('zh-CN')}</span>
+          <h3 className="font-semibold text-gray-900">AI 员工{dashTimeLabels[aiDataTimeRange]}数据</h3>
+          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+            {(['today', 'weekly', 'monthly'] as const).map((range) => (
+              <button
+                key={range}
+                onClick={() => setAiDataTimeRange(range)}
+                className={cn(
+                  "px-2.5 py-1 text-xs font-medium rounded-md transition-all",
+                  aiDataTimeRange === range
+                    ? "bg-white text-[#FF6B35] shadow-sm"
+                    : "text-gray-500 hover:text-gray-700"
+                )}
+              >
+                {dashTimeLabels[range]}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
           {[
-            { name: '接待人数', value: aiStats.today.customersServed, icon: Users, color: 'text-[#FF6B35]', bgColor: 'bg-[#FF6B35]/10' },
-            { name: '回复消息', value: aiStats.today.messagesReplied, icon: MessageCircle, color: 'text-green-600', bgColor: 'bg-green-100' },
-            { name: 'AI生成回复', value: aiStats.today.aiGeneratedReplies, icon: Sparkles, color: 'text-purple-600', bgColor: 'bg-purple-100' },
-            { name: '平均响应', value: `${aiStats.today.avgResponseTime}s`, icon: Clock, color: 'text-amber-600', bgColor: 'bg-amber-100' },
-            { name: '翻译次数', value: aiStats.today.translationCount, icon: Languages, color: 'text-cyan-600', bgColor: 'bg-cyan-100' },
+            { name: '接待人数', value: aiDataPeriod.customersServed, icon: Users, color: 'text-[#FF6B35]', bgColor: 'bg-[#FF6B35]/10' },
+            { name: 'AI生成回复', value: aiDataPeriod.aiGeneratedReplies, icon: Sparkles, color: 'text-purple-600', bgColor: 'bg-purple-100' },
+            { name: 'AI生成总结', value: aiDataPeriod.aiSummaryCount, icon: FileText, color: 'text-blue-600', bgColor: 'bg-blue-100' },
+            { name: 'AI标签提取', value: aiDataPeriod.aiLabelExtracted, icon: Target, color: 'text-green-600', bgColor: 'bg-green-100' },
+            { name: '会话平均响应', value: `${aiDataPeriod.avgResponseTime}s`, icon: Clock, color: 'text-amber-600', bgColor: 'bg-amber-100' },
+            { name: '翻译次数', value: aiDataPeriod.translationCount, icon: Languages, color: 'text-cyan-600', bgColor: 'bg-cyan-100' },
           ].map((stat, i) => (
             <div key={i} className="text-center p-3 rounded-xl hover:bg-gray-50 transition-colors">
               <div className={cn("w-10 h-10 rounded-lg mx-auto mb-2 flex items-center justify-center", stat.bgColor)}>
@@ -1153,65 +1289,45 @@ function DashboardView({ onGoToConversations }: { onGoToConversations: () => voi
         </div>
       </div>
       
-      {/* 两列布局：最近会话 + AI使用统计 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Activity */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-100">
-            <h3 className="font-semibold text-gray-900">最近会话</h3>
-          </div>
-          <div className="divide-y divide-gray-50">
-            {recentConversations.map((conv) => (
-              <div key={conv.id} className="flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors">
-                <img
-                  src={conv.customer.avatar}
-                  alt={conv.customer.name}
-                  className="w-10 h-10 rounded-full object-cover"
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-900">{conv.customer.name}</p>
-                  <p className="text-sm text-gray-500 truncate">{conv.lastMessage?.content}</p>
-                </div>
-                <span className="text-xs text-gray-400">
-                  {new Date(conv.updatedAt).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-        
-        {/* AI使用统计 */}
-        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-100">
-            <h3 className="font-semibold text-gray-900">AI使用统计</h3>
-          </div>
-          <div className="p-4 space-y-4">
-            {/* 采纳率进度条 */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-600">AI建议采纳率</span>
-                <span className="text-sm font-semibold text-[#FF6B35]">{aiStats.aiUsage.adoptionRate}%</span>
-              </div>
-              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-[#FF6B35] to-[#E85A2A] rounded-full transition-all duration-500"
-                  style={{ width: `${aiStats.aiUsage.adoptionRate}%` }}
-                />
-              </div>
-              <p className="text-xs text-gray-400 mt-1">
-                共生成 {aiStats.aiUsage.totalSuggestions} 条建议，采纳 {aiStats.aiUsage.adoptedSuggestions} 条
-              </p>
+      {/* AI接待统计 */}
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+            <h3 className="font-semibold text-gray-900">AI接待统计</h3>
+            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+              {(['today', 'weekly', 'monthly'] as const).map((range) => (
+                <button
+                  key={range}
+                  onClick={() => setAiReceptionTimeRange(range)}
+                  className={cn(
+                    "px-2.5 py-1 text-xs font-medium rounded-md transition-all",
+                    aiReceptionTimeRange === range
+                      ? "bg-white text-[#FF6B35] shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  )}
+                >
+                  {dashTimeLabels[range]}
+                </button>
+              ))}
             </div>
-            
+          </div>
+          <div className="p-4">
             {/* 回复类型分布 */}
-            <div className="grid grid-cols-2 gap-4 pt-2">
+            <div className="grid grid-cols-3 gap-3">
               <div className="p-3 bg-purple-50 rounded-xl">
                 <div className="flex items-center gap-2 mb-1">
                   <Sparkles className="w-4 h-4 text-purple-600" />
                   <span className="text-sm text-gray-600">AI自动回复</span>
                 </div>
                 <p className="text-2xl font-bold text-purple-700">{aiStats.aiUsage.autoReplies}</p>
-                <p className="text-xs text-purple-500">占比 {Math.round(aiStats.aiUsage.autoReplies / (aiStats.aiUsage.autoReplies + aiStats.aiUsage.manualReplies) * 100)}%</p>
+                <p className="text-xs text-purple-500">占比 {Math.round(aiStats.aiUsage.autoReplies / (aiStats.aiUsage.autoReplies + aiStats.aiUsage.adoptedSuggestions + aiStats.aiUsage.manualReplies || 1) * 100)}%</p>
+              </div>
+              <div className="p-3 bg-amber-50 rounded-xl">
+                <div className="flex items-center gap-2 mb-1">
+                  <Bot className="w-4 h-4 text-amber-600" />
+                  <span className="text-sm text-gray-600">AI辅助生成</span>
+                </div>
+                <p className="text-2xl font-bold text-amber-700">{aiStats.aiUsage.adoptedSuggestions}</p>
+                <p className="text-xs text-amber-500">占比 {Math.round(aiStats.aiUsage.adoptedSuggestions / (aiStats.aiUsage.autoReplies + aiStats.aiUsage.adoptedSuggestions + aiStats.aiUsage.manualReplies || 1) * 100)}%</p>
               </div>
               <div className="p-3 bg-blue-50 rounded-xl">
                 <div className="flex items-center gap-2 mb-1">
@@ -1219,19 +1335,18 @@ function DashboardView({ onGoToConversations }: { onGoToConversations: () => voi
                   <span className="text-sm text-gray-600">人工回复</span>
                 </div>
                 <p className="text-2xl font-bold text-blue-700">{aiStats.aiUsage.manualReplies}</p>
-                <p className="text-xs text-blue-500">占比 {Math.round(aiStats.aiUsage.manualReplies / (aiStats.aiUsage.autoReplies + aiStats.aiUsage.manualReplies) * 100)}%</p>
+                <p className="text-xs text-blue-500">占比 {Math.round(aiStats.aiUsage.manualReplies / (aiStats.aiUsage.autoReplies + aiStats.aiUsage.adoptedSuggestions + aiStats.aiUsage.manualReplies || 1) * 100)}%</p>
               </div>
             </div>
           </div>
-        </div>
       </div>
 
       {/* Platform Stats */}
       <div className="bg-white rounded-xl shadow-sm p-4">
         <h3 className="font-semibold text-gray-900 mb-4">平台分布</h3>
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
-          {['whatsapp', 'telegram', 'line', 'instagram', 'wechat', 'email'].map((platformId) => {
-            const count = conversations.filter(c => c.platform === platformId).length;
+        <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
+          {['whatsapp', 'telegram'].map((platformId) => {
+            const count = platformAccounts.filter(a => a.platformId === platformId && a.aiEnabled).length;
             const platform = platformConfigs.find(p => p.id === platformId);
             return (
               <div key={platformId} className="text-center">
@@ -1577,41 +1692,65 @@ function InsightCard({ icon: Icon, title, value, desc, color }: {
 // Analytics View
 function AnalyticsView() {
   const { aiStats } = useStore();
+  const [timeRange, setTimeRange] = useState<'today' | 'weekly' | 'monthly'>('today');
+  const timeLabels = { today: '今日', weekly: '本周', monthly: '本月' };
+  const periodData = aiStats[timeRange];
 
   return (
     <div className="h-full overflow-y-auto space-y-6">
+      {/* 时间范围选择器 */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-gray-900">数据分析</h2>
+        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+          {(['today', 'weekly', 'monthly'] as const).map((range) => (
+            <button
+              key={range}
+              onClick={() => setTimeRange(range)}
+              className={cn(
+                "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                timeRange === range
+                  ? "bg-white text-[#FF6B35] shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              )}
+            >
+              {timeLabels[range]}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* AI客服核心指标 - 渐变卡片风格 */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
           {
-            name: '今日接待',
-            value: aiStats.today.customersServed,
-            change: `+${Math.round((aiStats.today.customersServed - aiStats.dailyTrend[5].customers) / aiStats.dailyTrend[5].customers * 100)}%`,
+            name: `${timeLabels[timeRange]}接待`,
+            value: periodData.customersServed,
+            change: timeRange === 'today' ? `+${Math.round((periodData.customersServed - aiStats.dailyTrend[5].customers) / aiStats.dailyTrend[5].customers * 100)}%` : '',
             icon: Users,
             gradient: 'from-blue-500 to-indigo-600',
             bgLight: 'from-blue-50 to-indigo-50'
           },
           {
             name: 'AI回复数',
-            value: aiStats.today.aiGeneratedReplies,
-            change: `+${Math.round((aiStats.today.aiGeneratedReplies - aiStats.dailyTrend[5].aiReplies) / aiStats.dailyTrend[5].aiReplies * 100)}%`,
+            value: periodData.aiGeneratedReplies,
+            change: timeRange === 'today' ? `+${Math.round((periodData.aiGeneratedReplies - aiStats.dailyTrend[5].aiReplies) / aiStats.dailyTrend[5].aiReplies * 100)}%` : '',
             icon: Sparkles,
             gradient: 'from-violet-500 to-purple-600',
             bgLight: 'from-violet-50 to-purple-50'
           },
           {
             name: '平均响应',
-            value: `${aiStats.today.avgResponseTime}s`,
-            change: '-3s',
+            value: `${periodData.avgResponseTime}s`,
+            change: timeRange === 'today' ? '-3s' : '',
             icon: Clock,
             gradient: 'from-emerald-500 to-teal-600',
             bgLight: 'from-emerald-50 to-teal-50'
           },
           {
-            name: '满意度',
-            value: `${aiStats.today.satisfactionRate}%`,
-            change: '+2.3%',
-            icon: ThumbsUp,
+            name: '翻译次数',
+            value: periodData.translationCount,
+            change: timeRange === 'today' ? '+12' : '',
+            icon: Languages,
             gradient: 'from-amber-500 to-orange-600',
             bgLight: 'from-amber-50 to-orange-50'
           },
@@ -1626,7 +1765,7 @@ function AnalyticsView() {
                   stat.change.startsWith('+') ? "text-emerald-600" :
                   stat.change.startsWith('-') && stat.name === '平均响应' ? "text-emerald-600" : "text-red-500"
                 )}>
-                  {stat.change} 较昨日
+                  {stat.change}{stat.change ? (timeRange === 'today' ? ' 较昨日' : timeRange === 'weekly' ? ' 较上周' : ' 较上月') : ''}
                 </p>
               </div>
               <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br shadow-lg", stat.gradient)}>
@@ -1671,22 +1810,24 @@ function AnalyticsView() {
         </div>
       </div>
 
-      {/* 本周汇总 - 渐变背景 */}
+      {/* 数据汇总 - 渐变背景 */}
       <div className="bg-gradient-to-br from-slate-50 to-gray-100 rounded-xl shadow-sm p-5 border border-gray-100">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-slate-600" />
-            <h3 className="font-semibold text-gray-900">本周汇总</h3>
+            <h3 className="font-semibold text-gray-900">{timeLabels[timeRange]}汇总</h3>
           </div>
           <span className="text-xs text-gray-400 bg-white px-2 py-1 rounded-lg">{new Date().toLocaleDateString('zh-CN')} 为止</span>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-7 gap-4">
           {[
-            { name: '接待人数', value: aiStats.weekly.customersServed, unit: '人', color: 'text-blue-600' },
-            { name: '回复消息', value: aiStats.weekly.messagesReplied, unit: '条', color: 'text-indigo-600' },
-            { name: 'AI生成回复', value: aiStats.weekly.aiGeneratedReplies, unit: '条', color: 'text-violet-600' },
-            { name: '翻译次数', value: aiStats.weekly.translationCount, unit: '次', color: 'text-cyan-600' },
-            { name: '平均响应', value: `${aiStats.weekly.avgResponseTime}s`, unit: '', color: 'text-emerald-600' },
+            { name: '接待人数', value: periodData.customersServed, unit: '人', color: 'text-blue-600' },
+            { name: '回复消息', value: periodData.messagesReplied, unit: '条', color: 'text-indigo-600' },
+            { name: 'AI生成回复', value: periodData.aiGeneratedReplies, unit: '条', color: 'text-violet-600' },
+            { name: 'AI生成总结', value: periodData.aiSummaryCount, unit: '条', color: 'text-blue-600' },
+            { name: 'AI标签提取', value: periodData.aiLabelExtracted, unit: '个', color: 'text-green-600' },
+            { name: '翻译次数', value: periodData.translationCount, unit: '次', color: 'text-cyan-600' },
+            { name: '平均响应', value: `${periodData.avgResponseTime}s`, unit: '', color: 'text-emerald-600' },
           ].map((item, i) => (
             <div key={i} className="text-center p-4 bg-white rounded-xl shadow-sm">
               <p className={cn("text-2xl font-bold", item.color)}>{item.value}</p>
@@ -1698,232 +1839,188 @@ function AnalyticsView() {
       
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* AI接待效果 */}
+        {/* AI总结统计 */}
         <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 shadow-sm border border-blue-100">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Bot className="w-5 h-5 text-blue-600" />
-              <h3 className="font-semibold text-gray-900">AI接待效果</h3>
+              <FileText className="w-5 h-5 text-blue-600" />
+              <h3 className="font-semibold text-gray-900">AI总结统计</h3>
             </div>
-            <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-lg">本周数据</span>
+            <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-lg">{timeLabels[timeRange]}数据</span>
           </div>
 
           <div className="space-y-4">
-            {/* AI接待率 */}
+            {/* 总结生成率 */}
             <div className="bg-white/60 rounded-xl p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-600">AI接待率</span>
-                <span className="text-lg font-bold text-blue-600">78%</span>
+                <span className="text-sm text-gray-600">总结生成率</span>
+                <span className="text-lg font-bold text-blue-600">{Math.round(periodData.aiSummaryCount / periodData.customersServed * 100)}%</span>
               </div>
               <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full w-[78%] bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full" />
+                <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full" style={{ width: `${Math.round(periodData.aiSummaryCount / periodData.customersServed * 100)}%` }} />
               </div>
-              <p className="text-xs text-gray-400 mt-1">AI独立处理 312 / 总接待 400</p>
+              <p className="text-xs text-gray-400 mt-1">已生成 {periodData.aiSummaryCount} / 总会话 {periodData.customersServed}</p>
             </div>
 
-            {/* AI回复采纳率 */}
-            <div className="bg-white/60 rounded-xl p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-600">AI回复采纳率</span>
-                <span className="text-lg font-bold text-emerald-600">{aiStats.aiUsage.adoptionRate}%</span>
-              </div>
-              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full"
-                  style={{ width: `${aiStats.aiUsage.adoptionRate}%` }}
-                />
-              </div>
-              <p className="text-xs text-gray-400 mt-1">采纳 {aiStats.aiUsage.adoptedSuggestions} / 生成 {aiStats.aiUsage.totalSuggestions}</p>
-            </div>
-
-            {/* 客户满意度 */}
-            <div className="bg-white/60 rounded-xl p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-600">客户满意度</span>
-                <span className="text-lg font-bold text-violet-600">{aiStats.today.satisfactionRate}%</span>
-              </div>
-              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-violet-500 to-purple-500 rounded-full"
-                  style={{ width: `${aiStats.today.satisfactionRate}%` }}
-                />
-              </div>
-              <p className="text-xs text-gray-400 mt-1">好评 186 / 总评价 200</p>
-            </div>
           </div>
 
           {/* 底部统计 */}
           <div className="mt-4 p-3 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl">
             <div className="flex items-center justify-between text-white">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4" />
-                <span className="text-sm">AI解决问题数</span>
+                <FileText className="w-4 h-4" />
+                <span className="text-sm">{timeLabels[timeRange]}生成总结</span>
               </div>
-              <span className="text-xl font-bold">286</span>
+              <span className="text-xl font-bold">{periodData.aiSummaryCount}</span>
             </div>
           </div>
         </div>
-        
-        {/* 地区数据分布 */}
-        <div className="bg-gradient-to-br from-cyan-50 to-teal-50 rounded-xl p-6 shadow-sm border border-cyan-100">
-          <div className="flex items-center gap-2 mb-4">
-            <MapPin className="w-5 h-5 text-cyan-600" />
-            <h3 className="font-semibold text-gray-900">客户地区分布</h3>
+
+        {/* AI画像标签统计 */}
+        <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-xl p-6 shadow-sm border border-violet-100">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Target className="w-5 h-5 text-violet-600" />
+              <h3 className="font-semibold text-gray-900">AI画像标签统计</h3>
+            </div>
+            <span className="text-xs text-violet-600 bg-violet-100 px-2 py-1 rounded-lg">{timeLabels[timeRange]}数据</span>
           </div>
           <div className="space-y-3 bg-white/50 rounded-xl p-4">
             {[
-              { region: '北美', flag: '🇺🇸', count: 156, percent: 35, color: 'from-blue-500 to-blue-600' },
-              { region: '欧洲', flag: '🇪🇺', count: 112, percent: 25, color: 'from-emerald-500 to-emerald-600' },
-              { region: '东南亚', flag: '🌏', count: 89, percent: 20, color: 'from-amber-500 to-amber-600' },
-              { region: '中东', flag: '🇦🇪', count: 45, percent: 10, color: 'from-violet-500 to-violet-600' },
-              { region: '其他', flag: '🌐', count: 44, percent: 10, color: 'from-gray-400 to-gray-500' },
+              { field: '客户等级', count: 186, percent: 35, color: 'from-[#FF6B35] to-orange-500' },
+              { field: '客户类型', count: 156, percent: 29, color: 'from-blue-500 to-blue-600' },
+              { field: '意向品类', count: 134, percent: 25, color: 'from-violet-500 to-purple-600' },
+              { field: '预算区间', count: 98, percent: 18, color: 'from-emerald-500 to-teal-600' },
+              { field: '购买紧迫度', count: 72, percent: 14, color: 'from-red-500 to-rose-600' },
             ].map((item, i) => (
               <div key={i}>
                 <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm">{item.flag}</span>
-                    <span className="text-sm font-medium text-gray-700">{item.region}</span>
-                  </div>
+                  <span className="text-sm font-medium text-gray-700">{item.field}</span>
                   <div className="flex items-center gap-3">
-                    <span className="text-sm text-gray-500">{item.count} 人</span>
+                    <span className="text-sm text-gray-500">{item.count} 次</span>
                     <span className="text-sm font-bold text-gray-900">{item.percent}%</span>
                   </div>
                 </div>
                 <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
                   <div
                     className={cn("h-full rounded-full bg-gradient-to-r", item.color)}
-                    style={{ width: `${item.percent}%` }}
+                    style={{ width: `${item.percent * 2.8}%` }}
                   />
                 </div>
               </div>
             ))}
           </div>
 
-          {/* 总客户数 */}
-          <div className="mt-4 p-4 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-xl">
-            <div className="flex items-center justify-between">
+          {/* 总标签数 */}
+          <div className="mt-4 p-3 bg-gradient-to-r from-violet-500 to-purple-500 rounded-xl">
+            <div className="flex items-center justify-between text-white">
               <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-white" />
-                <span className="text-sm text-white/90">本周新增客户</span>
+                <Target className="w-4 h-4" />
+                <span className="text-sm">{timeLabels[timeRange]}提取标签</span>
               </div>
-              <span className="text-2xl font-bold text-white">446</span>
+              <span className="text-xl font-bold">{periodData.aiLabelExtracted}</span>
             </div>
           </div>
         </div>
       </div>
       
-      {/* AI回复效果分析 - 渐变背景 */}
-      <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-xl shadow-sm p-6 border border-violet-100">
-        <div className="flex items-center gap-2 mb-4">
-          <Sparkles className="w-5 h-5 text-violet-600" />
-          <h3 className="font-semibold text-gray-900">AI回复效果分析</h3>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* 采纳率 */}
-          <div className="flex items-center gap-4 bg-white/60 rounded-xl p-4">
-            <div className="relative w-20 h-20">
-              <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                <circle cx="50" cy="50" r="40" fill="none" stroke="#E5E7EB" strokeWidth="10" />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="40"
-                  fill="none"
-                  stroke="url(#gradient1)"
-                  strokeWidth="10"
-                  strokeDasharray={`${aiStats.aiUsage.adoptionRate * 2.51} 251`}
-                  strokeLinecap="round"
-                />
-                <defs>
-                  <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#8B5CF6" />
-                    <stop offset="100%" stopColor="#6366F1" />
-                  </linearGradient>
-                </defs>
-              </svg>
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-lg font-bold text-violet-700">{aiStats.aiUsage.adoptionRate}%</span>
-              </div>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-700">AI建议采纳率</p>
-              <p className="text-xs text-gray-500 mt-1">
-                生成 {aiStats.aiUsage.totalSuggestions} 条
-              </p>
-              <p className="text-xs text-gray-500">
-                采纳 {aiStats.aiUsage.adoptedSuggestions} 条
-              </p>
-            </div>
+      {/* AI标签下钻统计 */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* 客户类型分布 */}
+        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-sm p-5 border border-blue-100">
+          <div className="flex items-center gap-2 mb-4">
+            <Users className="w-4 h-4 text-blue-600" />
+            <h3 className="text-sm font-semibold text-gray-900">客户类型分布</h3>
           </div>
-          
-          {/* 回复类型对比 */}
-          <div className="md:col-span-2">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-sm text-gray-500">回复类型分布</span>
-              <div className="flex items-center gap-4 text-xs">
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded bg-purple-500" />
-                  <span className="text-gray-500">AI自动</span>
+          <div className="space-y-3">
+            {[
+              { name: '批发商', count: 42, percent: 27, color: 'bg-blue-500' },
+              { name: '平台卖家', count: 38, percent: 24, color: 'bg-indigo-500' },
+              { name: '零售终端', count: 35, percent: 22, color: 'bg-violet-500' },
+              { name: '品牌代理', count: 25, percent: 16, color: 'bg-purple-500' },
+              { name: '个人消费者', count: 16, percent: 11, color: 'bg-fuchsia-400' },
+            ].map((item, i) => (
+              <div key={i}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-gray-600">{item.name}</span>
+                  <span className="text-xs font-semibold text-gray-700">{item.count}</span>
                 </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-3 h-3 rounded bg-blue-500" />
-                  <span className="text-gray-500">人工</span>
+                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className={cn("h-full rounded-full", item.color)} style={{ width: `${item.percent * 3.7}%` }} />
                 </div>
               </div>
-            </div>
-            <div className="h-8 bg-gray-100 rounded-full overflow-hidden flex">
-              <div 
-                className="h-full bg-purple-500 flex items-center justify-center text-xs text-white font-medium"
-                style={{ 
-                  width: `${aiStats.aiUsage.autoReplies / (aiStats.aiUsage.autoReplies + aiStats.aiUsage.manualReplies) * 100}%` 
-                }}
-              >
-                {aiStats.aiUsage.autoReplies}
-              </div>
-              <div 
-                className="h-full bg-blue-500 flex items-center justify-center text-xs text-white font-medium"
-                style={{ 
-                  width: `${aiStats.aiUsage.manualReplies / (aiStats.aiUsage.autoReplies + aiStats.aiUsage.manualReplies) * 100}%` 
-                }}
-              >
-                {aiStats.aiUsage.manualReplies}
-              </div>
-            </div>
-            <div className="flex justify-between mt-2 text-xs text-gray-400">
-              <span>AI自动回复占比 {Math.round(aiStats.aiUsage.autoReplies / (aiStats.aiUsage.autoReplies + aiStats.aiUsage.manualReplies) * 100)}%</span>
-              <span>人工回复占比 {Math.round(aiStats.aiUsage.manualReplies / (aiStats.aiUsage.autoReplies + aiStats.aiUsage.manualReplies) * 100)}%</span>
-            </div>
+            ))}
           </div>
         </div>
-      </div>
-      
-      {/* 平台分布 - 渐变背景 */}
-      <div className="bg-gradient-to-br from-rose-50 to-pink-50 rounded-xl shadow-sm p-6 border border-rose-100">
-        <div className="flex items-center gap-2 mb-4">
-          <MessageCircle className="w-5 h-5 text-rose-600" />
-          <h3 className="font-semibold text-gray-900">每日消息趋势</h3>
+
+        {/* 意向品类分布 */}
+        <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-xl shadow-sm p-5 border border-violet-100">
+          <div className="flex items-center gap-2 mb-4">
+            <Target className="w-4 h-4 text-violet-600" />
+            <h3 className="text-sm font-semibold text-gray-900">意向品类分布</h3>
+          </div>
+          <div className="space-y-3">
+            {[
+              { name: '电子产品', count: 58, percent: 32, color: 'bg-violet-500' },
+              { name: '鞋类', count: 41, percent: 23, color: 'bg-purple-500' },
+              { name: '运动服饰', count: 34, percent: 19, color: 'bg-fuchsia-500' },
+              { name: '美妆护肤', count: 28, percent: 15, color: 'bg-pink-500' },
+              { name: '家居用品', count: 21, percent: 11, color: 'bg-rose-400' },
+            ].map((item, i) => (
+              <div key={i}>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-xs text-gray-600">{item.name}</span>
+                  <span className="text-xs font-semibold text-gray-700">{item.count}</span>
+                </div>
+                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                  <div className={cn("h-full rounded-full", item.color)} style={{ width: `${item.percent * 3.1}%` }} />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="h-48 flex items-end justify-between gap-3 bg-white/50 rounded-xl p-4">
-          {[40, 65, 45, 80, 55, 90, 70].map((height, i) => (
-            <div
-              key={i}
-              className="flex-1 h-full flex items-end"
-            >
-              <div
-                className="w-full bg-gradient-to-t from-rose-500 to-pink-400 rounded-t-lg transition-all duration-500 shadow-sm"
-                style={{ height: `${height}%` }}
-              />
+
+        {/* 购买紧迫度 & 预算区间 */}
+        <div className="space-y-6">
+          <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl shadow-sm p-5 border border-amber-100">
+            <div className="flex items-center gap-2 mb-3">
+              <Clock className="w-4 h-4 text-amber-600" />
+              <h3 className="text-sm font-semibold text-gray-900">购买紧迫度</h3>
             </div>
-          ))}
-        </div>
-        <div className="flex justify-between mt-3 text-xs text-gray-500 font-medium">
-          <span>周一</span>
-          <span>周二</span>
-          <span>周三</span>
-          <span>周四</span>
-          <span>周五</span>
-          <span>周六</span>
-          <span>周日</span>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { name: '本周内', count: 18, color: 'bg-red-500', textColor: 'text-red-700' },
+                { name: '本月内', count: 45, color: 'bg-orange-500', textColor: 'text-orange-700' },
+                { name: '近期考虑', count: 62, color: 'bg-amber-400', textColor: 'text-amber-700' },
+                { name: '观望中', count: 31, color: 'bg-gray-400', textColor: 'text-gray-600' },
+              ].map((item, i) => (
+                <div key={i} className="bg-white/70 rounded-lg p-2.5 text-center">
+                  <p className={cn("text-lg font-bold", item.textColor)}>{item.count}</p>
+                  <p className="text-[10px] text-gray-500">{item.name}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl shadow-sm p-5 border border-emerald-100">
+            <div className="flex items-center gap-2 mb-3">
+              <BarChart3 className="w-4 h-4 text-emerald-600" />
+              <h3 className="text-sm font-semibold text-gray-900">预算区间</h3>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { name: '<$500', count: 34, textColor: 'text-gray-600' },
+                { name: '$500-$5K', count: 52, textColor: 'text-emerald-700' },
+                { name: '$5K-$50K', count: 28, textColor: 'text-teal-700' },
+                { name: '>$50K', count: 12, textColor: 'text-cyan-700' },
+              ].map((item, i) => (
+                <div key={i} className="bg-white/70 rounded-lg p-2.5 text-center">
+                  <p className={cn("text-lg font-bold", item.textColor)}>{item.count}</p>
+                  <p className="text-[10px] text-gray-500">{item.name}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1937,20 +2034,24 @@ function AnalyticsView() {
           </div>
           <div className="space-y-3">
             {[
-              { level: 'A级', count: 28, percent: 15, color: 'from-emerald-500 to-emerald-600' },
-              { level: 'B级', count: 56, percent: 30, color: 'from-blue-500 to-blue-600' },
-              { level: 'C级', count: 74, percent: 40, color: 'from-amber-500 to-amber-600' },
-              { level: 'D级', count: 28, percent: 15, color: 'from-gray-400 to-gray-500' },
+              { level: 'A级', desc: '已成交', count: 28, percent: 15, color: 'from-emerald-500 to-emerald-600', dotColor: 'bg-emerald-500' },
+              { level: 'B级', desc: '高意向询价', count: 56, percent: 30, color: 'from-blue-500 to-blue-600', dotColor: 'bg-blue-500' },
+              { level: 'C级', desc: '观望', count: 74, percent: 40, color: 'from-amber-500 to-amber-600', dotColor: 'bg-amber-500' },
+              { level: 'D级', desc: '仅加好友', count: 28, percent: 15, color: 'from-gray-400 to-gray-500', dotColor: 'bg-gray-400' },
             ].map((item, i) => (
               <div key={i} className="bg-white/60 rounded-lg p-3">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">{item.level}</span>
+                  <div className="flex items-center gap-2">
+                    <span className={cn("w-2 h-2 rounded-full", item.dotColor)} />
+                    <span className="text-sm font-medium text-gray-700">{item.level}</span>
+                    <span className="text-xs text-gray-400">{item.desc}</span>
+                  </div>
                   <span className="text-sm text-gray-500">{item.count}人 ({item.percent}%)</span>
                 </div>
                 <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                   <div
                     className={cn("h-full rounded-full bg-gradient-to-r", item.color)}
-                    style={{ width: `${item.percent}%` }}
+                    style={{ width: `${item.percent * 2.5}%` }}
                   />
                 </div>
               </div>
@@ -1958,41 +2059,33 @@ function AnalyticsView() {
           </div>
         </div>
 
-        {/* 意向产品TOP5 */}
-        <div className="bg-gradient-to-br from-fuchsia-50 to-pink-50 rounded-xl shadow-sm p-6 border border-fuchsia-100">
+        {/* 敏感度特征统计 */}
+        <div className="bg-gradient-to-br from-indigo-50 to-violet-50 rounded-xl shadow-sm p-6 border border-indigo-100">
           <div className="flex items-center gap-2 mb-4">
-            <Target className="w-5 h-5 text-fuchsia-600" />
-            <h3 className="font-semibold text-gray-900">意向产品TOP5</h3>
+            <AlertTriangle className="w-5 h-5 text-indigo-600" />
+            <h3 className="font-semibold text-gray-900">敏感度特征统计</h3>
           </div>
           <div className="space-y-3">
             {[
-              { name: '智能手表Pro', count: 45, percent: 100 },
-              { name: '无线耳机Max', count: 38, percent: 84 },
-              { name: '便携充电宝', count: 32, percent: 71 },
-              { name: '蓝牙音箱', count: 28, percent: 62 },
-              { name: '智能手环', count: 22, percent: 49 },
+              { name: '价格敏感', count: 89, percent: 38, color: 'from-red-500 to-rose-500', dotColor: 'bg-red-500' },
+              { name: '物流敏感', count: 67, percent: 29, color: 'from-orange-500 to-amber-500', dotColor: 'bg-orange-500' },
+              { name: '质量敏感', count: 54, percent: 23, color: 'from-blue-500 to-indigo-500', dotColor: 'bg-blue-500' },
+              { name: '付款安全敏感', count: 38, percent: 16, color: 'from-violet-500 to-purple-500', dotColor: 'bg-violet-500' },
+              { name: '真实性敏感', count: 28, percent: 12, color: 'from-teal-500 to-cyan-500', dotColor: 'bg-teal-500' },
             ].map((item, i) => (
-              <div key={i} className="flex items-center gap-3 bg-white/60 rounded-lg p-3">
-                <span className={cn(
-                  "w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-white",
-                  i === 0 ? "bg-gradient-to-br from-amber-400 to-amber-500" :
-                  i === 1 ? "bg-gradient-to-br from-gray-300 to-gray-400" :
-                  i === 2 ? "bg-gradient-to-br from-amber-600 to-amber-700" :
-                  "bg-gray-300"
-                )}>
-                  {i + 1}
-                </span>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between mb-1">
+              <div key={i} className="bg-white/60 rounded-lg p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className={cn("w-2 h-2 rounded-full", item.dotColor)} />
                     <span className="text-sm font-medium text-gray-700">{item.name}</span>
-                    <span className="text-sm text-fuchsia-600 font-semibold">{item.count}</span>
                   </div>
-                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-gradient-to-r from-fuchsia-500 to-pink-500"
-                      style={{ width: `${item.percent}%` }}
-                    />
-                  </div>
+                  <span className="text-sm text-gray-500">{item.count}人 ({item.percent}%)</span>
+                </div>
+                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className={cn("h-full rounded-full bg-gradient-to-r", item.color)}
+                    style={{ width: `${item.percent * 2.6}%` }}
+                  />
                 </div>
               </div>
             ))}

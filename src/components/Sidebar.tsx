@@ -34,7 +34,8 @@ import {
   FolderOpen,
   RefreshCw,
   Power,
-  Loader2
+  Loader2,
+  AlertTriangle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -56,6 +57,7 @@ interface SidebarProps {
   onSectionChange?: (section: string) => void;
   onLogout?: () => void;
   onOpenAdminCenter?: () => void;
+  onOpenProxy?: () => void;
 }
 
 // 内联账号列表组件 - 直接在侧边栏展示账号管理功能
@@ -64,13 +66,15 @@ interface AccountListInlineProps {
   accounts: PlatformAccount[];
   selectedAccount: PlatformAccount | undefined;
   onSelectAccount: (accountId: string) => void;
+  onOpenProxy?: () => void;
 }
 
 const AccountListInline: React.FC<AccountListInlineProps> = ({
   platform,
   accounts,
   selectedAccount,
-  onSelectAccount
+  onSelectAccount,
+  onOpenProxy
 }) => {
   const {
     addPlatformAccount,
@@ -82,6 +86,7 @@ const AccountListInline: React.FC<AccountListInlineProps> = ({
   const [showQrCode, setShowQrCode] = useState<string | null>(null);
   const [hoveredAccount, setHoveredAccount] = useState<string | null>(null);
   const [restartingAccount, setRestartingAccount] = useState<string | null>(null);
+  const [confirmDisableAI, setConfirmDisableAI] = useState<string | null>(null);
   const [confirmCloseAccount, setConfirmCloseAccount] = useState<string | null>(null);
   const [editingRemarkId, setEditingRemarkId] = useState<string | null>(null);
   const [editingRemarkValue, setEditingRemarkValue] = useState('');
@@ -179,9 +184,9 @@ const AccountListInline: React.FC<AccountListInlineProps> = ({
               </button>
             )}
             <button
-              onClick={(e) => { e.stopPropagation(); /* 环境配置 */ }}
+              onClick={(e) => { e.stopPropagation(); onOpenProxy?.(); }}
               className="w-9 h-9 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 shadow-md"
-              title="环境配置"
+              title="代理IP配置"
             >
               <Server className="w-4 h-4 text-gray-600" />
             </button>
@@ -286,7 +291,7 @@ const AccountListInline: React.FC<AccountListInlineProps> = ({
           <div className="flex items-center gap-1.5">
             <Server className="w-3 h-3 flex-shrink-0" />
             <span className="truncate">
-              {account.proxyRegion ? `(${account.proxyRegion})` : '(本机)'}
+              {account.proxyRegion ? `${account.proxyRegion}${account.ip ? ` ${account.ip}` : ''}` : '本机'}
             </span>
           </div>
         </div>
@@ -309,14 +314,7 @@ const AccountListInline: React.FC<AccountListInlineProps> = ({
               <Power className="w-3.5 h-3.5" />
             </button>
             <button
-              onClick={(e) => { e.stopPropagation(); deletePlatformAccount(account.id); }}
-              className="p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
-              title="删除"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); updatePlatformAccount(account.id, { aiEnabled: !account.aiEnabled }); }}
+              onClick={(e) => { e.stopPropagation(); account.aiEnabled ? setConfirmDisableAI(account.id) : updatePlatformAccount(account.id, { aiEnabled: true }); }}
               className={cn(
                 "ml-auto flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium transition-colors",
                 account.aiEnabled
@@ -394,6 +392,31 @@ const AccountListInline: React.FC<AccountListInlineProps> = ({
           </div>
         </div>
       )}
+
+      {/* 关闭AI员工确认弹框 */}
+      {confirmDisableAI && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setConfirmDisableAI(null)} />
+          <div className="relative bg-white rounded-xl p-5 shadow-2xl w-80">
+            <div className="flex items-center justify-center w-12 h-12 mx-auto mb-3 bg-amber-100 rounded-full">
+              <AlertTriangle className="w-6 h-6 text-amber-500" />
+            </div>
+            <h4 className="text-center font-medium text-gray-900 mb-2">确认关闭AI员工</h4>
+            <p className="text-xs text-gray-500 text-center mb-3">
+              关闭后该账号将无法使用以下AI能力：
+            </p>
+            <div className="grid grid-cols-2 gap-1.5 mb-4">
+              {['智能销售对话', '主动营销触达', '客户召回', '质量检测'].map(cap => (
+                <span key={cap} className="text-[10px] text-center text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded-md">{cap}</span>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmDisableAI(null)} className="flex-1 px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">取消</button>
+              <button onClick={() => { updatePlatformAccount(confirmDisableAI, { aiEnabled: false }); setConfirmDisableAI(null); }} className="flex-1 px-3 py-2 text-sm text-white bg-amber-500 rounded-lg hover:bg-amber-600">确定关闭</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -402,7 +425,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeSection = 'conversations',
   onSectionChange,
   onLogout,
-  onOpenAdminCenter
+  onOpenAdminCenter,
+  onOpenProxy
 }) => {
   const {
     sidebarCollapsed,
@@ -595,6 +619,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           accounts={accounts}
                           selectedAccount={selectedAccount}
                           onSelectAccount={(accountId) => setPlatformAccount(platform.id, accountId)}
+                          onOpenProxy={onOpenProxy}
                         />
                       )}
                     </div>

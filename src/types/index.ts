@@ -261,12 +261,18 @@ export interface ActivationCode {
   departmentName: string;
   assignedTo?: string;
   role: 'admin' | 'agent' | 'manager';
-  status: 'unused' | 'active' | 'expired' | 'disabled';
+  status: 'unused' | 'active' | 'disabled';
   createdAt: Date;
   activatedAt?: Date;
   expiresAt?: Date;
+  lastLoginAt?: Date;         // 最近登录时间
   remark?: string;
-  platforms?: string[];
+  platforms?: string[];       // 支持的社交平台
+  onlinePorts?: number;       // 在线端口数
+  allocatedPorts?: number;    // 分配端口数
+  multiDevice?: boolean;      // 多设备登录
+  chatBackup?: boolean;       // 聊天备份
+  assignedAccounts?: number;  // 已分配账号数
   aiPlatforms?: AiPlatformConfig[];
   aiSeatLimit?: number;       // 该激活码可开启的AI坐席上限
   aiSeatUsed?: number;        // 该激活码已使用的AI坐席数
