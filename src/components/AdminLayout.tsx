@@ -38,6 +38,7 @@ import {
   ClipboardList,
   Download,
   AlertCircle,
+  Globe,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStore } from '@/store/useStore';
@@ -47,9 +48,28 @@ import { AdminChatView } from './AdminChatView';
 import { AILabelsPage } from './AILabelsPage';
 import { KnowledgeBasePage } from './KnowledgeBasePage';
 import { CustomerAIProfile } from './CustomerAIProfile';
+import { OrganizationStructure } from './OrganizationStructure';
+import { AccountManagement } from './AccountManagement';
+import { ProxyManagement } from './ProxyManagement';
 import type { ActivationCode } from '@/types';
 
-type AdminSection = 'activation-codes' | 'org-settings' | 'members' | 'security' | 'statistics' | 'settings' | 'audit' | 'audit-report' | 'ai-settings' | 'ai-config' | 'ai-config-detail' | 'ai-knowledge' | 'ai-scripts' | 'ai-labels' | 'customer-list' | 'customer-detail' | 'ticket-list';
+// 统一管理端复选框和单选按钮样式
+const adminCheckboxStyle = `
+  [type='checkbox']:checked,
+  input[type='checkbox']:checked {
+    background-color: #FF6B35 !important;
+    border-color: #FF6B35 !important;
+    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e") !important;
+  }
+  [type='radio']:checked,
+  input[type='radio']:checked {
+    background-color: #FF6B35 !important;
+    border-color: #FF6B35 !important;
+    background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3ccircle cx='8' cy='8' r='3'/%3e%3c/svg%3e") !important;
+  }
+`;
+
+type AdminSection = 'activation-codes' | 'org-settings' | 'members' | 'security' | 'statistics' | 'settings' | 'audit' | 'audit-report' | 'ai-settings' | 'ai-config' | 'ai-config-detail' | 'ai-knowledge' | 'ai-scripts' | 'ai-labels' | 'customer-list' | 'customer-detail' | 'ticket-list' | 'proxy-management';
 
 interface AdminLayoutProps {
   onBack?: () => void;
@@ -58,6 +78,7 @@ interface AdminLayoutProps {
 
 const menuItems: { id: AdminSection; name: string; icon: React.ComponentType<{ className?: string }>; }[] = [
   { id: 'activation-codes', name: '激活码管理', icon: Key },
+  { id: 'proxy-management', name: '代理IP管理', icon: Globe },
   { id: 'statistics', name: '数据统计', icon: BarChart3 },
   { id: 'security', name: '安全设置', icon: Shield },
   { id: 'settings', name: '系统设置', icon: Settings },
@@ -81,7 +102,7 @@ const ticketSubMenuItems: { id: AdminSection; name: string; icon: React.Componen
 
 // 组织架构子菜单
 const orgSubMenuItems: { id: AdminSection; name: string; icon: React.ComponentType<{ className?: string }>; }[] = [
-  { id: 'members', name: '成员管理', icon: Users },
+  { id: 'members', name: '账号管理', icon: Users },
   { id: 'org-settings', name: '组织设置', icon: Building2 },
 ];
 
@@ -109,6 +130,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onBack }) => {
   const isOrgSection = activeSection === 'members' || activeSection === 'org-settings';
   const [auditCode, setAuditCode] = useState<ActivationCode | null>(null);
   const [detailCustomerId, setDetailCustomerId] = useState<string | null>(null);
+  const [filterRoleId, setFilterRoleId] = useState<string | null>(null);
   const organization = useStore((state) => state.organization);
 
   // 从激活码列表跳转到内控管理查看聊天记录
@@ -138,8 +160,15 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onBack }) => {
     setActiveSection('ai-config');
   };
 
+  // 从组织设置跳转到账号管理查看角色账号
+  const handleViewRoleAccounts = (roleId: string) => {
+    setFilterRoleId(roleId);
+    setActiveSection('members');
+  };
+
   return (
     <div className="flex h-screen bg-gray-50">
+      <style>{adminCheckboxStyle}</style>
       {/* 侧边栏 */}
       <div
         className={cn(
@@ -540,7 +569,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onBack }) => {
         {/* 页面内容 */}
         <div className="flex-1 min-h-0 relative">
           <div className="absolute inset-0">
-            <AdminContent section={activeSection} onViewChat={handleViewChat} auditCode={auditCode} onClearAuditCode={() => setAuditCode(null)} detailCustomerId={detailCustomerId} onViewCustomerDetail={handleViewCustomerDetail} onBackToCustomerList={handleBackToCustomerList} onViewAIEmployee={handleViewAIEmployee} onBackToAIList={handleBackToAIList} />
+            <AdminContent section={activeSection} onViewChat={handleViewChat} auditCode={auditCode} onClearAuditCode={() => setAuditCode(null)} detailCustomerId={detailCustomerId} onViewCustomerDetail={handleViewCustomerDetail} onBackToCustomerList={handleBackToCustomerList} onViewAIEmployee={handleViewAIEmployee} onBackToAIList={handleBackToAIList} filterRoleId={filterRoleId} onClearFilterRole={() => setFilterRoleId(null)} onViewRoleAccounts={handleViewRoleAccounts} />
           </div>
         </div>
       </div>
@@ -559,30 +588,23 @@ const AdminContent: React.FC<{
   onBackToCustomerList: () => void;
   onViewAIEmployee: (employeeId: string) => void;
   onBackToAIList: () => void;
-}> = ({ section, onViewChat, auditCode, onClearAuditCode, detailCustomerId, onViewCustomerDetail, onBackToCustomerList, onViewAIEmployee, onBackToAIList }) => {
+  filterRoleId: string | null;
+  onClearFilterRole: () => void;
+  onViewRoleAccounts: (roleId: string) => void;
+}> = ({ section, onViewChat, auditCode, onClearAuditCode, detailCustomerId, onViewCustomerDetail, onBackToCustomerList, onViewAIEmployee, onBackToAIList, filterRoleId, onClearFilterRole, onViewRoleAccounts }) => {
   switch (section) {
     case 'activation-codes':
       return <AdminCenter onViewChat={onViewChat} />;
+    case 'proxy-management':
+      return <ProxyManagement />;
     case 'audit':
       return <AdminChatView initialCode={auditCode} onClearCode={onClearAuditCode} />;
     case 'audit-report':
       return <AdminAuditReportPage />;
     case 'members':
-      return (
-        <PlaceholderPage
-          icon={Users}
-          title="成员管理"
-          description="管理组织成员、分配角色和权限"
-        />
-      );
+      return <AccountManagement filterRoleId={filterRoleId} onClearFilter={onClearFilterRole} />;
     case 'org-settings':
-      return (
-        <PlaceholderPage
-          icon={Building2}
-          title="组织设置"
-          description="配置组织基本信息和偏好设置"
-        />
-      );
+      return <OrganizationStructure onViewRoleAccounts={onViewRoleAccounts} />;
     case 'statistics':
       return (
         <PlaceholderPage
@@ -657,9 +679,18 @@ const AiSwitch: React.FC<{ enabled: boolean }> = ({ enabled }) => (
 );
 
 // AI设置页面
-const platformIconMap: Record<string, React.ComponentType<{ className?: string }>> = {
-  MessageCircle, Send, MessageSquare, Instagram, Facebook, Mail, Smartphone, Music, Twitter, ShoppingBag,
-};
+const platformIconMap = {
+  MessageCircle,
+  Send,
+  MessageSquare,
+  Instagram,
+  Facebook,
+  Mail,
+  Smartphone,
+  Music,
+  Twitter,
+  ShoppingBag,
+} as Record<string, React.ComponentType<{ className?: string }>>;
 
 const AISettingsPage: React.FC = () => {
   const organization = useStore((s) => s.organization);
@@ -1375,69 +1406,88 @@ const AIConfigDetailPage: React.FC<{
       {/* 主内容区 */}
       <div className="flex-1 min-h-0 flex overflow-hidden">
         {/* 左侧：员工信息卡 */}
-        <div className="w-72 flex-shrink-0 border-r border-gray-200 bg-white overflow-y-auto p-5 space-y-5">
-          {/* 头像 + 名称 */}
+        <div className="w-72 flex-shrink-0 border-r border-gray-200 bg-gradient-to-b from-indigo-50/80 to-white overflow-y-auto p-5 space-y-5">
+          {/* 头像 + 名称 + 语言 */}
           <div className="flex flex-col items-center text-center">
             <div className="relative mb-3">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#FF6B35]/20 to-[#FF8F5E]/30 flex items-center justify-center">
-                <Bot className="w-8 h-8 text-[#FF6B35]" />
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center shadow-lg shadow-indigo-200/50">
+                <Bot className="w-8 h-8 text-white" />
               </div>
               <span className={cn(
-                'absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white',
+                'absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-white',
                 aiConfig.status === 'online' ? 'bg-green-500' : 'bg-gray-300'
               )} />
             </div>
             <h3 className="text-base font-semibold text-gray-900">{aiConfig.name}</h3>
+            <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
+              <Globe className="w-3 h-3" />
+              <span>{aiConfig.language || 'English (US)'}</span>
+            </div>
             {currentTpl && (
-              <span className="mt-1 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#FF6B35]/5 text-[11px] text-[#FF6B35] font-medium">
+              <span className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200/60 text-[11px] text-amber-700 font-medium">
                 {currentTpl.icon} {currentTpl.name}
               </span>
             )}
           </div>
 
-          {/* 状态切换 */}
-          <div className="flex items-center justify-between px-3 py-2.5 bg-gray-50 rounded-xl">
-            <span className="text-xs text-gray-600">启用状态</span>
-            <button
-              onClick={() => updateAIEmployeeConfig({ status: aiConfig.status === 'online' ? 'offline' : 'online' })}
-              className={cn(
-                "w-9 h-5 rounded-full transition-colors relative flex-shrink-0",
-                aiConfig.status === 'online' ? "bg-[#FF6B35]" : "bg-gray-200"
-              )}
-            >
+          {/* 工作状态 */}
+          <div className="px-3 py-2.5 bg-white/80 rounded-xl border border-gray-100">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-500">工作状态</span>
+              <button
+                onClick={() => updateAIEmployeeConfig({ status: aiConfig.status === 'online' ? 'offline' : 'online' })}
+                className={cn(
+                  "w-9 h-5 rounded-full transition-colors relative flex-shrink-0",
+                  aiConfig.status === 'online' ? "bg-indigo-500" : "bg-gray-200"
+                )}
+              >
+                <span className={cn(
+                  "absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform",
+                  aiConfig.status === 'online' ? "left-[18px]" : "left-0.5"
+                )} />
+              </button>
+            </div>
+            <div className="flex items-center gap-1.5 mt-1.5">
               <span className={cn(
-                "absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform",
-                aiConfig.status === 'online' ? "left-[18px]" : "left-0.5"
+                "w-2 h-2 rounded-full",
+                aiConfig.status === 'online' ? "bg-green-500" : "bg-gray-300"
               )} />
-            </button>
+              <span className={cn(
+                "text-xs font-medium",
+                aiConfig.status === 'online' ? "text-green-600" : "text-gray-400"
+              )}>
+                {aiConfig.status === 'online' ? '在线接单中' : '已离线'}
+              </span>
+            </div>
           </div>
 
           {/* 已激活平台 */}
           <div>
             <h4 className="text-xs font-medium text-gray-500 mb-2">已激活平台</h4>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex gap-2">
               {aiConfig.activePlatforms.map((pid) => {
                 const pc = platformConfigs.find((p) => p.id === pid);
-                const PIcon = pc ? platformIconMap[pc.icon] : null;
                 return pc ? (
-                  <div key={pid} className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-gray-50 border border-gray-100">
-                    <div className="w-4 h-4 rounded flex items-center justify-center" style={{ backgroundColor: pc.color }}>
-                      {PIcon && <PIcon className="w-2.5 h-2.5 text-white" />}
-                    </div>
-                    <span className="text-[11px] text-gray-600">{pc.name}</span>
+                  <div
+                    key={pid}
+                    className="w-6 h-6 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: pc.color }}
+                    title={pc.name}
+                  >
+                    <span className="text-white text-[9px] font-bold">{pc.name.charAt(0)}</span>
                   </div>
                 ) : null;
               })}
             </div>
           </div>
 
-          {/* 已开启功能 */}
+          {/* 连接功能 */}
           <div>
-            <h4 className="text-xs font-medium text-gray-500 mb-2">已开启功能</h4>
+            <h4 className="text-xs font-medium text-gray-500 mb-2">连接功能</h4>
             {activeFeatures.length > 0 ? (
               <div className="flex flex-wrap gap-1.5">
                 {activeFeatures.map((f) => (
-                  <span key={f as string} className="px-2 py-0.5 text-[11px] bg-[#FF6B35]/5 text-[#FF6B35] rounded-full">{f as string}</span>
+                  <span key={f as string} className="px-2 py-0.5 text-[11px] bg-indigo-50 text-indigo-600 rounded-full border border-indigo-100">{f as string}</span>
                 ))}
               </div>
             ) : (
@@ -1445,17 +1495,27 @@ const AIConfigDetailPage: React.FC<{
             )}
           </div>
 
-          {/* 语气预览 */}
+          {/* TONE OF VOICE PREVIEW */}
           <div>
-            <h4 className="text-xs font-medium text-gray-500 mb-2">语气预览</h4>
-            <div className="bg-gray-50 rounded-xl p-3 space-y-2">
+            <h4 className="text-[10px] font-semibold text-gray-400 tracking-wider uppercase mb-3">Tone of Voice Preview</h4>
+            <div className="space-y-2.5">
+              {/* 用户消息气泡 */}
               <div className="flex items-start gap-2">
-                <User className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
-                <p className="text-[11px] text-gray-600">{personaPreviewQuestion}</p>
+                <div className="w-5 h-5 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <User className="w-3 h-3 text-gray-500" />
+                </div>
+                <div className="bg-white rounded-xl rounded-tl-sm px-3 py-2 border border-gray-100 shadow-sm max-w-[85%]">
+                  <p className="text-[11px] text-gray-700 leading-relaxed">{personaPreviewQuestion}</p>
+                </div>
               </div>
-              <div className="flex items-start gap-2">
-                <Bot className="w-4 h-4 text-[#FF6B35] mt-0.5 flex-shrink-0" />
-                <p className="text-[11px] text-gray-700">{personaPreviewAnswers[aiConfig.personaTemplate]}</p>
+              {/* AI 回复气泡 */}
+              <div className="flex items-start gap-2 justify-end">
+                <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl rounded-tr-sm px-3 py-2 shadow-sm max-w-[85%] relative">
+                  <p className="text-[11px] text-white/95 leading-relaxed">{personaPreviewAnswers[aiConfig.personaTemplate]}</p>
+                  <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-indigo-500 border-2 border-white flex items-center justify-center">
+                    <span className="text-[7px] font-bold text-white">AI</span>
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -1464,64 +1524,84 @@ const AIConfigDetailPage: React.FC<{
         {/* 右侧：配置区 */}
         <div className="flex-1 overflow-y-auto p-6 space-y-5">
           {/* 平台选项卡 */}
-          {aiConfig.activePlatforms.length > 1 && (
-            <div className="flex gap-2 flex-wrap">
-              {aiConfig.activePlatforms.map((pid) => {
-                const pc = platformConfigs.find((p) => p.id === pid);
-                const PIcon = pc ? platformIconMap[pc.icon] : null;
-                return pc ? (
-                  <button
-                    key={pid}
-                    onClick={() => setSelectedPlatform(pid)}
-                    className={cn(
-                      'flex items-center gap-2 px-3 py-2 rounded-xl border text-sm transition-all',
-                      selectedPlatform === pid
-                        ? 'border-[#FF6B35] bg-[#FF6B35]/5 text-[#FF6B35] font-medium'
-                        : 'border-gray-200 text-gray-600 hover:border-gray-300'
-                    )}
-                  >
-                    <div className="w-5 h-5 rounded flex items-center justify-center" style={{ backgroundColor: pc.color }}>
-                      {PIcon && <PIcon className="w-3 h-3 text-white" />}
-                    </div>
-                    {pc.name}
-                  </button>
-                ) : null;
-              })}
-            </div>
-          )}
+          <div className="flex gap-2 flex-wrap">
+            {aiConfig.activePlatforms.map((pid) => {
+              const pc = platformConfigs.find((p) => p.id === pid);
+              const PIcon = pc ? platformIconMap[pc.icon] : null;
+              return pc ? (
+                <button
+                  key={pid}
+                  onClick={() => setSelectedPlatform(pid)}
+                  className={cn(
+                    'flex items-center gap-2 px-3 py-2 rounded-xl border text-sm transition-all',
+                    selectedPlatform === pid
+                      ? 'border-[#FF6B35] bg-[#FF6B35]/5 text-[#FF6B35] font-medium'
+                      : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                  )}
+                >
+                  <div className="w-5 h-5 rounded flex items-center justify-center" style={{ backgroundColor: pc.color }}>
+                    {PIcon && <PIcon className="w-3 h-3 text-white" />}
+                  </div>
+                  {pc.name}
+                </button>
+              ) : null;
+            })}
+          </div>
 
-          {/* AI 身份 / 人设 */}
+          {/* AI 身份与人设 */}
           <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
             <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-[#FF6B35]" />
-              AI 身份 / 人设
+              AI 身份与人设 (Identity)
             </h3>
-            {/* 昵称 */}
-            <div>
-              <label className="text-xs text-gray-500 mb-1.5 block">AI 员工昵称</label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={nicknameInput}
-                  onChange={(e) => setNicknameInput(e.target.value)}
-                  className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]"
-                />
-                <button
-                  onClick={handleSaveNickname}
-                  className={cn(
-                    "px-4 py-2 text-sm font-medium rounded-lg transition-colors",
-                    nicknameSaved
-                      ? "bg-green-50 text-green-600"
-                      : "bg-[#FF6B35] text-white hover:bg-[#E85A2A]"
-                  )}
+            {/* 昵称 + 语言 两列 */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs text-gray-500 mb-1.5 block">AI 员工对外昵称</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={nicknameInput}
+                    onChange={(e) => setNicknameInput(e.target.value)}
+                    className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]"
+                  />
+                  <button
+                    onClick={handleSaveNickname}
+                    className={cn(
+                      "px-3 py-2 text-sm font-medium rounded-lg transition-colors flex-shrink-0",
+                      nicknameSaved
+                        ? "bg-green-50 text-green-600"
+                        : "bg-[#FF6B35] text-white hover:bg-[#E85A2A]"
+                    )}
+                  >
+                    {nicknameSaved ? '已保存' : '保存'}
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-gray-500 mb-1.5 block">首选回复语言</label>
+                <select
+                  value={aiConfig.language || 'en'}
+                  onChange={(e) => updateAIEmployeeConfig({ language: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]"
                 >
-                  {nicknameSaved ? '已保存' : '保存'}
-                </button>
+                  <option value="en">English (US)</option>
+                  <option value="zh">中文（简体）</option>
+                  <option value="zh-TW">中文（繁体）</option>
+                  <option value="ja">日本語</option>
+                  <option value="ko">한국어</option>
+                  <option value="es">Espanol</option>
+                  <option value="fr">Francais</option>
+                  <option value="de">Deutsch</option>
+                  <option value="pt">Portugues</option>
+                  <option value="ar">العربية</option>
+                  <option value="ru">Русский</option>
+                </select>
               </div>
             </div>
             {/* 人设模板选择 */}
             <div>
-              <label className="text-xs text-gray-500 mb-2 block">人设模板</label>
+              <label className="text-xs text-gray-500 mb-2 block">选择人设模板</label>
               <div className="grid grid-cols-3 gap-3">
                 {personaTemplates.map((tpl) => (
                   <button
@@ -1552,67 +1632,101 @@ const AIConfigDetailPage: React.FC<{
           <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
             <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
               <Clock className="w-4 h-4 text-blue-500" />
-              工作时间
+              工作时间 (Schedule)
             </h3>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="text-xs text-gray-500 mb-1.5 block">开始时间</label>
-                <input
-                  type="time"
-                  value={aiConfig.workStartTime}
-                  onChange={(e) => updateAIEmployeeConfig({ workStartTime: e.target.value })}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]"
-                />
+                <label className="text-xs text-gray-500 mb-1.5 block">工作时区</label>
+                <select
+                  value={aiConfig.timezone || 'GMT+08:00'}
+                  onChange={(e) => updateAIEmployeeConfig({ timezone: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]"
+                >
+                  <option value="GMT-05:00">GMT-05:00 (New York)</option>
+                  <option value="GMT-08:00">GMT-08:00 (Los Angeles)</option>
+                  <option value="GMT+00:00">GMT+00:00 (London)</option>
+                  <option value="GMT+01:00">GMT+01:00 (Paris)</option>
+                  <option value="GMT+08:00">GMT+08:00 (Beijing)</option>
+                  <option value="GMT+09:00">GMT+09:00 (Tokyo)</option>
+                  <option value="GMT+09:30">GMT+09:30 (Seoul)</option>
+                  <option value="GMT+07:00">GMT+07:00 (Bangkok)</option>
+                  <option value="GMT+05:30">GMT+05:30 (Mumbai)</option>
+                  <option value="GMT+03:00">GMT+03:00 (Moscow)</option>
+                  <option value="GMT-03:00">GMT-03:00 (Sao Paulo)</option>
+                </select>
+                <p className="text-[10px] text-gray-400 mt-1.5">根据目标客户所在区域选择，避免半夜骚扰</p>
               </div>
               <div>
-                <label className="text-xs text-gray-500 mb-1.5 block">结束时间</label>
-                <input
-                  type="time"
-                  value={aiConfig.workEndTime}
-                  onChange={(e) => updateAIEmployeeConfig({ workEndTime: e.target.value })}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]"
-                />
+                <label className="text-xs text-gray-500 mb-1.5 block">在线时间段</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="time"
+                    value={aiConfig.workStartTime}
+                    onChange={(e) => updateAIEmployeeConfig({ workStartTime: e.target.value })}
+                    className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]"
+                  />
+                  <span className="text-xs text-gray-400">至</span>
+                  <input
+                    type="time"
+                    value={aiConfig.workEndTime}
+                    onChange={(e) => updateAIEmployeeConfig({ workEndTime: e.target.value })}
+                    className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]"
+                  />
+                </div>
               </div>
             </div>
             <div>
               <label className="text-xs text-gray-500 mb-2 block">工作日</label>
               <div className="flex gap-2">
-                {['日', '一', '二', '三', '四', '五', '六'].map((d, i) => (
+                {[
+                  { label: 'Mon', idx: 1 },
+                  { label: 'Tue', idx: 2 },
+                  { label: 'Wed', idx: 3 },
+                  { label: 'Thu', idx: 4 },
+                  { label: 'Fri', idx: 5 },
+                  { label: 'Sat', idx: 6 },
+                  { label: 'Sun', idx: 0 },
+                ].map(({ label, idx }) => (
                   <button
-                    key={i}
+                    key={idx}
                     onClick={() => {
-                      const days = aiConfig.workDays.includes(i)
-                        ? aiConfig.workDays.filter((x) => x !== i)
-                        : [...aiConfig.workDays, i].sort();
+                      const days = aiConfig.workDays.includes(idx)
+                        ? aiConfig.workDays.filter((x) => x !== idx)
+                        : [...aiConfig.workDays, idx].sort();
                       updateAIEmployeeConfig({ workDays: days });
                     }}
                     className={cn(
-                      'w-9 h-9 rounded-lg text-xs font-medium transition-colors',
-                      aiConfig.workDays.includes(i)
-                        ? 'bg-[#FF6B35] text-white'
+                      'px-3 h-9 rounded-lg text-xs font-medium transition-colors',
+                      aiConfig.workDays.includes(idx)
+                        ? 'bg-indigo-500 text-white'
                         : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                     )}
                   >
-                    {d}
+                    {label}
                   </button>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* AI 能力 */}
+          {/* AI 能力配置 */}
           <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-              <Zap className="w-4 h-4 text-amber-500" />
-              AI 能力
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+                <Zap className="w-4 h-4 text-amber-500" />
+                AI 能力配置 (Capabilities)
+              </h3>
+              <span className="text-[11px] text-gray-500 px-2.5 py-1 bg-gray-50 rounded-full border border-gray-100">
+                当前应用 {platformConfigs.find((p) => p.id === selectedPlatform)?.name || selectedPlatform}
+              </span>
+            </div>
             <div className="grid grid-cols-2 gap-3">
               <CapabilityCard
                 icon={MessageCircle}
                 iconColor="text-[#FF6B35]"
                 iconBg="bg-[#FF6B35]/10"
-                title="智能销售对话"
-                description="自动识别客户意图，智能推荐产品并引导下单"
+                title="AI 销售客服"
+                description="自动识别客户意图，解答产品问题，并在对话中引导客户完成订单转化"
                 enabled={currentCap?.aiSalesChat ?? false}
                 onToggle={() => handleToggleCapability('aiSalesChat')}
               />
@@ -1620,8 +1734,8 @@ const AIConfigDetailPage: React.FC<{
                 icon={Send}
                 iconColor="text-blue-500"
                 iconBg="bg-blue-50"
-                title="主动营销触达"
-                description="根据客户画像自动发送个性化营销消息"
+                title="AI 主动营销"
+                description="根据客户标签，向客户主动发送个性化营销消息（SOP模板）"
                 enabled={currentCap?.aiProactiveMarketing ?? false}
                 onToggle={() => handleToggleCapability('aiProactiveMarketing')}
               />
@@ -1629,8 +1743,8 @@ const AIConfigDetailPage: React.FC<{
                 icon={User}
                 iconColor="text-purple-500"
                 iconBg="bg-purple-50"
-                title="客户召回"
-                description="自动识别沉默客户并发送召回消息"
+                title="AI 沉默互回"
+                description="自动识别 7 天未互动的客户进行回调提醒并发送，需配置客户互回模板新流。"
                 enabled={currentCap?.aiRecall ?? false}
                 onToggle={() => handleToggleCapability('aiRecall')}
               />
@@ -1638,12 +1752,19 @@ const AIConfigDetailPage: React.FC<{
                 icon={CheckCircle2}
                 iconColor="text-green-500"
                 iconBg="bg-green-50"
-                title="质量检测"
-                description="自动检测对话质量并生成改进建议"
+                title="AI 会话质检"
+                description="对接结束后自动质检AI员工的工作质量，并自动生成质检报告"
                 enabled={currentCap?.aiQualityCheck ?? false}
                 onToggle={() => handleToggleCapability('aiQualityCheck')}
               />
             </div>
+          </div>
+
+          {/* 配置知识库与话术库 */}
+          <div className="text-center py-2">
+            <button className="text-sm text-[#FF6B35] hover:text-[#E85A2A] font-medium hover:underline transition-colors">
+              配置知识库与话术库
+            </button>
           </div>
         </div>
       </div>
@@ -2287,7 +2408,7 @@ const AdminCustomerDetailPage: React.FC<{
       {/* 主体：三列分栏 */}
       <div className="flex-1 flex min-h-0">
         {/* 左侧：聊天记录 */}
-        <div className="w-[35%] border-r border-gray-100 flex flex-col min-h-0 bg-white">
+        <div className="flex-[3] border-r border-gray-100 flex flex-col min-h-0 bg-white">
           <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-100 bg-gray-50/80 flex-shrink-0">
             <MessageSquare className="w-4 h-4 text-[#FF6B35]" />
             <span className="text-sm font-medium text-gray-800">聊天记录</span>
@@ -2303,9 +2424,16 @@ const AdminCustomerDetailPage: React.FC<{
               messages.map((msg) => {
                 const isCustomer = msg.senderType === 'customer';
                 return (
-                  <div key={msg.id} className={cn("flex", isCustomer ? "justify-start" : "justify-end")}>
+                  <div key={msg.id} className={cn("flex gap-2 items-start", isCustomer ? "justify-start" : "justify-end")}>
+                    {isCustomer && (
+                      <img
+                        src={conversation?.customer.avatar}
+                        alt="Customer"
+                        className="w-8 h-8 rounded-full flex-shrink-0 mt-0.5"
+                      />
+                    )}
                     <div className={cn(
-                      "max-w-[80%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm",
+                      "max-w-[75%] rounded-xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm",
                       isCustomer
                         ? "bg-white text-gray-800 border border-gray-100"
                         : msg.senderType === 'ai'
@@ -2325,6 +2453,18 @@ const AdminCustomerDetailPage: React.FC<{
                         <p className="mt-1.5 pt-1.5 border-t border-gray-200/60 text-xs text-gray-500 italic">{msg.translatedContent}</p>
                       )}
                     </div>
+                    {!isCustomer && (
+                      <div className={cn(
+                        "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5",
+                        msg.senderType === 'ai' ? "bg-purple-100" : "bg-[#FF6B35]/10"
+                      )}>
+                        {msg.senderType === 'ai' ? (
+                          <Bot className="w-4 h-4 text-purple-600" />
+                        ) : (
+                          <User className="w-4 h-4 text-[#FF6B35]" />
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })
@@ -2333,12 +2473,12 @@ const AdminCustomerDetailPage: React.FC<{
         </div>
 
         {/* 中间：AI画像 */}
-        <div className="w-[35%] border-r border-gray-100 overflow-y-auto bg-white">
+        <div className="flex-1 border-r border-gray-100 overflow-y-auto bg-white min-w-0">
           <CustomerAIProfile />
         </div>
 
         {/* 右侧：跟进记录 */}
-        <div className="w-[30%] flex flex-col min-h-0 bg-white">
+        <div className="w-80 flex-shrink-0 flex flex-col min-h-0 bg-white">
           <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-100 bg-gray-50/80 flex-shrink-0">
             <ClipboardList className="w-4 h-4 text-[#FF6B35]" />
             <span className="text-sm font-medium text-gray-800">跟进记录</span>

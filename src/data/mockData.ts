@@ -307,7 +307,30 @@ export const mockConversations: Conversation[] = [
     messages: [
       { id: 'msg_1', conversationId: 'conv_1', senderId: 'cust_1', senderType: 'customer', content: 'Hi, I ordered a wireless earphone last month and I\'m very satisfied with it!', contentOriginal: 'Hi, I ordered a wireless earphone last month and I\'m very satisfied with it!', language: 'en', timestamp: new Date('2024-12-20T09:30:00'), status: 'read' },
       { id: 'msg_2', conversationId: 'conv_1', senderId: 'ai', senderType: 'ai', content: 'Thank you for your feedback! We\'re glad you\'re enjoying your wireless earphone. Is there anything else we can help you with today?', translatedContent: '感谢您的反馈！很高兴您喜欢我们的无线耳机。今天还有什么可以帮您的吗？', language: 'en', timestamp: new Date('2024-12-20T09:31:00'), status: 'read', isAIGenerated: true },
-      { id: 'msg_3', conversationId: 'conv_1', senderId: 'cust_1', senderType: 'customer', content: 'Actually, I\'m looking to buy another one as a gift. Do you have any discounts for returning customers?', contentOriginal: 'Actually, I\'m looking to buy another one as a gift. Do you have any discounts for returning customers?', language: 'en', timestamp: new Date('2024-12-20T09:32:00'), status: 'unread' },
+      { id: 'msg_3', conversationId: 'conv_1', senderId: 'cust_1', senderType: 'customer', content: 'Actually, I\'m looking to buy another one as a gift. Do you have any discounts for returning customers?', contentOriginal: 'Actually, I\'m looking to buy another one as a gift. Do you have any discounts for returning customers?', language: 'en', timestamp: new Date('2024-12-20T09:32:00'), status: 'read' },
+      { id: 'msg_4', conversationId: 'conv_1', senderId: 'ai', senderType: 'ai', content: 'Absolutely! As a valued returning customer, you can use code RETURN10 for 10% off your next purchase.', translatedContent: '当然！作为尊贵的回头客，您可以使用代码RETURN10享受下次购买10%的折扣。', language: 'en', timestamp: new Date('2024-12-20T09:33:00'), status: 'read', isAIGenerated: true },
+      { id: 'msg_5', conversationId: 'conv_1', senderId: 'cust_1', senderType: 'customer', content: 'That\'s great! Can you tell me more about the battery life? My friend uses their earphones a lot.', contentOriginal: 'That\'s great! Can you tell me more about the battery life? My friend uses their earphones a lot.', language: 'en', timestamp: new Date('2024-12-20T09:35:00'), status: 'read' },
+      { id: 'msg_6', conversationId: 'conv_1', senderId: 'ai', senderType: 'ai', content: 'The battery lasts up to 8 hours on a single charge, and the charging case provides an additional 24 hours of power.', translatedContent: '电池单次充电可持续使用8小时，充电盒可额外提供24小时的电量。', language: 'en', timestamp: new Date('2024-12-20T09:36:00'), status: 'read', isAIGenerated: true },
+      { id: 'msg_7', conversationId: 'conv_1', senderId: 'cust_1', senderType: 'customer', content: 'Perfect! What about water resistance? My friend goes to the gym often.', contentOriginal: 'Perfect! What about water resistance? My friend goes to the gym often.', language: 'en', timestamp: new Date('2024-12-20T09:38:00'), status: 'read' },
+      { id: 'msg_8', conversationId: 'conv_1', senderId: 'ai', senderType: 'ai', content: 'They have IPX5 water resistance, so they\'re sweat and splash-proof - perfect for workouts!', translatedContent: '它们具有IPX5防水等级，防汗防溅，非常适合运动！', language: 'en', timestamp: new Date('2024-12-20T09:39:00'), status: 'read', isAIGenerated: true },
+      { id: 'msg_9', conversationId: 'conv_1', senderId: 'cust_1', senderType: 'customer', content: 'Excellent! How long does shipping usually take?', contentOriginal: 'Excellent! How long does shipping usually take?', language: 'en', timestamp: new Date('2024-12-20T09:41:00'), status: 'read' },
+      { id: 'msg_10', conversationId: 'conv_1', senderId: 'ai', senderType: 'ai', content: 'Standard shipping takes 5-7 business days. We also offer express shipping (2-3 days) for an additional fee.', translatedContent: '标准配送需要5-7个工作日。我们还提供快递服务（2-3天），需额外收费。', language: 'en', timestamp: new Date('2024-12-20T09:42:00'), status: 'read', isAIGenerated: true },
+      { id: 'msg_11', conversationId: 'conv_1', senderId: 'cust_1', senderType: 'customer', content: 'I\'ll go with standard shipping. What colors are available?', contentOriginal: 'I\'ll go with standard shipping. What colors are available?', language: 'en', timestamp: new Date('2024-12-20T09:44:00'), status: 'read' },
+      { id: 'msg_12', conversationId: 'conv_1', senderId: 'ai', senderType: 'ai', content: 'We have black, white, navy blue, and rose gold. All colors are currently in stock!', translatedContent: '我们有黑色、白色、海军蓝和玫瑰金。所有颜色目前都有库存！', language: 'en', timestamp: new Date('2024-12-20T09:45:00'), status: 'read', isAIGenerated: true },
+      { id: 'msg_13', conversationId: 'conv_1', senderId: 'cust_1', senderType: 'customer', content: 'I think rose gold would be perfect. Can I place the order now?', contentOriginal: 'I think rose gold would be perfect. Can I place the order now?', language: 'en', timestamp: new Date('2024-12-20T09:47:00'), status: 'read' },
+      { id: 'msg_14', conversationId: 'conv_1', senderId: 'agent', senderType: 'agent', content: 'Hi Sarah! I\'m taking over from here. Let me help you complete your order.', translatedContent: '嗨Sarah！我来接手。让我帮您完成订单。', language: 'en', timestamp: new Date('2024-12-20T09:48:00'), status: 'read' },
+      { id: 'msg_15', conversationId: 'conv_1', senderId: 'cust_1', senderType: 'customer', content: 'Great! What payment methods do you accept?', contentOriginal: 'Great! What payment methods do you accept?', language: 'en', timestamp: new Date('2024-12-20T09:49:00'), status: 'read' },
+      { id: 'msg_16', conversationId: 'conv_1', senderId: 'agent', senderType: 'agent', content: 'We accept credit cards (Visa, Mastercard, Amex), PayPal, and Apple Pay.', translatedContent: '我们接受信用卡（Visa、Mastercard、Amex）、PayPal和Apple Pay。', language: 'en', timestamp: new Date('2024-12-20T09:50:00'), status: 'read' },
+      { id: 'msg_17', conversationId: 'conv_1', senderId: 'cust_1', senderType: 'customer', content: 'Perfect! I\'ll use PayPal. Can you send me the checkout link?', contentOriginal: 'Perfect! I\'ll use PayPal. Can you send me the checkout link?', language: 'en', timestamp: new Date('2024-12-20T09:52:00'), status: 'read' },
+      { id: 'msg_18', conversationId: 'conv_1', senderId: 'agent', senderType: 'agent', content: 'Sure! I\'m creating your order now. Rose gold wireless earphones with RETURN10 discount code.', translatedContent: '好的！我现在为您创建订单。玫瑰金无线耳机，使用RETURN10折扣码。', language: 'en', timestamp: new Date('2024-12-20T09:53:00'), status: 'read' },
+      { id: 'msg_19', conversationId: 'conv_1', senderId: 'cust_1', senderType: 'customer', content: 'Yes, that\'s correct!', contentOriginal: 'Yes, that\'s correct!', language: 'en', timestamp: new Date('2024-12-20T09:54:00'), status: 'read' },
+      { id: 'msg_20', conversationId: 'conv_1', senderId: 'agent', senderType: 'agent', content: 'Order created! Your total is $269.99 (10% discount applied). Here\'s your checkout link: checkout.example.com/order-12345', translatedContent: '订单已创建！您的总价是$269.99（已应用10%折扣）。这是您的结账链接：checkout.example.com/order-12345', language: 'en', timestamp: new Date('2024-12-20T09:55:00'), status: 'read' },
+      { id: 'msg_21', conversationId: 'conv_1', senderId: 'cust_1', senderType: 'customer', content: 'Awesome! Just completed the payment. When will it ship?', contentOriginal: 'Awesome! Just completed the payment. When will it ship?', language: 'en', timestamp: new Date('2024-12-20T09:58:00'), status: 'read' },
+      { id: 'msg_22', conversationId: 'conv_1', senderId: 'agent', senderType: 'agent', content: 'Thank you! Your order will ship within 24 hours. You\'ll receive a tracking number via email.', translatedContent: '谢谢！您的订单将在24小时内发货。您将通过电子邮件收到跟踪号码。', language: 'en', timestamp: new Date('2024-12-20T09:59:00'), status: 'read' },
+      { id: 'msg_23', conversationId: 'conv_1', senderId: 'cust_1', senderType: 'customer', content: 'Perfect! One more question - do you offer gift wrapping?', contentOriginal: 'Perfect! One more question - do you offer gift wrapping?', language: 'en', timestamp: new Date('2024-12-20T10:01:00'), status: 'read' },
+      { id: 'msg_24', conversationId: 'conv_1', senderId: 'agent', senderType: 'agent', content: 'Yes! We offer complimentary gift wrapping. I\'ve added it to your order. It comes with a greeting card too.', translatedContent: '是的！我们提供免费礼品包装。我已将其添加到您的订单中。还附带贺卡。', language: 'en', timestamp: new Date('2024-12-20T10:02:00'), status: 'read' },
+      { id: 'msg_25', conversationId: 'conv_1', senderId: 'cust_1', senderType: 'customer', content: 'That\'s wonderful! Thank you so much for your help!', contentOriginal: 'That\'s wonderful! Thank you so much for your help!', language: 'en', timestamp: new Date('2024-12-20T10:03:00'), status: 'read' },
+      { id: 'msg_26', conversationId: 'conv_1', senderId: 'agent', senderType: 'agent', content: 'You\'re very welcome! If you have any questions, feel free to reach out. Have a great day!', translatedContent: '非常欢迎！如果您有任何问题，请随时联系我们。祝您有美好的一天！', language: 'en', timestamp: new Date('2024-12-20T10:04:00'), status: 'read' },
     ],
     unreadCount: 1,
     lastMessage: { id: 'msg_3', conversationId: 'conv_1', senderId: 'cust_1', senderType: 'customer', content: 'Actually, I\'m looking to buy another one as a gift. Do you have any discounts for returning customers?', contentOriginal: 'Actually, I\'m looking to buy another one as a gift. Do you have any discounts for returning customers?', language: 'en', timestamp: new Date('2024-12-20T09:32:00'), status: 'unread' },
@@ -1141,6 +1164,8 @@ export const mockAIStats = {
     avgResponseTime: 12,       // 平均响应时间(秒)
     satisfactionRate: 94.5,    // 满意度(%)
     translationCount: 87,      // 翻译次数
+    aiSummaryCount: 134,       // AI生成总结数
+    aiLabelExtracted: 312,     // AI标签提取数量
   },
   // 本周数据
   weekly: {
@@ -1150,6 +1175,19 @@ export const mockAIStats = {
     avgResponseTime: 15,
     satisfactionRate: 93.2,
     translationCount: 612,
+    aiSummaryCount: 876,        // AI生成总结数
+    aiLabelExtracted: 2134,     // AI标签提取数量
+  },
+  // 本月数据
+  monthly: {
+    customersServed: 4562,
+    messagesReplied: 13280,
+    aiGeneratedReplies: 8934,
+    avgResponseTime: 14,
+    satisfactionRate: 93.8,
+    translationCount: 2456,
+    aiSummaryCount: 3521,
+    aiLabelExtracted: 8762,
   },
   // AI使用统计
   aiUsage: {
@@ -1247,7 +1285,6 @@ export const mockActivationCodes: ActivationCode[] = [
     { platformId: 'facebook', aiSalesChat: false, aiProactiveMarketing: true, aiRecall: false, aiQualityCheck: false },
     { platformId: 'instagram', aiSalesChat: true, aiProactiveMarketing: false, aiRecall: false, aiQualityCheck: true },
   ] },
-  { id: 'ac_006', code: 'QXMS-SO03-2024', departmentId: 'dept_sales_overseas', departmentName: '海外销售组', role: 'agent', status: 'expired', createdAt: new Date('2024-01-01'), expiresAt: new Date('2024-06-30'), remark: '已过期', aiSeatLimit: 0, aiSeatUsed: 0 },
   { id: 'ac_007', code: 'QXMS-CP01-2024', departmentId: 'dept_cs_pre', departmentName: '售前客服组', assignedTo: '小美', role: 'agent', status: 'active', createdAt: new Date('2024-06-01'), activatedAt: new Date('2024-06-01'), expiresAt: new Date('2025-12-31'), platforms: ['wechat', 'whatsapp'], aiSeatLimit: 2, aiSeatUsed: 2, aiAllocationMode: 'fixed', aiFixedAccountIds: ['wx_xiaomei_01', 'wa_xiaomei_01'], aiPlatforms: [
     { platformId: 'wechat', aiSalesChat: true, aiProactiveMarketing: false, aiRecall: true, aiQualityCheck: true },
     { platformId: 'whatsapp', aiSalesChat: false, aiProactiveMarketing: true, aiRecall: false, aiQualityCheck: true },
