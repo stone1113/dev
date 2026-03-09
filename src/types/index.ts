@@ -41,6 +41,7 @@ export interface Attachment {
 export interface CustomerProfile {
   id: string;
   name: string;
+  nicknameRemark?: string; // 姓名昵称备注
   avatar?: string;
   email?: string;
   phone?: string;
@@ -48,11 +49,23 @@ export interface CustomerProfile {
   language: string;
   platform: Platform;
   tags: string[];
+  aiProfile?: AIProfile; // AI画像数据
   notes?: string;
   orderHistory?: Order[];
   behaviorAnalysis?: BehaviorAnalysis;
   createdAt: Date;
   lastContactAt: Date;
+}
+
+// AI画像
+export interface AIProfile {
+  customerLevel?: string; // 客户等级
+  customerType?: string; // 客户类型
+  intendedCategory?: string; // 意向品类
+  budgetRange?: string; // 预算区间
+  purchaseUrgency?: string; // 购买紧迫度
+  inquiryStage?: string; // 询盘阶段
+  decisionRole?: string; // 决策角色
 }
 
 // 订单信息

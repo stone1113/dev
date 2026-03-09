@@ -51,6 +51,7 @@ import { CustomerAIProfile } from './CustomerAIProfile';
 import { OrganizationStructure } from './OrganizationStructure';
 import { AccountManagement } from './AccountManagement';
 import { ProxyManagement } from './ProxyManagement';
+import { DashboardPage } from './DashboardPage';
 import type { ActivationCode } from '@/types';
 
 // 统一管理端复选框和单选按钮样式
@@ -69,7 +70,7 @@ const adminCheckboxStyle = `
   }
 `;
 
-type AdminSection = 'activation-codes' | 'org-settings' | 'members' | 'security' | 'statistics' | 'settings' | 'audit' | 'audit-report' | 'ai-settings' | 'ai-config' | 'ai-config-detail' | 'ai-knowledge' | 'ai-scripts' | 'ai-labels' | 'customer-list' | 'customer-detail' | 'ticket-list' | 'proxy-management';
+type AdminSection = 'dashboard' | 'activation-codes' | 'org-settings' | 'members' | 'security' | 'statistics' | 'settings' | 'audit' | 'audit-report' | 'ai-settings' | 'ai-config' | 'ai-config-detail' | 'ai-knowledge' | 'ai-scripts' | 'ai-labels' | 'customer-list' | 'customer-detail' | 'ticket-list' | 'proxy-management';
 
 interface AdminLayoutProps {
   onBack?: () => void;
@@ -77,6 +78,7 @@ interface AdminLayoutProps {
 }
 
 const menuItems: { id: AdminSection; name: string; icon: React.ComponentType<{ className?: string }>; }[] = [
+  { id: 'dashboard', name: '工作台', icon: BarChart3 },
   { id: 'activation-codes', name: '激活码管理', icon: Key },
   { id: 'proxy-management', name: '代理IP管理', icon: Globe },
   { id: 'statistics', name: '数据统计', icon: BarChart3 },
@@ -116,7 +118,7 @@ const aiSubMenuItems: { id: AdminSection; name: string; icon: React.ComponentTyp
 ];
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ onBack }) => {
-  const [activeSection, setActiveSection] = useState<AdminSection>('activation-codes');
+  const [activeSection, setActiveSection] = useState<AdminSection>('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [aiMenuExpanded, setAiMenuExpanded] = useState(false);
   const [auditMenuExpanded, setAuditMenuExpanded] = useState(false);
@@ -593,6 +595,8 @@ const AdminContent: React.FC<{
   onViewRoleAccounts: (roleId: string) => void;
 }> = ({ section, onViewChat, auditCode, onClearAuditCode, detailCustomerId, onViewCustomerDetail, onBackToCustomerList, onViewAIEmployee, onBackToAIList, filterRoleId, onClearFilterRole, onViewRoleAccounts }) => {
   switch (section) {
+    case 'dashboard':
+      return <DashboardPage />;
     case 'activation-codes':
       return <AdminCenter onViewChat={onViewChat} />;
     case 'proxy-management':
@@ -1123,13 +1127,13 @@ const AIConfigListPage: React.FC<{ onViewEmployee: (id: string) => void }> = ({ 
     addAIEmployee({
       id,
       name: newName || `AI 员工 ${aiEmployees.length + 1}`,
-      language: 'en-US',
+      language: 'zh',
       personaTemplate: 'sales',
       status: 'online',
       timezone: 'Asia/Shanghai',
-      workStartTime: '09:00',
-      workEndTime: '18:00',
-      workDays: [1, 2, 3, 4, 5],
+      workStartTime: '00:00',
+      workEndTime: '23:59',
+      workDays: [1, 2, 3, 4, 5, 6, 0],
       activePlatforms: [newPlatform],
       platformCapabilities: [
         { platformId: newPlatform, aiSalesChat: true, aiProactiveMarketing: false, aiRecall: false, aiQualityCheck: false },
@@ -1581,7 +1585,7 @@ const AIConfigDetailPage: React.FC<{
               <div>
                 <label className="text-xs text-gray-500 mb-1.5 block">首选回复语言</label>
                 <select
-                  value={aiConfig.language || 'en'}
+                  value={aiConfig.language || 'zh'}
                   onChange={(e) => updateAIEmployeeConfig({ language: e.target.value })}
                   className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]"
                 >
@@ -1642,17 +1646,17 @@ const AIConfigDetailPage: React.FC<{
                   onChange={(e) => updateAIEmployeeConfig({ timezone: e.target.value })}
                   className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]"
                 >
-                  <option value="GMT-05:00">GMT-05:00 (New York)</option>
-                  <option value="GMT-08:00">GMT-08:00 (Los Angeles)</option>
-                  <option value="GMT+00:00">GMT+00:00 (London)</option>
-                  <option value="GMT+01:00">GMT+01:00 (Paris)</option>
                   <option value="GMT+08:00">GMT+08:00 (Beijing)</option>
                   <option value="GMT+09:00">GMT+09:00 (Tokyo)</option>
                   <option value="GMT+09:30">GMT+09:30 (Seoul)</option>
                   <option value="GMT+07:00">GMT+07:00 (Bangkok)</option>
                   <option value="GMT+05:30">GMT+05:30 (Mumbai)</option>
                   <option value="GMT+03:00">GMT+03:00 (Moscow)</option>
+                  <option value="GMT+01:00">GMT+01:00 (Paris)</option>
+                  <option value="GMT+00:00">GMT+00:00 (London)</option>
                   <option value="GMT-03:00">GMT-03:00 (Sao Paulo)</option>
+                  <option value="GMT-05:00">GMT-05:00 (New York)</option>
+                  <option value="GMT-08:00">GMT-08:00 (Los Angeles)</option>
                 </select>
                 <p className="text-[10px] text-gray-400 mt-1.5">根据目标客户所在区域选择，避免半夜骚扰</p>
               </div>

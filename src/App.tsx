@@ -1609,14 +1609,44 @@ function CustomersView() {
                   <td className="px-4 py-4">
                     <span className="text-sm text-gray-900">{customer.country || '-'}</span>
                   </td>
-                  <td className="px-4 py-4 text-sm text-gray-600">-</td>
                   <td className="px-4 py-4">
-                    <div className="flex flex-wrap gap-1">
-                      {customer.tags?.slice(0, 2).map((tag, i) => (
-                        <span key={i} className="px-2 py-0.5 text-xs bg-[#FF6B35]/10 text-[#FF6B35] rounded">
-                          {tag}
-                        </span>
-                      ))}
+                    <span className="text-sm font-medium text-gray-900">{customer.nicknameRemark || customer.name}</span>
+                  </td>
+                  <td className="px-4 py-6">
+                    <div className="flex flex-wrap gap-1.5 items-center max-w-xs">
+                      {(() => {
+                        const aiProfileTags = customer.aiProfile ? [
+                          customer.aiProfile.customerLevel,
+                          customer.aiProfile.customerType,
+                          customer.aiProfile.intendedCategory,
+                          customer.aiProfile.budgetRange,
+                          customer.aiProfile.purchaseUrgency,
+                          customer.aiProfile.inquiryStage,
+                          customer.aiProfile.decisionRole,
+                        ].filter(Boolean) : [];
+                        const displayTags = aiProfileTags.length > 0 ? aiProfileTags : (customer.tags || []);
+
+                        return (
+                          <>
+                            {displayTags.slice(0, 6).map((tag, i) => (
+                              <span key={i} className="px-2.5 py-1 text-xs bg-blue-50 text-blue-600 rounded-md font-medium whitespace-nowrap">
+                                {tag}
+                              </span>
+                            ))}
+                            {displayTags.length > 6 && (
+                              <span
+                                className="px-2.5 py-1 text-xs bg-gray-100 text-gray-600 rounded-md font-medium cursor-help whitespace-nowrap"
+                                title={displayTags.slice(6).join('、')}
+                              >
+                                +{displayTags.length - 6}
+                              </span>
+                            )}
+                            {displayTags.length === 0 && (
+                              <span className="text-xs text-gray-400">-</span>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                   </td>
                   <td className="px-4 py-4 text-sm text-gray-600">

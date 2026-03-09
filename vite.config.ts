@@ -14,5 +14,6 @@ export default defineConfig({
   },
   server: {
     host: true,
+    allowedHosts: ['ungained-freeman-unpiloted.ngrok-free.dev'],
   },
 });

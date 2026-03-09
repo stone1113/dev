@@ -21,6 +21,7 @@ import {
   UserPlus,
   Edit3,
   Unlink,
+  AlertCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStore } from '@/store/useStore';
@@ -394,10 +395,21 @@ const UnbindAccountModal: React.FC<{
 }> = ({ code, onClose, onConfirm }) => {
   const [selectedAccountIds, setSelectedAccountIds] = useState<string[]>([]);
 
-  const boundAccounts = [
-    { id: '1', username: 'test', name: '测试用户', status: 'active' as const, department: '金牌销售小组', role: '金牌销售主管', createdAt: new Date('2024-01-15') },
-    { id: '2', username: 'user2', name: '张三', status: 'active' as const, department: '国内销售组', role: '销售专员', createdAt: new Date('2024-02-20') },
-  ];
+  console.log('UnbindAccountModal - code:', code);
+  console.log('UnbindAccountModal - assignedTo:', code.assignedTo);
+
+  // 根据激活码的assignedTo字段生成已绑定账号列表
+  const boundAccounts = code.assignedTo ? code.assignedTo.split(',').map((name, index) => ({
+    id: `${code.id}-${index}`,
+    username: name.trim(),
+    name: name.trim(),
+    status: 'active' as const,
+    department: code.departmentName || '-',
+    role: code.role || '客服',
+    createdAt: code.createdAt || new Date()
+  })) : [];
+
+  console.log('UnbindAccountModal - boundAccounts:', boundAccounts);
 
   const toggleAccount = (accountId: string) => {
     setSelectedAccountIds(prev =>
@@ -555,6 +567,59 @@ const DisableConfirmModal: React.FC<{
   );
 };
 
+// 部门冲突提示弹框
+const DepartmentConflictModal: React.FC<{
+  code: ActivationCode;
+  newDeptName: string;
+  onClose: () => void;
+  onConfirm: () => void;
+}> = ({ code, newDeptName, onClose, onConfirm }) => {
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center">
+              <AlertCircle className="w-5 h-5 text-orange-500" />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">部门冲突提示</h3>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+        <div className="px-6 py-4">
+          <p className="text-sm text-gray-600 mb-3">
+            该激活码当前已绑定「{code.departmentName}」部门的员工账号，分配到新部门「{newDeptName}」后：
+          </p>
+          <ol className="space-y-2 text-sm text-gray-600">
+            <li>1、系统将自动解绑原部门的所有员工账号；</li>
+            <li>2、激活码将分配到新部门「{newDeptName}」；</li>
+            <li>3、需要重新为该激活码分配新部门的员工账号。</li>
+          </ol>
+        </div>
+        <div className="px-6 py-4 border-t border-gray-200 flex justify-end gap-3">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-sm text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            取消
+          </button>
+          <button
+            onClick={() => {
+              onConfirm();
+              onClose();
+            }}
+            className="px-4 py-2 text-sm font-medium bg-[#FF6B35] text-white rounded-lg hover:bg-[#E85A2A] transition-colors"
+          >
+            确认分配
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // 激活码行内联操作按钮
 const CodeActionButtons: React.FC<{
   code: ActivationCode;
@@ -564,46 +629,65 @@ const CodeActionButtons: React.FC<{
   onAssignAccount: (code: ActivationCode) => void;
   onUnbind: (code: ActivationCode) => void;
   onDisableConfirm: (code: ActivationCode) => void;
-}> = ({ code, onToggle, onEdit, onAssignDept, onAssignAccount, onUnbind, onDisableConfirm }) => (
-  <div className="flex items-center gap-1">
-    <button
-      onClick={() => onAssignDept(code)}
-      className="inline-flex items-center gap-1 px-2 py-1 text-xs text-[#FF6B35] hover:bg-[#FF6B35]/10 rounded-md transition-colors whitespace-nowrap"
-      title="分配部门"
-    >
-      <FolderTree className="w-3.5 h-3.5" />
-      分配部门
-    </button>
-    <button
-      onClick={() => onAssignAccount(code)}
-      className="inline-flex items-center gap-1 px-2 py-1 text-xs text-[#FF6B35] hover:bg-[#FF6B35]/10 rounded-md transition-colors whitespace-nowrap"
-      title="分配账号"
-    >
-      <UserPlus className="w-3.5 h-3.5" />
-      分配账号
-    </button>
-    <button
-      onClick={() => onEdit(code)}
-      className="inline-flex items-center gap-1 px-2 py-1 text-xs text-[#FF6B35] hover:bg-[#FF6B35]/10 rounded-md transition-colors whitespace-nowrap"
-      title="编辑"
-    >
-      <Edit3 className="w-3.5 h-3.5" />
-      编辑
-    </button>
-    <button
-      onClick={() => onUnbind(code)}
-      disabled={!code.assignedTo}
-      className={cn(
-        "inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md transition-colors whitespace-nowrap",
-        code.assignedTo
-          ? "text-[#FF6B35] hover:bg-[#FF6B35]/10"
-          : "text-gray-400 cursor-not-allowed"
-      )}
-      title="解绑"
-    >
-      <Unlink className="w-3.5 h-3.5" />
-      解绑
-    </button>
+  onCopy: (code: ActivationCode) => void;
+}> = ({ code, onToggle, onEdit, onAssignDept, onAssignAccount, onUnbind, onDisableConfirm, onCopy }) => {
+  const hasDepartment = !!code.departmentId;
+  const hasAssignedAccounts = !!code.assignedTo;
+
+  return (
+    <div className="flex items-center gap-1">
+      <button
+        onClick={() => onCopy(code)}
+        className="inline-flex items-center gap-1 px-2 py-1 text-xs text-[#FF6B35] hover:bg-[#FF6B35]/10 rounded-md transition-colors whitespace-nowrap"
+        title="复制激活码"
+      >
+        <Key className="w-3.5 h-3.5" />
+        复制
+      </button>
+      <button
+        onClick={() => onAssignDept(code)}
+        className="inline-flex items-center gap-1 px-2 py-1 text-xs text-[#FF6B35] hover:bg-[#FF6B35]/10 rounded-md transition-colors whitespace-nowrap"
+        title="分配部门"
+      >
+        <FolderTree className="w-3.5 h-3.5" />
+        分配部门
+      </button>
+      <button
+        onClick={() => hasDepartment && onAssignAccount(code)}
+        disabled={!hasDepartment}
+        className={cn(
+          "inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md transition-colors whitespace-nowrap",
+          hasDepartment
+            ? "text-[#FF6B35] hover:bg-[#FF6B35]/10 cursor-pointer"
+            : "text-gray-400 cursor-not-allowed opacity-50"
+        )}
+        title={hasDepartment ? "分配账号" : "请先分配部门"}
+      >
+        <UserPlus className="w-3.5 h-3.5" />
+        分配账号
+      </button>
+      <button
+        onClick={() => onEdit(code)}
+        className="inline-flex items-center gap-1 px-2 py-1 text-xs text-[#FF6B35] hover:bg-[#FF6B35]/10 rounded-md transition-colors whitespace-nowrap"
+        title="编辑"
+      >
+        <Edit3 className="w-3.5 h-3.5" />
+        编辑
+      </button>
+      <button
+        onClick={() => hasAssignedAccounts && onUnbind(code)}
+        disabled={!hasAssignedAccounts}
+        className={cn(
+          "inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md transition-colors whitespace-nowrap",
+          hasAssignedAccounts
+            ? "text-[#FF6B35] hover:bg-[#FF6B35]/10 cursor-pointer"
+            : "text-gray-400 cursor-not-allowed opacity-50"
+        )}
+        title={hasAssignedAccounts ? "解绑" : "暂无已分配账号"}
+      >
+        <Unlink className="w-3.5 h-3.5" />
+        解绑
+      </button>
     {(code.status === 'active' || code.status === 'disabled') && (
       <button
         onClick={() => {
@@ -624,7 +708,8 @@ const CodeActionButtons: React.FC<{
       </button>
     )}
   </div>
-);
+  );
+};
 
 // AI配额配置弹窗
 const AIQuotaModal: React.FC<{
@@ -768,6 +853,8 @@ export const AdminCenter: React.FC<{ onViewChat?: (code: ActivationCode) => void
   const [unbindingCode, setUnbindingCode] = useState<ActivationCode | null>(null);
   const [showDisableConfirm, setShowDisableConfirm] = useState(false);
   const [disablingCode, setDisablingCode] = useState<ActivationCode | null>(null);
+  const [showDeptConflict, setShowDeptConflict] = useState(false);
+  const [conflictDeptInfo, setConflictDeptInfo] = useState<{ code: ActivationCode; deptId: string; deptName: string } | null>(null);
 
   const organization = useStore((state) => state.organization);
   const departments = useStore((state) => state.departments);
@@ -777,6 +864,9 @@ export const AdminCenter: React.FC<{ onViewChat?: (code: ActivationCode) => void
   const toggleActivationCodeStatus = useStore((state) => state.toggleActivationCodeStatus);
   const updateActivationCode = useStore((state) => state.updateActivationCode);
   const setOrganizationLoginMode = useStore((state) => state.setOrganizationLoginMode);
+
+  const [selectedCodes, setSelectedCodes] = useState<string[]>([]);
+  const [showBatchMenu, setShowBatchMenu] = useState(false);
 
   const deptCodes = getFilteredActivationCodes();
 
@@ -816,17 +906,6 @@ export const AdminCenter: React.FC<{ onViewChat?: (code: ActivationCode) => void
   return (
     <div className="h-full flex flex-col">
       {/* 顶部操作栏 */}
-      <div className="px-6 py-4 flex items-center justify-between flex-shrink-0">
-        <div />
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-[#FF6B35] text-white text-sm font-medium rounded-lg hover:bg-[#E85A2A] transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          生成激活码
-        </button>
-      </div>
-
       <div className="flex-1 px-6 pb-6 min-h-0">
         <div className="flex gap-6 h-full">
           {/* 左侧部门树 + 登录模式 */}
@@ -927,6 +1006,85 @@ export const AdminCenter: React.FC<{ onViewChat?: (code: ActivationCode) => void
                 <Filter className="w-4 h-4" />
                 筛选
               </button>
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="flex items-center gap-1.5 px-3 py-2 text-sm text-white bg-[#FF6B35] hover:bg-[#E85A2A] rounded-lg transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                生成激活码
+              </button>
+              <div className="relative">
+                <button
+                  onClick={() => selectedCodes.length > 0 && setShowBatchMenu(!showBatchMenu)}
+                  disabled={selectedCodes.length === 0}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-2 text-sm rounded-lg transition-colors",
+                    selectedCodes.length > 0
+                      ? "text-white bg-[#FF6B35] hover:bg-[#FF6B35]/90 cursor-pointer"
+                      : "text-gray-400 bg-gray-100 cursor-not-allowed"
+                  )}
+                >
+                  批量操作 {selectedCodes.length > 0 && `(${selectedCodes.length})`}
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+                {showBatchMenu && selectedCodes.length > 0 && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setShowBatchMenu(false)} />
+                      <div className="absolute right-0 top-full mt-1 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-20">
+                        <button
+                          onClick={() => {
+                            const codes = filteredCodes.filter(c => selectedCodes.includes(c.id)).map(c => c.code).join('\n');
+                            navigator.clipboard.writeText(codes);
+                            setShowBatchMenu(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          复制激活码
+                        </button>
+                        <button
+                          onClick={() => {
+                            selectedCodes.forEach(id => toggleActivationCodeStatus(id));
+                            setSelectedCodes([]);
+                            setShowBatchMenu(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          批量启用
+                        </button>
+                        <button
+                          onClick={() => {
+                            selectedCodes.forEach(id => toggleActivationCodeStatus(id));
+                            setSelectedCodes([]);
+                            setShowBatchMenu(false);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          批量停用
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowBatchMenu(false);
+                            setAssigningCode(filteredCodes.find(c => selectedCodes.includes(c.id)) || null);
+                            setShowAssignDeptModal(true);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          分配到部门
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowBatchMenu(false);
+                            setAssigningCodeForAccount(filteredCodes.find(c => selectedCodes.includes(c.id)) || null);
+                            setShowAssignAccountModal(true);
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          分配到账号
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
               {selectedDepartmentId && (
                 <div className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FF6B35]/10 text-[#FF6B35] text-sm rounded-lg">
                   <FolderTree className="w-3.5 h-3.5" />
@@ -950,6 +1108,20 @@ export const AdminCenter: React.FC<{ onViewChat?: (code: ActivationCode) => void
                 <table className="w-full min-w-max">
                   <thead>
                     <tr className="border-b border-gray-200 bg-gray-50/50">
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap w-12">
+                        <input
+                          type="checkbox"
+                          checked={selectedCodes.length === filteredCodes.length && filteredCodes.length > 0}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedCodes(filteredCodes.map(c => c.id));
+                            } else {
+                              setSelectedCodes([]);
+                            }
+                          }}
+                          className="w-4 h-4 text-[#FF6B35] border-gray-300 rounded focus:ring-[#FF6B35]"
+                        />
+                      </th>
                       <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">激活码</th>
                       <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">所属部门</th>
                       <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">使用人</th>
@@ -972,6 +1144,20 @@ export const AdminCenter: React.FC<{ onViewChat?: (code: ActivationCode) => void
                   <tbody>
                     {filteredCodes.map((code) => (
                       <tr key={code.id} className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
+                        <td className="py-3 px-4">
+                          <input
+                            type="checkbox"
+                            checked={selectedCodes.includes(code.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedCodes([...selectedCodes, code.id]);
+                              } else {
+                                setSelectedCodes(selectedCodes.filter(id => id !== code.id));
+                              }
+                            }}
+                            className="w-4 h-4 text-[#FF6B35] border-gray-300 rounded focus:ring-[#FF6B35]"
+                          />
+                        </td>
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-1.5">
                             <Key className="w-3.5 h-3.5 text-[#FF6B35]" />
@@ -1062,6 +1248,19 @@ export const AdminCenter: React.FC<{ onViewChat?: (code: ActivationCode) => void
                             onEdit={(code) => {
                               setEditingCode(code);
                               setShowEditModal(true);
+                            }}
+                            onCopy={(code) => {
+                              // 复制激活码配置，创建新的激活码
+                              const newCode = {
+                                ...code,
+                                id: `code-${Date.now()}`,
+                                code: `COPY-${code.code}`,
+                                status: 'active' as const,
+                                assignedTo: undefined,
+                                createdAt: new Date().toISOString(),
+                              };
+                              // TODO: 调用 store 的添加激活码方法
+                              console.log('复制激活码:', newCode);
                             }}
                             onAssignDept={(code) => {
                               setAssigningCode(code);
@@ -1160,13 +1359,30 @@ export const AdminCenter: React.FC<{ onViewChat?: (code: ActivationCode) => void
             };
             const dept = findDept(departments, deptId);
             if (dept) {
-              updateActivationCode(assigningCode.id, {
-                departmentId: dept.id,
-                departmentName: dept.name
-              });
+              // 检查是否有冲突：已有部门、已分配账号、且要分配到不同部门
+              const hasConflict = assigningCode.departmentId &&
+                                  assigningCode.assignedTo &&
+                                  deptId !== assigningCode.departmentId;
+
+              if (hasConflict) {
+                // 显示冲突提示
+                setConflictDeptInfo({
+                  code: assigningCode,
+                  deptId: dept.id,
+                  deptName: dept.name
+                });
+                setShowDeptConflict(true);
+                setShowAssignDeptModal(false);
+              } else {
+                // 直接分配
+                updateActivationCode(assigningCode.id, {
+                  departmentId: dept.id,
+                  departmentName: dept.name
+                });
+                setShowAssignDeptModal(false);
+                setAssigningCode(null);
+              }
             }
-            setShowAssignDeptModal(false);
-            setAssigningCode(null);
           }}
         />
       )}
@@ -1218,6 +1434,30 @@ export const AdminCenter: React.FC<{ onViewChat?: (code: ActivationCode) => void
             toggleActivationCodeStatus(disablingCode.id);
             setShowDisableConfirm(false);
             setDisablingCode(null);
+          }}
+        />
+      )}
+
+      {/* 部门冲突提示弹框 */}
+      {showDeptConflict && conflictDeptInfo && (
+        <DepartmentConflictModal
+          code={conflictDeptInfo.code}
+          newDeptName={conflictDeptInfo.deptName}
+          onClose={() => {
+            setShowDeptConflict(false);
+            setConflictDeptInfo(null);
+            setAssigningCode(null);
+          }}
+          onConfirm={() => {
+            // 执行部门分配（实际应该还要解绑账号，但这需要后端支持）
+            updateActivationCode(conflictDeptInfo.code.id, {
+              departmentId: conflictDeptInfo.deptId,
+              departmentName: conflictDeptInfo.deptName,
+              assignedTo: '' // 清空已分配账号
+            });
+            setShowDeptConflict(false);
+            setConflictDeptInfo(null);
+            setAssigningCode(null);
           }}
         />
       )}

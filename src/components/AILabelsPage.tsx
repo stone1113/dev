@@ -37,6 +37,10 @@ export const AILabelsPage: React.FC = () => {
   const [showAddGroup, setShowAddGroup] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupColor, setNewGroupColor] = useState('#FF6B35');
+  const [showAddDimension, setShowAddDimension] = useState(false);
+  const [newDimensionName, setNewDimensionName] = useState('');
+  const [newDimensionColor, setNewDimensionColor] = useState('#FF6B35');
+  const [newDimensionGroupId, setNewDimensionGroupId] = useState<string>('');
 
   const childrenMap = useMemo(() => {
     const map: Record<string, AILabel[]> = {};
@@ -167,6 +171,24 @@ export const AILabelsPage: React.FC = () => {
     setShowAddGroup(false);
   };
 
+  const handleAddDimension = () => {
+    if (!newDimensionName.trim() || !newDimensionGroupId) return;
+    const siblings = dimensionNodes.filter((d) => d.groupId === newDimensionGroupId);
+    const maxOrder = Math.max(0, ...siblings.map((s) => s.order ?? 0));
+    addAILabel({
+      id: `dim_${Date.now()}`,
+      groupId: newDimensionGroupId,
+      parentId: null,
+      level: 2,
+      name: newDimensionName.trim(),
+      color: newDimensionColor,
+      order: maxOrder + 1,
+    });
+    setNewDimensionName('');
+    setNewDimensionGroupId('');
+    setShowAddDimension(false);
+  };
+
   const visibleDimensions = useMemo(() => {
     const dims = selectedIndustryId
       ? dimensionNodes.filter((d) => d.groupId === selectedIndustryId)
@@ -207,6 +229,16 @@ export const AILabelsPage: React.FC = () => {
                   className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/30 focus:border-[#FF6B35]"
                 />
               </div>
+              <button
+                onClick={() => {
+                  setNewDimensionGroupId(selectedIndustryId || '');
+                  setShowAddDimension(true);
+                }}
+                className="flex items-center gap-1.5 px-3 py-2 text-sm text-[#FF6B35] border border-[#FF6B35] rounded-lg hover:bg-[#FF6B35]/5 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                添加维度
+              </button>
               <span className="ml-auto text-xs text-gray-500">
                 共 {filteredFieldIds ? filteredFieldIds.size : fieldNodes.length} 个字段
               </span>
@@ -245,6 +277,20 @@ export const AILabelsPage: React.FC = () => {
           onColorChange={setNewGroupColor}
           onSave={handleAddGroup}
           onClose={() => setShowAddGroup(false)}
+        />
+      )}
+
+      {showAddDimension && (
+        <AddDimensionModal
+          name={newDimensionName}
+          color={newDimensionColor}
+          groupId={newDimensionGroupId}
+          industries={aiLabelGroups}
+          onNameChange={setNewDimensionName}
+          onColorChange={setNewDimensionColor}
+          onGroupIdChange={setNewDimensionGroupId}
+          onSave={handleAddDimension}
+          onClose={() => setShowAddDimension(false)}
         />
       )}
     </div>
@@ -663,6 +709,92 @@ export const AddGroupModal: React.FC<{
             placeholder="请输入行业名称"
             className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/30 focus:border-[#FF6B35] transition-colors"
             autoFocus
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">颜色</label>
+          <div className="flex flex-wrap gap-2">
+            {PRESET_COLORS.map((c) => (
+              <button
+                key={c}
+                onClick={() => onColorChange(c)}
+                className={cn(
+                  'w-7 h-7 rounded-full border-2 transition-all',
+                  color === c ? 'border-gray-800 scale-110' : 'border-transparent hover:scale-105'
+                )}
+                style={{ backgroundColor: c }}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+        <button
+          onClick={onClose}
+          className="px-4 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          取消
+        </button>
+        <button
+          onClick={onSave}
+          disabled={!name.trim()}
+          className={cn(
+            'px-4 py-2 text-sm font-medium rounded-lg transition-colors',
+            name.trim()
+              ? 'bg-[#FF6B35] text-white hover:bg-[#E85A2A]'
+              : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+          )}
+        >
+          保存
+        </button>
+      </div>
+    </div>
+  </div>
+);
+
+// ============ AddDimensionModal ============
+export const AddDimensionModal: React.FC<{
+  name: string;
+  color: string;
+  groupId: string;
+  industries: AILabelGroup[];
+  onNameChange: (v: string) => void;
+  onColorChange: (v: string) => void;
+  onGroupIdChange: (v: string) => void;
+  onSave: () => void;
+  onClose: () => void;
+}> = ({ name, color, groupId, industries, onNameChange, onColorChange, onGroupIdChange, onSave, onClose }) => (
+  <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+    <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 overflow-hidden">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <h2 className="text-lg font-semibold text-gray-900">新增维度</h2>
+        <button onClick={onClose} className="p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+      <div className="px-6 py-5 space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">所属行业</label>
+          <select
+            value={groupId}
+            onChange={(e) => onGroupIdChange(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/30 focus:border-[#FF6B35] transition-colors"
+          >
+            <option value="">系统默认</option>
+            {industries.map((ind) => (
+              <option key={ind.id} value={ind.id}>{ind.name}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">维度名称</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => onNameChange(e.target.value)}
+            placeholder="请输入维度名称（如：用户画像、交易属性）"
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/30 focus:border-[#FF6B35] transition-colors"
           />
         </div>
         <div>
