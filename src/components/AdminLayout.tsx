@@ -1852,6 +1852,11 @@ const AdminCustomerListPage: React.FC<{ onViewDetail: (customerId: string) => vo
   const [recordDateRange, setRecordDateRange] = useState('');
   const [tagFilter, setTagFilter] = useState<Record<string, string[]>>({});
   const [showTagSidebar, setShowTagSidebar] = useState(false);
+  const [showCodeDropdown, setShowCodeDropdown] = useState(false);
+  const [showPlatformDropdown, setShowPlatformDropdown] = useState(false);
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false);
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const [showActivityDropdown, setShowActivityDropdown] = useState(false);
 
   const customers = useMemo(() => {
     const seen = new Set<string>();
@@ -2020,57 +2025,101 @@ const AdminCustomerListPage: React.FC<{ onViewDetail: (customerId: string) => vo
       <div className="px-6 py-3 bg-white border-b border-gray-100 space-y-3">
         {/* 第一行筛选 */}
         <div className="grid grid-cols-5 gap-3">
-          <div>
+          <div className="relative">
             <label className="text-[11px] text-gray-400 mb-1 block">激活码</label>
-            <select value={codeFilter} onChange={(e) => setCodeFilter(e.target.value)} className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]">
-              <option value="all">全部激活码</option>
-              {activationCodes.map(ac => (
-                <option key={ac.id} value={ac.code}>{ac.code}{ac.remark ? ` (${ac.remark})` : ''}</option>
-              ))}
-            </select>
+            <button
+              onClick={() => setShowCodeDropdown(!showCodeDropdown)}
+              className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] text-left flex items-center justify-between hover:border-[#FF6B35] transition-colors"
+            >
+              <span>{codeFilter === 'all' ? '全部激活码' : activationCodes.find(ac => ac.code === codeFilter)?.code + (activationCodes.find(ac => ac.code === codeFilter)?.remark ? ` (${activationCodes.find(ac => ac.code === codeFilter)?.remark})` : '')}</span>
+              <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            {showCodeDropdown && (
+              <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                <div onClick={() => { setCodeFilter('all'); setShowCodeDropdown(false); }} className="px-2.5 py-1.5 text-sm text-[#666] hover:bg-[#FFF7F3] cursor-pointer">全部激活码</div>
+                {activationCodes.map(ac => (
+                  <div key={ac.id} onClick={() => { setCodeFilter(ac.code); setShowCodeDropdown(false); }} className={`px-2.5 py-1.5 text-sm cursor-pointer transition-colors ${codeFilter === ac.code ? 'bg-[#FF6B35] text-white' : 'text-[#666] hover:bg-[#FFF7F3]'}`}>{ac.code}{ac.remark ? ` (${ac.remark})` : ''}</div>
+                ))}
+              </div>
+            )}
           </div>
-          <div>
+          <div className="relative">
             <label className="text-[11px] text-gray-400 mb-1 block">社交平台</label>
-            <select value={platformFilter} onChange={(e) => setPlatformFilter(e.target.value)} className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]">
-              <option value="all">全部平台</option>
-              {platformConfigs.map(p => (
-                <option key={p.id} value={p.id}>{p.name}</option>
-              ))}
-            </select>
+            <button
+              onClick={() => setShowPlatformDropdown(!showPlatformDropdown)}
+              className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] text-left flex items-center justify-between hover:border-[#FF6B35] transition-colors"
+            >
+              <span>{platformFilter === 'all' ? '全部平台' : platformConfigs.find(p => p.id === platformFilter)?.name}</span>
+              <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            {showPlatformDropdown && (
+              <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                <div onClick={() => { setPlatformFilter('all'); setShowPlatformDropdown(false); }} className="px-2.5 py-1.5 text-sm text-[#666] hover:bg-[#FFF7F3] cursor-pointer">全部平台</div>
+                {platformConfigs.map(p => (
+                  <div key={p.id} onClick={() => { setPlatformFilter(p.id); setShowPlatformDropdown(false); }} className={`px-2.5 py-1.5 text-sm cursor-pointer transition-colors ${platformFilter === p.id ? 'bg-[#FF6B35] text-white' : 'text-[#666] hover:bg-[#FFF7F3]'}`}>{p.name}</div>
+                ))}
+              </div>
+            )}
           </div>
-          <div>
+          <div className="relative">
             <label className="text-[11px] text-gray-400 mb-1 block">国家</label>
-            <select value={countryFilter} onChange={(e) => setCountryFilter(e.target.value)} className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]">
-              <option value="all">全部国家</option>
-              {allCountries.map(c => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
+            <button
+              onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+              className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] text-left flex items-center justify-between hover:border-[#FF6B35] transition-colors"
+            >
+              <span>{countryFilter === 'all' ? '全部国家' : countryFilter}</span>
+              <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            {showCountryDropdown && (
+              <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                <div onClick={() => { setCountryFilter('all'); setShowCountryDropdown(false); }} className="px-2.5 py-1.5 text-sm text-[#666] hover:bg-[#FFF7F3] cursor-pointer">全部国家</div>
+                {allCountries.map(c => (
+                  <div key={c} onClick={() => { setCountryFilter(c); setShowCountryDropdown(false); }} className={`px-2.5 py-1.5 text-sm cursor-pointer transition-colors ${countryFilter === c ? 'bg-[#FF6B35] text-white' : 'text-[#666] hover:bg-[#FFF7F3]'}`}>{c}</div>
+                ))}
+              </div>
+            )}
           </div>
           <div>
             <label className="text-[11px] text-gray-400 mb-1 block">社交账号昵称</label>
             <input type="text" placeholder="请输入" value={accountFilter} onChange={(e) => setAccountFilter(e.target.value)} className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]" />
           </div>
-          <div>
+          <div className="relative">
             <label className="text-[11px] text-gray-400 mb-1 block">客户状态</label>
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]">
-              <option value="all">全部状态</option>
-              {Object.entries(CUSTOMER_STATUS_MAP).map(([k, v]) => (
-                <option key={k} value={k}>{v.label}</option>
-              ))}
-            </select>
+            <button
+              onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+              className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] text-left flex items-center justify-between hover:border-[#FF6B35] transition-colors"
+            >
+              <span>{statusFilter === 'all' ? '全部状态' : CUSTOMER_STATUS_MAP[statusFilter]?.label}</span>
+              <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            {showStatusDropdown && (
+              <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                <div onClick={() => { setStatusFilter('all'); setShowStatusDropdown(false); }} className="px-2.5 py-1.5 text-sm text-[#666] hover:bg-[#FFF7F3] cursor-pointer">全部状态</div>
+                {Object.entries(CUSTOMER_STATUS_MAP).map(([k, v]) => (
+                  <div key={k} onClick={() => { setStatusFilter(k); setShowStatusDropdown(false); }} className={`px-2.5 py-1.5 text-sm cursor-pointer transition-colors ${statusFilter === k ? 'bg-[#FF6B35] text-white' : 'text-[#666] hover:bg-[#FFF7F3]'}`}>{v.label}</div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         {/* 第二行筛选 */}
         <div className="grid grid-cols-5 gap-3">
-          <div>
+          <div className="relative">
             <label className="text-[11px] text-gray-400 mb-1 block">活跃度</label>
-            <select value={activityFilter} onChange={(e) => setActivityFilter(e.target.value)} className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]">
-              <option value="all">全部</option>
-              <option value="高">高</option>
-              <option value="中">中</option>
-              <option value="低">低</option>
-            </select>
+            <button
+              onClick={() => setShowActivityDropdown(!showActivityDropdown)}
+              className="w-full px-2.5 py-1.5 text-sm border border-gray-200 rounded-lg bg-white text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] text-left flex items-center justify-between hover:border-[#FF6B35] transition-colors"
+            >
+              <span>{activityFilter === 'all' ? '全部' : activityFilter}</span>
+              <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
+            </button>
+            {showActivityDropdown && (
+              <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg">
+                {['all', '高', '中', '低'].map(a => (
+                  <div key={a} onClick={() => { setActivityFilter(a); setShowActivityDropdown(false); }} className={`px-2.5 py-1.5 text-sm cursor-pointer transition-colors ${activityFilter === a ? 'bg-[#FF6B35] text-white' : 'text-[#666] hover:bg-[#FFF7F3]'}`}>{a === 'all' ? '全部' : a}</div>
+                ))}
+              </div>
+            )}
           </div>
           <div>
             <label className="text-[11px] text-gray-400 mb-1 block">昵称备注</label>
