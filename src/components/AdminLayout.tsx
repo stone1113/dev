@@ -2739,61 +2739,94 @@ const TicketFilterBar: React.FC<{
   onStatusChange: (v: PlatformTicketStatus | 'all') => void;
   allCodes: { code: string; remark: string }[];
   onReset: () => void;
-}> = ({ platformFilter, onPlatformChange, codeFilter, onCodeChange, statusFilter, onStatusChange, allCodes, onReset }) => (
-  <div className="px-6 py-3 flex items-center gap-4 border-b border-gray-100 flex-shrink-0 bg-white">
-    <div className="flex items-center gap-2">
-      <span className="text-xs text-gray-500 whitespace-nowrap">工单平台</span>
-      <select
-        value={platformFilter}
-        onChange={(e) => onPlatformChange(e.target.value)}
-        className="px-3 py-1.5 text-sm border border-gray-200 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-[#FF6B35]/30 focus:border-[#FF6B35] min-w-[140px]"
-      >
-        <option value="all">全部</option>
-        {platformConfigs.map(p => (
-          <option key={p.id} value={p.id}>{p.name}</option>
-        ))}
-      </select>
+}> = ({ platformFilter, onPlatformChange, codeFilter, onCodeChange, statusFilter, onStatusChange, allCodes, onReset }) => {
+  const [showPlatformDropdown, setShowPlatformDropdown] = useState(false);
+  const [showCodeDropdown, setShowCodeDropdown] = useState(false);
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+
+  const getPlatformLabel = () => {
+    if (platformFilter === 'all') return '全部';
+    const p = platformConfigs.find(pc => pc.id === platformFilter);
+    return p ? p.name : '全部';
+  };
+
+  const getCodeLabel = () => {
+    if (codeFilter === 'all') return '全部';
+    const c = allCodes.find(ac => ac.code === codeFilter);
+    return c ? `${c.code}(${c.remark})` : '全部';
+  };
+
+  const getStatusLabel = () => {
+    const statusMap = { all: '全部', normal: '正常', abnormal: '异常', offline: '离线' };
+    return statusMap[statusFilter] || '全部';
+  };
+
+  return (
+    <div className="px-6 py-3 flex items-center gap-4 border-b border-gray-100 flex-shrink-0 bg-white">
+      <div className="flex items-center gap-2 relative">
+        <span className="text-xs text-gray-500 whitespace-nowrap">工单平台</span>
+        <button
+          onClick={() => setShowPlatformDropdown(!showPlatformDropdown)}
+          className="px-3 py-1.5 text-sm border border-gray-200 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-[#FF6B35]/30 focus:border-[#FF6B35] min-w-[140px] text-left flex items-center justify-between hover:border-[#FF6B35] transition-colors"
+        >
+          <span className="text-gray-700">{getPlatformLabel()}</span>
+          <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        {showPlatformDropdown && (
+          <div className="absolute z-50 mt-1 top-full left-20 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto min-w-[140px]">
+            <div onClick={() => { onPlatformChange('all'); setShowPlatformDropdown(false); }} className="px-3 py-2 text-sm text-[#666] hover:bg-[#FFF7F3] cursor-pointer">全部</div>
+            {platformConfigs.map(p => (
+              <div key={p.id} onClick={() => { onPlatformChange(p.id); setShowPlatformDropdown(false); }} className={`px-3 py-2 text-sm cursor-pointer transition-colors ${platformFilter === p.id ? 'bg-[#FF6B35] text-white' : 'text-[#666] hover:bg-[#FFF7F3]'}`}>{p.name}</div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="flex items-center gap-2 relative">
+        <span className="text-xs text-gray-500 whitespace-nowrap">激活码(备注)</span>
+        <button
+          onClick={() => setShowCodeDropdown(!showCodeDropdown)}
+          className="px-3 py-1.5 text-sm border border-gray-200 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-[#FF6B35]/30 focus:border-[#FF6B35] min-w-[140px] text-left flex items-center justify-between hover:border-[#FF6B35] transition-colors"
+        >
+          <span className="text-gray-700">{getCodeLabel()}</span>
+          <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        {showCodeDropdown && (
+          <div className="absolute z-50 mt-1 top-full left-28 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto min-w-[200px]">
+            <div onClick={() => { onCodeChange('all'); setShowCodeDropdown(false); }} className="px-3 py-2 text-sm text-[#666] hover:bg-[#FFF7F3] cursor-pointer">全部</div>
+            {allCodes.map(c => (
+              <div key={c.code} onClick={() => { onCodeChange(c.code); setShowCodeDropdown(false); }} className={`px-3 py-2 text-sm cursor-pointer transition-colors ${codeFilter === c.code ? 'bg-[#FF6B35] text-white' : 'text-[#666] hover:bg-[#FFF7F3]'}`}>{c.code}({c.remark})</div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="flex items-center gap-2 relative">
+        <span className="text-xs text-gray-500 whitespace-nowrap">工单状态</span>
+        <button
+          onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+          className="px-3 py-1.5 text-sm border border-gray-200 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-[#FF6B35]/30 focus:border-[#FF6B35] min-w-[100px] text-left flex items-center justify-between hover:border-[#FF6B35] transition-colors"
+        >
+          <span className="text-gray-700">{getStatusLabel()}</span>
+          <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        {showStatusDropdown && (
+          <div className="absolute z-50 mt-1 top-full left-20 bg-white border border-gray-200 rounded-lg shadow-lg min-w-[100px]">
+            {[{ value: 'all', label: '全部' }, { value: 'normal', label: '正常' }, { value: 'abnormal', label: '异常' }, { value: 'offline', label: '离线' }].map(s => (
+              <div key={s.value} onClick={() => { onStatusChange(s.value as any); setShowStatusDropdown(false); }} className={`px-3 py-2 text-sm cursor-pointer transition-colors ${statusFilter === s.value ? 'bg-[#FF6B35] text-white' : 'text-[#666] hover:bg-[#FFF7F3]'}`}>{s.label}</div>
+            ))}
+          </div>
+        )}
+      </div>
+      <button onClick={() => {}} className="px-4 py-1.5 text-sm font-medium text-white bg-[#FF6B35] rounded-md hover:bg-[#E85A2A] transition-colors">查询</button>
+      <button onClick={onReset} className="px-4 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">重置</button>
     </div>
-    <div className="flex items-center gap-2">
-      <span className="text-xs text-gray-500 whitespace-nowrap">激活码(备注)</span>
-      <select
-        value={codeFilter}
-        onChange={(e) => onCodeChange(e.target.value)}
-        className="px-3 py-1.5 text-sm border border-gray-200 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-[#FF6B35]/30 focus:border-[#FF6B35] min-w-[140px]"
-      >
-        <option value="all">全部</option>
-        {allCodes.map(c => (
-          <option key={c.code} value={c.code}>{c.code}({c.remark})</option>
-        ))}
-      </select>
-    </div>
-    <div className="flex items-center gap-2">
-      <span className="text-xs text-gray-500 whitespace-nowrap">工单状态</span>
-      <select
-        value={statusFilter}
-        onChange={(e) => onStatusChange(e.target.value as PlatformTicketStatus | 'all')}
-        className="px-3 py-1.5 text-sm border border-gray-200 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-[#FF6B35]/30 focus:border-[#FF6B35] min-w-[100px]"
-      >
-        <option value="all">全部</option>
-        <option value="normal">正常</option>
-        <option value="abnormal">异常</option>
-        <option value="offline">离线</option>
-      </select>
-    </div>
-    <button
-      onClick={() => {}}
-      className="px-4 py-1.5 text-sm font-medium text-white bg-[#FF6B35] rounded-md hover:bg-[#E85A2A] transition-colors"
-    >
-      查询
-    </button>
-    <button
-      onClick={onReset}
-      className="px-4 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors"
-    >
-      重置
-    </button>
-  </div>
-);
+  );
+};
 
 // 工单分组侧边栏
 const TicketGroupSidebar: React.FC<{

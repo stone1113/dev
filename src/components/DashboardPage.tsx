@@ -19,7 +19,10 @@ export const DashboardPage: React.FC = () => {
   const activationCodes = useStore((s) => s.activationCodes);
   const topCodes = activationCodes.slice(0, 5);
   const [selectedPlatform, setSelectedPlatform] = useState('全部平台');
+  const [showPlatformDropdown, setShowPlatformDropdown] = useState(false);
   const [selectedTimeRange, setSelectedTimeRange] = useState('今日');
+
+  const platforms = ['全部平台', 'WhatsApp', 'Telegram', 'Line', 'Instagram', 'Facebook', 'WeChat', 'Email', 'SMS', 'TikTok', 'Twitter', 'Shopify'];
 
   return (
     <div className="h-full overflow-y-auto bg-[#F7F8FA]">
@@ -86,24 +89,32 @@ export const DashboardPage: React.FC = () => {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-base font-semibold text-[#1A1A1A]">AI 员工今日数据</h2>
             <div className="flex items-center gap-2">
-              <select
-                value={selectedPlatform}
-                onChange={(e) => setSelectedPlatform(e.target.value)}
-                className="text-xs text-[#666] bg-white border border-[#E8E8E8] rounded-md px-3 py-1.5 pr-8 cursor-pointer hover:border-[#FF6B35] transition-colors appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2212%22%20height%3D%2212%22%20viewBox%3D%220%200%2012%2012%22%3E%3Cpath%20fill%3D%22%23999%22%20d%3D%22M10.293%203.293L6%207.586%201.707%203.293A1%201%200%2000.293%204.707l5%205a1%201%200%20001.414%200l5-5a1%201%200%2010-1.414-1.414z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px] bg-[right_8px_center] bg-no-repeat"
-              >
-                <option>全部平台</option>
-                <option>WhatsApp</option>
-                <option>Telegram</option>
-                <option>Line</option>
-                <option>Instagram</option>
-                <option>Facebook</option>
-                <option>WeChat</option>
-                <option>Email</option>
-                <option>SMS</option>
-                <option>TikTok</option>
-                <option>Twitter</option>
-                <option>Shopify</option>
-              </select>
+              <div className="relative">
+                <button
+                  onClick={() => setShowPlatformDropdown(!showPlatformDropdown)}
+                  className="text-xs text-[#666] bg-white border border-[#E8E8E8] rounded-md px-3 py-1.5 pr-8 cursor-pointer hover:border-[#FF6B35] transition-colors flex items-center gap-2"
+                >
+                  {selectedPlatform}
+                  <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {showPlatformDropdown && (
+                  <div className="absolute z-50 mt-1 right-0 bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto min-w-[120px]">
+                    {platforms.map((platform) => (
+                      <div
+                        key={platform}
+                        onClick={() => { setSelectedPlatform(platform); setShowPlatformDropdown(false); }}
+                        className={`px-3 py-2 text-xs cursor-pointer transition-colors ${
+                          selectedPlatform === platform ? 'bg-[#FF6B35] text-white' : 'text-[#666] hover:bg-[#FFF7F3]'
+                        }`}
+                      >
+                        {platform}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
               <div className="flex items-center bg-[#F2F2F2] rounded-md border border-[#E8E8E8] p-0.5">
                 {['今日', '本周', '本月'].map((range) => (
                   <button

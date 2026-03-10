@@ -427,29 +427,32 @@ select:focus {
 
 select option {
   background-color: white !important;
+  background: white !important;
   color: #333 !important;
   padding: 8px 12px;
+  font-weight: normal !important;
 }
 
-select option:checked {
+select option:checked,
+select option[selected],
+select option:focus,
+select option:active,
+select option[aria-selected="true"] {
   background: #FF6B35 !important;
+  background-color: #FF6B35 !important;
   color: white !important;
+  font-weight: normal !important;
 }
 
-select option:hover,
-select option:focus {
+select option:hover {
   background: #FFF7F3 !important;
   background-color: #FFF7F3 !important;
   color: #333 !important;
-}
-
-/* 强制覆盖浏览器默认样式 */
-select option:hover {
   background-image: none !important;
   box-shadow: none !important;
 }
 
-/* 移除所有蓝色高亮 */
+/* 移除所有浏览器默认高亮 */
 select::-ms-expand {
   display: none;
 }

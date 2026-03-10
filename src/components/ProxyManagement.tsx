@@ -281,11 +281,25 @@ export const ProxyManagement: React.FC = () => {
   const [proxies] = useState<ProxyConfig[]>(mockProxies);
   const [searchName, setSearchName] = useState('');
   const [selectedCode, setSelectedCode] = useState('all');
+  const [showCodeDropdown, setShowCodeDropdown] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingProxy, setEditingProxy] = useState<ProxyConfig | null>(null);
+
+  const mockActivationCodes = [
+    { id: 'ac_001', code: 'QXMS-SA01-2024', remark: '张三' },
+    { id: 'ac_002', code: 'QXMS-SA02-2024', remark: '李四' },
+    { id: 'ac_003', code: 'QXMS-SO01-2024', remark: 'David' },
+    { id: 'ac_004', code: 'QXMS-CP01-2024', remark: '小美' },
+  ];
+
+  const getSelectedCodeLabel = () => {
+    if (selectedCode === 'all') return '全部';
+    const ac = mockActivationCodes.find(a => a.id === selectedCode);
+    return ac ? `${ac.code} (${ac.remark})` : '全部';
+  };
 
   const toggleSelect = (id: string) => {
     setSelectedIds(prev =>
@@ -346,17 +360,41 @@ export const ProxyManagement: React.FC = () => {
 
       <div className="px-6 py-4 bg-white border-b border-gray-200">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 relative">
             <span className="text-sm text-gray-600 whitespace-nowrap">激活码（备注）</span>
-            <select
-              value={selectedCode}
-              onChange={(e) => setSelectedCode(e.target.value)}
-              className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/30 focus:border-[#FF6B35]"
-            >
-              <option value="all">全部</option>
-              <option value="dept">部分激活码</option>
-              <option value="all-codes">全部激活码</option>
-            </select>
+            <div className="relative">
+              <button
+                onClick={() => setShowCodeDropdown(!showCodeDropdown)}
+                className="px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/30 focus:border-[#FF6B35] bg-white hover:border-[#FF6B35] transition-colors min-w-[200px] text-left flex items-center justify-between"
+              >
+                <span className="text-gray-700">{getSelectedCodeLabel()}</span>
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              {showCodeDropdown && (
+                <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-64 overflow-y-auto">
+                  <div
+                    onClick={() => { setSelectedCode('all'); setShowCodeDropdown(false); }}
+                    className="px-3 py-2 text-sm text-gray-700 hover:bg-[#FFF7F3] cursor-pointer"
+                  >
+                    全部
+                  </div>
+                  {mockActivationCodes.map((ac) => (
+                    <div
+                      key={ac.id}
+                      onClick={() => { setSelectedCode(ac.id); setShowCodeDropdown(false); }}
+                      className={cn(
+                        "px-3 py-2 text-sm cursor-pointer",
+                        selectedCode === ac.id ? "bg-[#FF6B35] text-white" : "text-gray-700 hover:bg-[#FFF7F3]"
+                      )}
+                    >
+                      {ac.code} ({ac.remark})
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-600 whitespace-nowrap">代理名称</span>
