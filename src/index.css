@@ -414,3 +414,52 @@ input[type='radio']:checked::after {
   border-radius: 50%;
   background-color: white;
 }
+
+/* 下拉菜单选中项样式 */
+select {
+  color: #666;
+}
+
+select:focus {
+  outline: none;
+  border-color: #FF6B35;
+}
+
+select option {
+  background-color: white !important;
+  color: #333 !important;
+  padding: 8px 12px;
+}
+
+select option:checked {
+  background: #FF6B35 !important;
+  color: white !important;
+}
+
+select option:hover,
+select option:focus {
+  background: #FFF7F3 !important;
+  background-color: #FFF7F3 !important;
+  color: #333 !important;
+}
+
+/* 强制覆盖浏览器默认样式 */
+select option:hover {
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+/* 移除所有蓝色高亮 */
+select::-ms-expand {
+  display: none;
+}
+
+select:-moz-focusring {
+  color: transparent;
+  text-shadow: 0 0 0 #666;
+}
+
+select:focus-visible {
+  outline: none;
+  border-color: #FF6B35;
+}

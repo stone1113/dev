@@ -2983,7 +2983,7 @@ const AdminAuditReportPage: React.FC = () => {
             </div>
             <div className="mt-4 flex items-center gap-4">
               <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-green-500" />
+                <span className="w-2 h-2 rounded-full bg-[#FF6B35]" />
                 <span className="text-xs text-gray-500">在线 5</span>
               </div>
               <div className="flex items-center gap-1.5">
@@ -3005,7 +3005,7 @@ const AdminAuditReportPage: React.FC = () => {
             <div className="flex items-end gap-3">
               <p className="text-3xl font-bold text-gray-900">537</p>
               <div className="flex items-center gap-1 mb-1">
-                <span className="text-xs text-green-600">+12.5%</span>
+                <span className="text-xs text-[#FF6B35]">+12.5%</span>
                 <span className="text-[10px] text-gray-400">较昨日</span>
               </div>
             </div>
@@ -3044,7 +3044,7 @@ const AdminAuditReportPage: React.FC = () => {
                 <span className="text-[11px] text-gray-400">平均回复时长</span>
               </div>
               <div>
-                <p className="text-2xl font-bold text-green-600">96.2<span className="text-sm font-normal text-green-500 ml-0.5">%</span></p>
+                <p className="text-2xl font-bold text-[#FF6B35]">96.2<span className="text-sm font-normal text-[#FF6B35] ml-0.5">%</span></p>
                 <span className="text-[11px] text-gray-400">回复率</span>
               </div>
               <div>
@@ -3064,25 +3064,25 @@ const AdminAuditReportPage: React.FC = () => {
               <span className="text-[11px] text-gray-400">今日</span>
             </div>
             <div className="flex items-end gap-3 mb-4">
-              <p className="text-3xl font-bold text-red-500">12</p>
+              <p className="text-3xl font-bold text-[#FF6B35]">12</p>
               <div className="flex items-center gap-1 mb-1">
-                <span className="text-xs text-red-500">+3</span>
+                <span className="text-xs text-[#FF6B35]">+3</span>
                 <span className="text-[10px] text-gray-400">较昨日</span>
               </div>
             </div>
             <div className="space-y-2.5">
               {[
-                { name: '销售主力(SA01)', count: 5, color: '#EF4444' },
-                { name: '李四(SA02)', count: 4, color: '#F97316' },
-                { name: 'Emily(SO02)', count: 2, color: '#F59E0B' },
-                { name: 'David(SO01)', count: 1, color: '#22C55E' },
+                { name: '销售主力(SA01)', count: 5 },
+                { name: '李四(SA02)', count: 4 },
+                { name: 'Emily(SO02)', count: 2 },
+                { name: 'David(SO01)', count: 1 },
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <span className="text-xs text-gray-500 w-28 truncate">{item.name}</span>
                   <div className="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden">
                     <div
-                      className="h-full rounded-full transition-all"
-                      style={{ width: `${(item.count / 5) * 100}%`, backgroundColor: item.color }}
+                      className="h-full rounded-full transition-all bg-[#FF6B35]"
+                      style={{ width: `${(item.count / 5) * 100}%` }}
                     />
                   </div>
                   <span className="text-xs font-medium text-gray-700 w-6 text-right">{item.count}</span>
@@ -3101,31 +3101,31 @@ const AdminAuditReportPage: React.FC = () => {
               </div>
             </div>
             <div className="grid grid-cols-3 gap-4 mb-4">
-              <div className="text-center p-3 bg-red-50 rounded-lg">
-                <p className="text-xl font-bold text-red-600">3</p>
-                <span className="text-[11px] text-red-500">敏感词触发</span>
+              <div className="text-center p-3 bg-[#FFF7F3] rounded-lg">
+                <p className="text-xl font-bold text-[#FF6B35]">3</p>
+                <span className="text-[11px] text-[#FF6B35]">敏感词触发</span>
               </div>
-              <div className="text-center p-3 bg-orange-50 rounded-lg">
-                <p className="text-xl font-bold text-orange-600">7</p>
-                <span className="text-[11px] text-orange-500">删除消息</span>
+              <div className="text-center p-3 bg-[#F7F8FA] rounded-lg">
+                <p className="text-xl font-bold text-[#666]">7</p>
+                <span className="text-[11px] text-[#666]">删除消息</span>
               </div>
-              <div className="text-center p-3 bg-amber-50 rounded-lg">
-                <p className="text-xl font-bold text-amber-600">2</p>
-                <span className="text-[11px] text-amber-500">删除联系人</span>
+              <div className="text-center p-3 bg-[#F7F8FA] rounded-lg">
+                <p className="text-xl font-bold text-[#666]">2</p>
+                <span className="text-[11px] text-[#666]">删除联系人</span>
               </div>
             </div>
             <div className="grid grid-cols-3 gap-4">
-              <div className="text-center p-3 bg-blue-50 rounded-lg">
-                <p className="text-xl font-bold text-blue-600">4</p>
-                <span className="text-[11px] text-blue-500">发送名片</span>
+              <div className="text-center p-3 bg-[#F7F8FA] rounded-lg">
+                <p className="text-xl font-bold text-[#1A1A1A]">4</p>
+                <span className="text-[11px] text-[#666]">发送名片</span>
               </div>
-              <div className="text-center p-3 bg-indigo-50 rounded-lg">
-                <p className="text-xl font-bold text-indigo-600">5</p>
-                <span className="text-[11px] text-indigo-500">发送文件</span>
+              <div className="text-center p-3 bg-[#F7F8FA] rounded-lg">
+                <p className="text-xl font-bold text-[#1A1A1A]">5</p>
+                <span className="text-[11px] text-[#666]">发送文件</span>
               </div>
-              <div className="text-center p-3 bg-purple-50 rounded-lg">
-                <p className="text-xl font-bold text-purple-600">1</p>
-                <span className="text-[11px] text-purple-500">异常登录</span>
+              <div className="text-center p-3 bg-[#F7F8FA] rounded-lg">
+                <p className="text-xl font-bold text-[#1A1A1A]">1</p>
+                <span className="text-[11px] text-[#666]">异常登录</span>
               </div>
             </div>
           </div>
@@ -3162,8 +3162,8 @@ const AdminAuditReportPage: React.FC = () => {
                     <span className={cn(
                       "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0",
                       i === 0 ? "bg-[#FF6B35] text-white" :
-                      i === 1 ? "bg-orange-300 text-white" :
-                      i === 2 ? "bg-orange-200 text-orange-700" :
+                      i === 1 ? "bg-[#FFB088] text-white" :
+                      i === 2 ? "bg-[#FFD4BE] text-[#FF6B35]" :
                       "bg-gray-100 text-gray-400"
                     )}>{i + 1}</span>
                     <span className="text-xs text-gray-700 truncate flex-1">{item.name}</span>
@@ -3184,14 +3184,14 @@ const AdminAuditReportPage: React.FC = () => {
                   <div key={i} className="flex items-center gap-2">
                     <span className={cn(
                       "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0",
-                      i === 0 ? "bg-blue-500 text-white" :
-                      i === 1 ? "bg-blue-300 text-white" :
-                      i === 2 ? "bg-blue-200 text-blue-700" :
+                      i === 0 ? "bg-[#1A1A1A] text-white" :
+                      i === 1 ? "bg-[#666] text-white" :
+                      i === 2 ? "bg-[#999] text-white" :
                       "bg-gray-100 text-gray-400"
                     )}>{i + 1}</span>
                     <span className="text-xs text-gray-700 truncate flex-1">{item.name}</span>
                     <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden flex-shrink-0">
-                      <div className="h-full bg-blue-500 rounded-full" style={{ width: `${(item.messages / maxMsg) * 100}%` }} />
+                      <div className="h-full bg-[#1A1A1A] rounded-full" style={{ width: `${(item.messages / maxMsg) * 100}%` }} />
                     </div>
                     <span className="text-xs font-medium text-gray-700 w-10 text-right flex-shrink-0">{item.messages}</span>
                   </div>
@@ -3207,14 +3207,14 @@ const AdminAuditReportPage: React.FC = () => {
                   <div key={i} className="flex items-center gap-2">
                     <span className={cn(
                       "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0",
-                      i === 0 ? "bg-emerald-500 text-white" :
-                      i === 1 ? "bg-emerald-300 text-white" :
-                      i === 2 ? "bg-emerald-200 text-emerald-700" :
+                      i === 0 ? "bg-[#FF6B35] text-white" :
+                      i === 1 ? "bg-[#FFB088] text-white" :
+                      i === 2 ? "bg-[#FFD4BE] text-[#FF6B35]" :
                       "bg-gray-100 text-gray-400"
                     )}>{i + 1}</span>
                     <span className="text-xs text-gray-700 truncate flex-1">{item.name}</span>
                     <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden flex-shrink-0">
-                      <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${(item.initiated / maxInit) * 100}%` }} />
+                      <div className="h-full bg-[#FF6B35] rounded-full" style={{ width: `${(item.initiated / maxInit) * 100}%` }} />
                     </div>
                     <span className="text-xs font-medium text-gray-700 w-8 text-right flex-shrink-0">{item.initiated}</span>
                   </div>
@@ -3230,14 +3230,14 @@ const AdminAuditReportPage: React.FC = () => {
                   <div key={i} className="flex items-center gap-2">
                     <span className={cn(
                       "w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0",
-                      i === 0 ? "bg-violet-500 text-white" :
-                      i === 1 ? "bg-violet-300 text-white" :
-                      i === 2 ? "bg-violet-200 text-violet-700" :
+                      i === 0 ? "bg-[#1A1A1A] text-white" :
+                      i === 1 ? "bg-[#666] text-white" :
+                      i === 2 ? "bg-[#999] text-white" :
                       "bg-gray-100 text-gray-400"
                     )}>{i + 1}</span>
                     <span className="text-xs text-gray-700 truncate flex-1">{item.name}</span>
                     <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden flex-shrink-0">
-                      <div className="h-full bg-violet-500 rounded-full" style={{ width: `${(item.customers / maxCust) * 100}%` }} />
+                      <div className="h-full bg-[#1A1A1A] rounded-full" style={{ width: `${(item.customers / maxCust) * 100}%` }} />
                     </div>
                     <span className="text-xs font-medium text-gray-700 w-8 text-right flex-shrink-0">{item.customers}</span>
                   </div>
