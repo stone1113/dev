@@ -87,7 +87,7 @@ export const ContactList: React.FC<ContactListProps> = ({ onClose }) => {
   const FilterTag = ({
     label,
     active,
-    onClick
+    onClick,
   }: {
     label: string;
     active: boolean;
@@ -98,7 +98,7 @@ export const ContactList: React.FC<ContactListProps> = ({ onClose }) => {
       className={cn(
         "px-2 py-0.5 text-xs rounded transition-colors whitespace-nowrap",
         active
-          ? "bg-[#FF6B35] text-white"
+          ? "bg-[#1A1A1A] text-white"
           : "bg-gray-100 text-gray-600 hover:bg-gray-200"
       )}
     >
@@ -109,10 +109,12 @@ export const ContactList: React.FC<ContactListProps> = ({ onClose }) => {
   return (
     <div className="h-full bg-white rounded-xl shadow-sm flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-3 py-2.5 border-b border-gray-100">
-        <div className="flex items-center gap-1.5">
-          <Users className="w-4 h-4 text-[#FF6B35]" />
-          <h3 className="font-medium text-gray-900 text-xs">联系人管理</h3>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#E8E8E8]">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#FF6B35] to-[#FF8F5E] flex items-center justify-center shadow-sm">
+            <Users className="w-5 h-5 text-white" />
+          </div>
+          <h3 className="font-semibold text-[#1A1A1A]">联系人管理</h3>
         </div>
         <div className="flex items-center gap-0.5">
           <button className="p-1 hover:bg-gray-100 rounded transition-colors">
@@ -140,9 +142,9 @@ export const ContactList: React.FC<ContactListProps> = ({ onClose }) => {
             placeholder="请输入用户名/ID/手机号"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-3 pr-8 py-1.5 text-xs bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-[#FF6B35]"
+            className="w-full pl-3 pr-8 py-1.5 text-xs bg-white border border-gray-200 rounded-lg focus:outline-none focus:border-gray-400"
           />
-          <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#FF6B35]" />
+          <Search className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         </div>
       </div>
 
@@ -184,8 +186,8 @@ export const ContactList: React.FC<ContactListProps> = ({ onClose }) => {
             <Check className="w-3 h-3 text-white" strokeWidth={3} />
           )}
         </button>
-        <button onClick={selectAll} className="text-xs text-[#FF6B35] hover:underline">全选</button>
-        <button onClick={invertSelection} className="text-xs text-[#FF6B35] hover:underline">反选</button>
+        <button onClick={selectAll} className="text-xs text-[#666] hover:text-[#333] hover:underline">全选</button>
+        <button onClick={invertSelection} className="text-xs text-[#666] hover:text-[#333] hover:underline">反选</button>
       </div>
 
       {/* Contact List */}
@@ -268,7 +270,7 @@ export const ContactList: React.FC<ContactListProps> = ({ onClose }) => {
         <div className="px-3 py-2 border-t border-gray-100">
           <button
             onClick={() => setShowBroadcast(true)}
-            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-[#FF6B35] rounded-lg hover:bg-[#E85A2A] transition-colors"
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-medium text-white bg-[#1A1A1A] rounded-lg hover:bg-[#333] transition-colors"
           >
             <Send className="w-3.5 h-3.5" />
             群发消息 ({selectedIds.size})

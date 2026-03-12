@@ -146,11 +146,12 @@ const AccountListInline: React.FC<AccountListInlineProps> = ({
         key={account.id}
         className={cn(
           "relative p-2 rounded-lg transition-all text-xs border-l-4",
-          // 在线状态：主题色浅背景，可点击
-          isOnline && "bg-[#FF6B35]/5 border-l-[#FF6B35] cursor-pointer",
+          // 在线状态：可点击
+          isOnline && !isSelected && "bg-white border-l-[#E8855A] cursor-pointer hover:bg-[#FFF7F3]",
+          // 在线且选中：主题色强调
+          isOnline && isSelected && "bg-[#FFF0E8] border-l-[#E8855A] cursor-pointer ring-1 ring-[#E8855A]/30 shadow-sm",
           // 离线/未登录状态：灰色背景，不可点击
-          !isOnline && "bg-gray-50 border-l-[#FF6B35]/40 cursor-default",
-          isSelected && "ring-1 ring-[#FF6B35]/30 bg-[#FF6B35]/10"
+          !isOnline && "bg-[#F7F8FA] border-l-[#D9D9D9] cursor-default opacity-75"
         )}
         onMouseEnter={() => setHoveredAccount(account.id)}
         onMouseLeave={() => setHoveredAccount(null)}
@@ -165,37 +166,37 @@ const AccountListInline: React.FC<AccountListInlineProps> = ({
 
         {/* 悬停时显示的操作按钮遮罩 - 仅对离线和未登录状态显示 */}
         {isHovered && !isRestarting && !isOnline && (
-          <div className="absolute inset-0 bg-gray-900/60 rounded-lg flex items-center justify-center gap-3 z-10">
+          <div className="absolute inset-0 bg-[#1A1A1A]/60 rounded-lg flex items-center justify-center gap-3 z-10">
             {isNotLoggedIn ? (
               <button
                 onClick={(e) => { e.stopPropagation(); setLoginAccountId(account.id); }}
-                className="w-9 h-9 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 shadow-md"
+                className="w-9 h-9 bg-white rounded-full flex items-center justify-center hover:bg-[#F2F2F2] shadow-md"
                 title="扫码登录"
               >
-                <FolderOpen className="w-4 h-4 text-amber-600" />
+                <FolderOpen className="w-4 h-4 text-[#FF6B35]" />
               </button>
             ) : (
               <button
                 onClick={(e) => { e.stopPropagation(); handleToggleStatus(account); }}
-                className="w-9 h-9 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 shadow-md"
+                className="w-9 h-9 bg-white rounded-full flex items-center justify-center hover:bg-[#F2F2F2] shadow-md"
                 title="上线"
               >
-                <FolderOpen className="w-4 h-4 text-amber-600" />
+                <FolderOpen className="w-4 h-4 text-[#FF6B35]" />
               </button>
             )}
             <button
               onClick={(e) => { e.stopPropagation(); onOpenProxy?.(); }}
-              className="w-9 h-9 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 shadow-md"
+              className="w-9 h-9 bg-white rounded-full flex items-center justify-center hover:bg-[#F2F2F2] shadow-md"
               title="代理IP配置"
             >
-              <Server className="w-4 h-4 text-gray-600" />
+              <Server className="w-4 h-4 text-[#666]" />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); deletePlatformAccount(account.id); }}
-              className="w-9 h-9 bg-white rounded-full flex items-center justify-center hover:bg-gray-100 shadow-md"
+              className="w-9 h-9 bg-white rounded-full flex items-center justify-center hover:bg-[#F2F2F2] shadow-md"
               title="删除"
             >
-              <Trash2 className="w-4 h-4 text-gray-600" />
+              <Trash2 className="w-4 h-4 text-[#666]" />
             </button>
           </div>
         )}
@@ -206,7 +207,7 @@ const AccountListInline: React.FC<AccountListInlineProps> = ({
             <img src={account.avatar} alt={account.name} className="w-8 h-8 rounded-full object-cover" />
             {/* 在线状态显示未读消息数量 */}
             {isOnline && account.messageCount > 0 && (
-              <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-red-500 text-white text-[10px] font-medium rounded-full flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 bg-[#FF6B35] text-white text-[10px] font-medium rounded-full flex items-center justify-center">
                 {account.messageCount > 99 ? '99+' : account.messageCount}
               </span>
             )}
@@ -215,37 +216,37 @@ const AccountListInline: React.FC<AccountListInlineProps> = ({
             <div className="flex items-center gap-1">
               <span className={cn(
                 "font-medium truncate",
-                isOnline ? "text-green-600" : isSelected ? "text-[#FF6B35]" : "text-gray-800"
+                isOnline ? "text-[#1A1A1A]" : isSelected ? "text-[#1A1A1A]" : "text-[#1A1A1A]"
               )}>
                 {account.name}
               </span>
-              {/* 在线状态显示AI标识 - 更明显 */}
+              {/* 在线状态显示AI标识 */}
               {isOnline && account.aiEnabled && (
                 <span
-                  className="flex items-center justify-center w-4 h-4 bg-purple-500 rounded flex-shrink-0"
+                  className="flex items-center justify-center w-4 h-4 bg-[#1A1A1A] rounded flex-shrink-0"
                   title="AI员工服务中"
                 >
                   <Bot className="w-3 h-3 text-white" />
                 </span>
               )}
-              {/* 状态标签 */}
+              {/* 状态标签 - 推到右侧 */}
               <span className={cn(
-                "px-1.5 py-0.5 text-[10px] rounded flex-shrink-0",
-                isOnline && "bg-green-100 text-green-600",
-                isOffline && "bg-gray-100 text-gray-500",
-                isNotLoggedIn && "bg-amber-100 text-amber-600"
+                "ml-auto px-1.5 py-0.5 text-[10px] rounded flex-shrink-0",
+                isOnline && "bg-[#FFF7F3] text-[#FF6B35]",
+                isOffline && "bg-[#F2F2F2] text-[#999]",
+                isNotLoggedIn && "bg-[#FFD4BE] text-[#FF6B35]"
               )}>
                 {isOnline ? '在线' : isOffline ? '离线' : '未登录'}
               </span>
             </div>
             {account.phone && (
-              <div className="text-gray-500 truncate">{account.phone}</div>
+              <div className="text-[#999] truncate">{account.phone}</div>
             )}
           </div>
         </div>
 
         {/* 账号信息 */}
-        <div className="mt-1.5 space-y-0 text-gray-400">
+        <div className="mt-1.5 space-y-0 text-[#666]">
           <div className="flex items-center gap-1.5">
             <ExternalLink className="w-3 h-3 flex-shrink-0" />
             {editingRemarkId === account.id ? (
@@ -268,13 +269,13 @@ const AccountListInline: React.FC<AccountListInlineProps> = ({
                 }}
                 onClick={(e) => e.stopPropagation()}
                 autoFocus
-                className="flex-1 min-w-0 px-1 py-0.5 text-xs bg-white border border-[#FF6B35] rounded outline-none text-gray-700"
+                className="flex-1 min-w-0 px-1 py-0.5 text-xs bg-white border border-[#FF6B35] rounded outline-none text-[#333]"
               />
             ) : (
               <span
                 className={cn(
                   "truncate",
-                  isOnline && "cursor-text hover:text-gray-600"
+                  isOnline && "cursor-text hover:text-[#666]"
                 )}
                 onClick={(e) => {
                   if (isOnline) {
@@ -298,17 +299,17 @@ const AccountListInline: React.FC<AccountListInlineProps> = ({
 
         {/* 在线状态的操作按钮 - 图标按钮 */}
         {isOnline && (
-          <div className="mt-1.5 pt-1.5 border-t border-gray-100 flex items-center gap-1">
+          <div className="mt-1.5 pt-1.5 border-t border-[#E8E8E8] flex items-center gap-1">
             <button
               onClick={(e) => { e.stopPropagation(); handleRestartSession(account.id); }}
-              className="p-1 rounded-md text-green-600 hover:text-green-700 hover:bg-green-50 transition-colors"
+              className="p-1 rounded-md text-[#666] hover:text-[#1A1A1A] hover:bg-[#F2F2F2] transition-colors"
               title="重启会话"
             >
               <RefreshCw className="w-3.5 h-3.5" />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); setConfirmCloseAccount(account.id); }}
-              className="p-1 rounded-md text-red-500 hover:text-red-600 hover:bg-red-50 transition-colors"
+              className="p-1 rounded-md text-[#999] hover:text-[#1A1A1A] hover:bg-[#F2F2F2] transition-colors"
               title="关闭会话"
             >
               <Power className="w-3.5 h-3.5" />
@@ -318,8 +319,8 @@ const AccountListInline: React.FC<AccountListInlineProps> = ({
               className={cn(
                 "ml-auto flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-medium transition-colors",
                 account.aiEnabled
-                  ? "text-[#FF6B35] bg-[#FF6B35]/10 hover:bg-[#FF6B35]/20"
-                  : "text-gray-400 bg-gray-100 hover:bg-gray-200"
+                  ? "text-white bg-[#1A1A1A] hover:bg-[#333]"
+                  : "text-[#B3B3B3] bg-[#F2F2F2] hover:bg-[#E8E8E8]"
               )}
               title={account.aiEnabled ? '关闭AI员工' : '开启AI员工'}
             >
@@ -333,14 +334,14 @@ const AccountListInline: React.FC<AccountListInlineProps> = ({
   };
 
   return (
-    <div className="ml-4 mt-1 pl-3 border-l-2 border-gray-200 space-y-2">
+    <div className="ml-4 mt-1 pl-3 border-l-2 border-[#D9D9D9] space-y-2">
       {/* 所有账号列表 - 状态标签在卡片内显示 */}
       {accounts.map(renderAccountCard)}
 
       {/* 添加账号 */}
       <button
         onClick={handleAddAccount}
-        className="w-full flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs text-gray-400 hover:text-[#FF6B35] hover:bg-[#FF6B35]/5"
+        className="w-full flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs text-[#B3B3B3] hover:text-[#FF6B35] hover:bg-[#FF6B35]/5"
       >
         <Plus className="w-3 h-3" />
         <span>添加账号</span>
@@ -351,14 +352,14 @@ const AccountListInline: React.FC<AccountListInlineProps> = ({
         <div className="fixed inset-0 z-[60] flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setShowQrCode(null)} />
           <div className="relative bg-white rounded-xl p-6 shadow-2xl">
-            <button onClick={() => setShowQrCode(null)} className="absolute top-3 right-3 p-1 hover:bg-gray-100 rounded">
-              <X className="w-4 h-4 text-gray-500" />
+            <button onClick={() => setShowQrCode(null)} className="absolute top-3 right-3 p-1 hover:bg-[#F2F2F2] rounded">
+              <X className="w-4 h-4 text-[#999]" />
             </button>
-            <h4 className="text-center font-medium text-gray-900 mb-4">扫码登录 {platformConfig?.name}</h4>
-            <div className="w-48 h-48 bg-gray-100 rounded-lg flex items-center justify-center">
-              <QrCode className="w-32 h-32 text-gray-300" />
+            <h4 className="text-center font-medium text-[#1A1A1A] mb-4">扫码登录 {platformConfig?.name}</h4>
+            <div className="w-48 h-48 bg-[#F2F2F2] rounded-lg flex items-center justify-center">
+              <QrCode className="w-32 h-32 text-[#D9D9D9]" />
             </div>
-            <p className="text-xs text-gray-500 text-center mt-3">请使用 {platformConfig?.name} 扫描二维码</p>
+            <p className="text-xs text-[#999] text-center mt-3">请使用 {platformConfig?.name} 扫描二维码</p>
           </div>
         </div>
       )}
@@ -368,23 +369,23 @@ const AccountListInline: React.FC<AccountListInlineProps> = ({
         <div className="fixed inset-0 z-[60] flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setConfirmCloseAccount(null)} />
           <div className="relative bg-white rounded-xl p-5 shadow-2xl w-72">
-            <div className="flex items-center justify-center w-12 h-12 mx-auto mb-3 bg-red-100 rounded-full">
-              <Power className="w-6 h-6 text-red-500" />
+            <div className="flex items-center justify-center w-12 h-12 mx-auto mb-3 bg-[#FFF7F3] rounded-full">
+              <Power className="w-6 h-6 text-[#FF6B35]" />
             </div>
-            <h4 className="text-center font-medium text-gray-900 mb-2">确认关闭会话</h4>
-            <p className="text-xs text-gray-500 text-center mb-4">
+            <h4 className="text-center font-medium text-[#1A1A1A] mb-2">确认关闭会话</h4>
+            <p className="text-xs text-[#999] text-center mb-4">
               关闭后该账号将变为离线状态，确定要关闭吗？
             </p>
             <div className="flex gap-2">
               <button
                 onClick={() => setConfirmCloseAccount(null)}
-                className="flex-1 px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
+                className="flex-1 px-3 py-2 text-sm text-[#666] border border-[#D9D9D9] rounded-lg hover:bg-[#F7F8FA]"
               >
                 取消
               </button>
               <button
                 onClick={() => handleConfirmClose(confirmCloseAccount)}
-                className="flex-1 px-3 py-2 text-sm text-white bg-red-500 rounded-lg hover:bg-red-600"
+                className="flex-1 px-3 py-2 text-sm text-white bg-[#FF6B35] rounded-lg hover:bg-[#E85A2A]"
               >
                 确定
               </button>
@@ -398,21 +399,21 @@ const AccountListInline: React.FC<AccountListInlineProps> = ({
         <div className="fixed inset-0 z-[60] flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setConfirmDisableAI(null)} />
           <div className="relative bg-white rounded-xl p-5 shadow-2xl w-80">
-            <div className="flex items-center justify-center w-12 h-12 mx-auto mb-3 bg-amber-100 rounded-full">
-              <AlertTriangle className="w-6 h-6 text-amber-500" />
+            <div className="flex items-center justify-center w-12 h-12 mx-auto mb-3 bg-[#FFD4BE] rounded-full">
+              <AlertTriangle className="w-6 h-6 text-[#FF6B35]" />
             </div>
-            <h4 className="text-center font-medium text-gray-900 mb-2">确认关闭AI员工</h4>
-            <p className="text-xs text-gray-500 text-center mb-3">
+            <h4 className="text-center font-medium text-[#1A1A1A] mb-2">确认关闭AI员工</h4>
+            <p className="text-xs text-[#999] text-center mb-3">
               关闭后该账号将无法使用以下AI能力：
             </p>
             <div className="grid grid-cols-2 gap-1.5 mb-4">
               {['智能销售对话', '主动营销触达', '客户召回', '质量检测'].map(cap => (
-                <span key={cap} className="text-[10px] text-center text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded-md">{cap}</span>
+                <span key={cap} className="text-[10px] text-center text-[#E85A2A] bg-[#FFF7F3] border border-[#FFD4BE] px-2 py-1 rounded-md">{cap}</span>
               ))}
             </div>
             <div className="flex gap-2">
-              <button onClick={() => setConfirmDisableAI(null)} className="flex-1 px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">取消</button>
-              <button onClick={() => { updatePlatformAccount(confirmDisableAI, { aiEnabled: false }); setConfirmDisableAI(null); }} className="flex-1 px-3 py-2 text-sm text-white bg-amber-500 rounded-lg hover:bg-amber-600">确定关闭</button>
+              <button onClick={() => setConfirmDisableAI(null)} className="flex-1 px-3 py-2 text-sm text-[#666] border border-[#D9D9D9] rounded-lg hover:bg-[#F7F8FA]">取消</button>
+              <button onClick={() => { updatePlatformAccount(confirmDisableAI, { aiEnabled: false }); setConfirmDisableAI(null); }} className="flex-1 px-3 py-2 text-sm text-white bg-[#FF6B35] rounded-lg hover:bg-[#E85A2A]">确定关闭</button>
             </div>
           </div>
         </div>
@@ -467,18 +468,18 @@ export const Sidebar: React.FC<SidebarProps> = ({
     <>
       <div 
         className={cn(
-          "flex flex-col h-full bg-white border-r border-gray-200 transition-all duration-300",
+          "flex flex-col h-full bg-white border-r border-[#E8E8E8] transition-all duration-300",
           sidebarCollapsed ? "w-16" : "w-64"
         )}
       >
         {/* Logo */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100">
+        <div className="flex items-center justify-between p-4 border-b border-[#E8E8E8]">
           {!sidebarCollapsed && (
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-[#FF6B35] rounded-lg flex items-center justify-center">
                 <MessageCircle className="w-5 h-5 text-white" />
               </div>
-              <span className="font-semibold text-gray-900">ChatBiz</span>
+              <span className="font-semibold text-[#1A1A1A]">ChatBiz</span>
             </div>
           )}
           {sidebarCollapsed && (
@@ -489,17 +490,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {!sidebarCollapsed && (
             <button
               onClick={toggleSidebar}
-              className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-1 hover:bg-[#F2F2F2] rounded-lg transition-colors"
             >
-              <ChevronLeft className="w-4 h-4 text-gray-400" />
+              <ChevronLeft className="w-4 h-4 text-[#B3B3B3]" />
             </button>
           )}
           {sidebarCollapsed && (
             <button
               onClick={toggleSidebar}
-              className="absolute -right-3 top-4 w-6 h-6 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
+              className="absolute -right-3 top-4 w-6 h-6 bg-white border border-[#D9D9D9] rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
             >
-              <ChevronRight className="w-3 h-3 text-gray-400" />
+              <ChevronRight className="w-3 h-3 text-[#B3B3B3]" />
             </button>
           )}
         </div>
@@ -515,7 +516,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200",
                   activeSection === item.id
                     ? "bg-[#FF6B35] text-white"
-                    : "text-gray-600 hover:bg-gray-100"
+                    : "text-[#666] hover:bg-[#F2F2F2]"
                 )}
               >
                 <item.icon className={cn(
@@ -526,14 +527,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <>
                     <span className="flex-1 text-left text-sm font-medium">{item.name}</span>
                     {item.badge !== null && item.badge > 0 && (
-                      <span className="px-2 py-0.5 text-xs font-medium bg-red-500 text-white rounded-full">
+                      <span className="px-2 py-0.5 text-xs font-medium bg-[#FF6B35] text-white rounded-full">
                         {item.badge > 99 ? '99+' : item.badge}
                       </span>
                     )}
                   </>
                 )}
                 {sidebarCollapsed && item.badge !== null && item.badge > 0 && (
-                  <span className="absolute top-1 right-1 w-4 h-4 text-[10px] font-medium bg-red-500 text-white rounded-full flex items-center justify-center">
+                  <span className="absolute top-1 right-1 w-4 h-4 text-[10px] font-medium bg-[#FF6B35] text-white rounded-full flex items-center justify-center">
                     {item.badge > 9 ? '9+' : item.badge}
                   </span>
                 )}
@@ -545,7 +546,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {!sidebarCollapsed && activeSection === 'conversations' && (
             <div className="mt-6 px-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+                <span className="text-xs font-medium text-[#B3B3B3] uppercase tracking-wider">
                   平台与账号
                 </span>
               </div>
@@ -555,14 +556,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   className={cn(
                     "w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-sm",
                     selectedPlatform === 'all'
-                      ? "bg-gray-100 text-gray-900 font-medium"
-                      : "text-gray-600 hover:bg-gray-50"
+                      ? "bg-[#F2F2F2] text-[#1A1A1A] font-medium"
+                      : "text-[#666] hover:bg-[#F7F8FA]"
                   )}
                 >
                   <MessageCircle className="w-4 h-4" />
                   <span className="flex-1 text-left">全部平台</span>
                   {totalUnread > 0 && (
-                    <span className="px-1.5 py-0.5 text-xs bg-red-100 text-red-600 rounded-full">
+                    <span className="px-1.5 py-0.5 text-xs bg-[#FFF7F3] text-[#FF6B35] rounded-full">
                       {totalUnread}
                     </span>
                   )}
@@ -589,8 +590,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         className={cn(
                           "w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-sm",
                           isSelected
-                            ? "bg-gray-100 text-gray-900 font-medium"
-                            : "text-gray-600 hover:bg-gray-50"
+                            ? "bg-[#F2F2F2] text-[#1A1A1A] font-medium"
+                            : "text-[#666] hover:bg-[#F7F8FA]"
                         )}
                       >
                         <div style={{ color: platform.color }}>
@@ -598,14 +599,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
                         </div>
                         <span className="flex-1 text-left">{platform.name}</span>
                         {unreadCount > 0 && (
-                          <span className="px-1.5 py-0.5 text-xs bg-red-100 text-red-600 rounded-full">
+                          <span className="px-1.5 py-0.5 text-xs bg-[#FFF7F3] text-[#FF6B35] rounded-full">
                             {unreadCount}
                           </span>
                         )}
                         {hasMultipleAccounts && (
-                          <ChevronDown 
+                          <ChevronDown
                             className={cn(
-                              "w-3 h-3 text-gray-400 transition-transform",
+                              "w-3 h-3 text-[#B3B3B3] transition-transform",
                               isExpanded && "rotate-180"
                             )} 
                           />
@@ -631,15 +632,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
         
         {/* Bottom Navigation */}
-        <div className="p-2 border-t border-gray-100">
+        <div className="p-2 border-t border-[#E8E8E8]">
           <nav className="space-y-1">
             {bottomNavItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => onSectionChange?.(item.id)}
                 className={cn(
-                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-gray-600 hover:bg-gray-100",
-                  activeSection === item.id && "bg-gray-100 text-gray-900"
+                  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-[#666] hover:bg-[#F2F2F2]",
+                  activeSection === item.id && "bg-[#F2F2F2] text-[#1A1A1A]"
                 )}
               >
                 <item.icon className={cn(
