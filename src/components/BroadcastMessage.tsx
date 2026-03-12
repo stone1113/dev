@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { X, RefreshCw, Search, Check, ChevronDown, Image, Video, FileText, Clock, Send, Sparkles, Wand2, Calendar, Loader2, BookOpen, Languages, Database, MessageSquare, Package, Target, Zap, TrendingUp, Tag, UserCheck, AlertCircle, Mic, Trash2, Plus, Shuffle, FileEdit, ClipboardList } from 'lucide-react';
 import { useStore } from '@/store/useStore';
 import { generateMessage, optimizeMessage } from '@/lib/aiService';
@@ -193,6 +193,66 @@ export const BroadcastMessage: React.FC<BroadcastMessageProps> = ({ onClose, sel
   const [showTranslationSettings, setShowTranslationSettings] = useState(true);
   // const [translatedContent, setTranslatedContent] = useState('');
   // const [isTranslating, setIsTranslating] = useState(false);
+
+  // 自定义下拉选择组件
+  const SelectField = ({
+    value,
+    onChange,
+    options,
+    showFlag = true
+  }: {
+    value: string;
+    onChange: (v: string) => void;
+    options: { code: string; name: string; flag?: string }[];
+    showFlag?: boolean;
+  }) => {
+    const [open, setOpen] = useState(false);
+    const ref = useRef<HTMLDivElement>(null);
+    const selected = options.find(o => o.code === value);
+
+    useEffect(() => {
+      const handler = (e: MouseEvent) => {
+        if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      };
+      document.addEventListener('mousedown', handler);
+      return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    return (
+      <div className="relative flex-1" ref={ref}>
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          className={cn(
+            "w-full flex items-center justify-between px-3 py-2 text-sm border rounded-lg bg-white shadow-sm transition-colors whitespace-nowrap overflow-hidden",
+            open ? "border-[#FF6B35] ring-1 ring-[#FF6B35]/20" : "border-gray-200"
+          )}
+        >
+          <span className="truncate">{showFlag && selected?.flag} {selected?.name}</span>
+          <ChevronDown className={cn("w-3.5 h-3.5 text-[#999] transition-transform flex-shrink-0 ml-2", open && "rotate-180")} />
+        </button>
+        {open && (
+          <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-[#E8E8E8] rounded-lg shadow-lg max-h-48 overflow-y-auto">
+            {options.map((opt) => (
+              <button
+                key={opt.code}
+                type="button"
+                onClick={() => { onChange(opt.code); setOpen(false); }}
+                className={cn(
+                  "w-full text-left px-3 py-2 text-sm transition-colors",
+                  opt.code === value
+                    ? "bg-[#FFF0E8] text-[#FF6B35] font-medium"
+                    : "text-[#333] hover:bg-[#F7F8FA]"
+                )}
+              >
+                {showFlag && opt.flag} {opt.name}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const toggleAgent = (id: string) => {
     const newSelected = new Set(selectedAgents);
@@ -526,16 +586,16 @@ export const BroadcastMessage: React.FC<BroadcastMessageProps> = ({ onClose, sel
     <button
       type="button"
       onClick={onChange}
-      className="flex items-center gap-2 cursor-pointer whitespace-nowrap group"
+      className="flex items-center gap-1.5 cursor-pointer whitespace-nowrap group"
     >
       <span className={cn(
-        "w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0",
+        "w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0",
         checked ? "border-[#FF6B35] bg-[#FF6B35]/5" : "border-gray-300 group-hover:border-gray-400"
       )}>
-        {checked && <span className="w-2.5 h-2.5 rounded-full bg-[#FF6B35]" />}
+        {checked && <span className="w-2 h-2 rounded-full bg-[#FF6B35]" />}
       </span>
       <span className={cn(
-        "text-sm transition-colors",
+        "text-xs transition-colors",
         checked ? "text-gray-900 font-medium" : "text-gray-600"
       )}>{label}</span>
     </button>
@@ -785,7 +845,7 @@ export const BroadcastMessage: React.FC<BroadcastMessageProps> = ({ onClose, sel
           {/* 右侧 - 群发设置 */}
           <div className="w-[640px] bg-gradient-to-b from-gray-50/50 to-white border-l border-gray-200 flex flex-col">
             <div className="px-6 py-4 bg-white border-b border-gray-100">
-              <h2 className="text-base font-semibold text-gray-900 tracking-tight">群发设置</h2>
+              <h2 className="text-sm font-semibold text-gray-900 tracking-tight">群发设置</h2>
               <p className="text-xs text-gray-400 mt-0.5">配置消息内容和发送规则</p>
             </div>
 
@@ -863,39 +923,28 @@ export const BroadcastMessage: React.FC<BroadcastMessageProps> = ({ onClose, sel
                     <div className="p-4 bg-white rounded-xl border border-gray-100 shadow-sm space-y-3">
                       <div className="flex items-center gap-4">
                         <span className="text-xs font-medium text-gray-500 w-16">源语言</span>
-                        <select
+                        <SelectField
                           value={sourceLanguage}
-                          onChange={(e) => setSourceLanguage(e.target.value)}
-                          className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#FF6B35] bg-gray-50/50"
-                        >
-                          {languages.filter(l => l.code !== 'auto').map(lang => (
-                            <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
-                          ))}
-                        </select>
+                          onChange={setSourceLanguage}
+                          options={languages.filter(l => l.code !== 'auto')}
+                        />
                       </div>
                       <div className="flex items-center gap-4">
                         <span className="text-xs font-medium text-gray-500 w-16">目标语言</span>
-                        <select
+                        <SelectField
                           value={targetLanguage}
-                          onChange={(e) => setTargetLanguage(e.target.value)}
-                          className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#FF6B35] bg-gray-50/50"
-                        >
-                          {languages.map(lang => (
-                            <option key={lang.code} value={lang.code}>{lang.flag} {lang.name}</option>
-                          ))}
-                        </select>
+                          onChange={setTargetLanguage}
+                          options={languages}
+                        />
                       </div>
                       <div className="flex items-center gap-4">
                         <span className="text-xs font-medium text-gray-500 w-16">翻译引擎</span>
-                        <select
+                        <SelectField
                           value={translationEngine}
-                          onChange={(e) => setTranslationEngine(e.target.value)}
-                          className="flex-1 px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:border-[#FF6B35] bg-gray-50/50"
-                        >
-                          {translationEngines.map(engine => (
-                            <option key={engine.code} value={engine.code}>{engine.name}</option>
-                          ))}
-                        </select>
+                          onChange={setTranslationEngine}
+                          options={translationEngines.map(e => ({ code: e.code, name: e.name }))}
+                          showFlag={false}
+                        />
                       </div>
                       <button
                         onClick={() => setShowTranslationSettings(false)}
