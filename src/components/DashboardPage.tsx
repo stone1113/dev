@@ -27,15 +27,15 @@ export const DashboardPage: React.FC = () => {
   return (
     <div className="h-full overflow-y-auto bg-[#F7F8FA]">
       {/* ── 顶部用户信息栏 ── */}
-      <div className="bg-gradient-to-r from-[#FF6B35] to-[#FF8F5E] text-white px-8 py-5">
+      <div className="bg-gradient-to-r from-[#FF6B35] to-[#FF8F5E] px-8 py-5 shadow-md">
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-3 min-w-0 shrink-0">
             <div className="w-11 h-11 bg-white/20 backdrop-blur rounded-full flex items-center justify-center ring-2 ring-white/30">
-              <span className="text-base font-semibold">L</span>
+              <span className="text-base font-semibold text-white">L</span>
             </div>
             <div>
-              <div className="font-medium text-[15px]">linmianbao@outlook.com</div>
-              <div className="text-xs text-white/70 mt-0.5">2026-03-21 14:18:06</div>
+              <div className="font-semibold text-[15px] text-white">linmianbao@outlook.com</div>
+              <div className="text-xs text-white/80 mt-0.5">2026-03-21 14:18:06</div>
             </div>
           </div>
           <div className="flex items-center justify-center gap-6 flex-1">
@@ -46,7 +46,7 @@ export const DashboardPage: React.FC = () => {
               { label: '总端口', value: '5' },
             ].map((item) => (
               <div key={item.label} className="text-center">
-                <div className="text-[11px] text-white/80 tracking-wide">{item.label}</div>
+                <div className="text-[11px] text-white/70 tracking-wide">{item.label}</div>
                 <div className="text-xl font-bold mt-0.5 text-white">{item.value}</div>
               </div>
             ))}
@@ -55,14 +55,14 @@ export const DashboardPage: React.FC = () => {
             <button className="px-4 py-1.5 text-sm bg-[#1A1A1A] hover:bg-[#333] text-white rounded-md transition-all">
               续费
             </button>
-            <button className="px-4 py-1.5 text-sm bg-white text-[#FF6B35] font-medium rounded-md hover:bg-white/90 transition-all shadow-sm">
+            <button className="px-4 py-1.5 text-sm bg-white text-[#FF6B35] font-medium rounded-md hover:bg-white/90 transition-all shadow-md">
               增加端口
             </button>
             <button className="px-4 py-1.5 text-sm bg-[#1A1A1A] hover:bg-[#333] text-white rounded-md transition-all">
               更换套餐
             </button>
-            <div className="ml-1 w-9 h-9 bg-white/15 rounded-full flex items-center justify-center">
-              <Crown className="w-5 h-5 text-white/80" />
+            <div className="ml-1 w-9 h-9 bg-white/20 rounded-full flex items-center justify-center">
+              <Crown className="w-5 h-5 text-white" />
             </div>
           </div>
         </div>
@@ -73,13 +73,12 @@ export const DashboardPage: React.FC = () => {
         <div className="bg-white rounded-lg border border-[#E8E8E8] shadow-sm">
           <div className="px-6 py-4">
             <h2 className="text-base font-semibold text-[#1A1A1A] mb-4">订阅信息</h2>
-            <div className="grid grid-cols-6 gap-4">
+            <div className="grid grid-cols-5 gap-4">
               <SubscriptionItem icon={Crown} label="当前套餐" value="专业版" highlight />
               <SubscriptionItem icon={Calendar} label="到期时间" value="2026-12-31" />
-              <SubscriptionItem icon={Key} label="激活码" value="QXMS2024DEMO" />
-              <SubscriptionItem icon={MessageSquare} label="会话端口" value={<><span className="text-[#FF6B35]">13</span> / 10</>} />
-              <SubscriptionItem icon={Bot} label="AI绑定" value={<><span className="text-[#FF6B35]">9 个账号</span> / 17</>} />
+              <SubscriptionItem icon={Bot} label="AI绑定" value={<><span className="text-[#1A1A1A] font-semibold">9 个账号</span> / 17</>} />
               <SubscriptionItem icon={Users} label="组织" value="示例企业" />
+              <SubscriptionItem icon={Key} label="组织代码" value="QXMS2024DEMO" />
             </div>
           </div>
         </div>
@@ -122,7 +121,7 @@ export const DashboardPage: React.FC = () => {
                     onClick={() => setSelectedTimeRange(range)}
                     className={`px-3 py-1 text-xs font-medium rounded transition-all ${
                       selectedTimeRange === range
-                        ? 'bg-white text-[#FF6B35] shadow-sm'
+                        ? 'bg-[#1A1A1A] text-white shadow-sm'
                         : 'text-[#666] hover:text-[#333]'
                     }`}
                   >
@@ -172,7 +171,7 @@ export const DashboardPage: React.FC = () => {
                     onClick={() => setSelectedTimeRange(range)}
                     className={`px-3 py-1 text-xs font-medium rounded transition-all ${
                       selectedTimeRange === range
-                        ? 'bg-white text-[#FF6B35] shadow-sm'
+                        ? 'bg-[#1A1A1A] text-white shadow-sm'
                         : 'text-[#666] hover:text-[#333]'
                     }`}
                   >
@@ -212,7 +211,7 @@ export const DashboardPage: React.FC = () => {
           <div className="col-span-2 bg-white rounded-lg border border-[#E8E8E8] shadow-sm p-6">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-base font-semibold text-[#1A1A1A]">消息中心</h2>
-              <button className="text-xs text-[#FF6B35] hover:text-[#E85A2A] flex items-center gap-0.5 transition-colors">
+              <button className="text-xs text-[#666] hover:text-[#1A1A1A] flex items-center gap-0.5 transition-colors">
                 全部 <ChevronRight className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -267,7 +266,7 @@ export const DashboardPage: React.FC = () => {
           <div className="col-span-2 bg-white rounded-lg border border-[#E8E8E8] shadow-sm p-6">
             <div className="flex items-center justify-between mb-5">
               <h2 className="text-base font-semibold text-[#1A1A1A]">今日线索排行</h2>
-              <TrendingUp className="w-4 h-4 text-[#FF6B35]" />
+              <TrendingUp className="w-4 h-4 text-[#666]" />
             </div>
             <div className="space-y-1">
               {topCodes.map((c, i) => (
@@ -402,7 +401,7 @@ const AIReceptionCard: React.FC<{
       <Icon className="w-4 h-4 text-[#FF6B35]" />
       <span className="text-sm text-[#666]">{label}</span>
     </div>
-    <div className="text-3xl font-bold text-[#FF6B35]">{value}</div>
+    <div className="text-3xl font-bold text-[#1A1A1A]">{value}</div>
     <div className="flex items-center justify-between mt-2">
       <span className="text-xs text-[#999]">占比 {percent}%</span>
       <span className="text-xs text-[#B3B3B3]">/ {total}</span>
@@ -434,17 +433,17 @@ const FunctionCard: React.FC<{
   label: string;
   badge?: 'hot' | 'new';
 }> = ({ icon: Icon, label, badge }) => (
-  <button className="flex flex-col items-center gap-2 py-3 rounded-lg hover:bg-[#FFF7F3] transition-all group relative">
+  <button className="flex flex-col items-center gap-2 py-3 rounded-lg hover:bg-[#F7F8FA] transition-all group relative">
     {badge === 'hot' && (
       <span className="absolute -top-1 right-2 px-1 py-px bg-[#FF6B35] text-white text-[9px] rounded leading-tight">Hot</span>
     )}
     {badge === 'new' && (
       <span className="absolute -top-1 right-2 px-1 py-px bg-[#333] text-white text-[9px] rounded leading-tight">New</span>
     )}
-    <div className="w-11 h-11 rounded-lg bg-[#F2F2F2] group-hover:bg-[#FFF7F3] border border-[#E8E8E8] group-hover:border-[#FFD4BE] flex items-center justify-center transition-all">
-      <Icon className="w-5 h-5 text-[#666] group-hover:text-[#FF6B35] transition-colors" />
+    <div className="w-11 h-11 rounded-lg bg-[#F2F2F2] group-hover:bg-[#E8E8E8] border border-[#E8E8E8] group-hover:border-[#D9D9D9] flex items-center justify-center transition-all">
+      <Icon className="w-5 h-5 text-[#666] group-hover:text-[#1A1A1A] transition-colors" />
     </div>
-    <span className="text-[13px] text-[#666] group-hover:text-[#FF6B35] transition-colors">{label}</span>
+    <span className="text-[13px] text-[#666] group-hover:text-[#1A1A1A] transition-colors">{label}</span>
   </button>
 );
 
@@ -500,8 +499,8 @@ const LeadStatItem: React.FC<{
   highlight?: boolean;
 }> = ({ icon: Icon, label, subtext, value, highlight }) => (
   <div className="flex items-center gap-3 p-3 rounded-lg border border-[#E8E8E8] hover:shadow-sm transition-shadow">
-    <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-[#FFF7F3]">
-      <Icon className="w-[18px] h-[18px] text-[#FF6B35]" />
+    <div className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 bg-[#1A1A1A]">
+      <Icon className="w-4 h-4 text-white" />
     </div>
     <div className="flex-1 min-w-0">
       <div className="text-sm font-medium text-[#333]">{label}</div>

@@ -379,13 +379,13 @@ const AccountListInline: React.FC<AccountListInlineProps> = ({
             <div className="flex gap-2">
               <button
                 onClick={() => setConfirmCloseAccount(null)}
-                className="flex-1 px-3 py-2 text-sm text-[#666] border border-[#D9D9D9] rounded-lg hover:bg-[#F7F8FA]"
+                className="flex-1 px-3 py-2 text-xs text-[#666] border border-[#D9D9D9] rounded-lg hover:bg-[#F7F8FA]"
               >
                 取消
               </button>
               <button
                 onClick={() => handleConfirmClose(confirmCloseAccount)}
-                className="flex-1 px-3 py-2 text-sm text-white bg-[#FF6B35] rounded-lg hover:bg-[#E85A2A]"
+                className="flex-1 px-3 py-2 text-xs text-white bg-[#FF6B35] rounded-lg hover:bg-[#E85A2A]"
               >
                 确定
               </button>
@@ -412,8 +412,8 @@ const AccountListInline: React.FC<AccountListInlineProps> = ({
               ))}
             </div>
             <div className="flex gap-2">
-              <button onClick={() => setConfirmDisableAI(null)} className="flex-1 px-3 py-2 text-sm text-[#666] border border-[#D9D9D9] rounded-lg hover:bg-[#F7F8FA]">取消</button>
-              <button onClick={() => { updatePlatformAccount(confirmDisableAI, { aiEnabled: false }); setConfirmDisableAI(null); }} className="flex-1 px-3 py-2 text-sm text-white bg-[#FF6B35] rounded-lg hover:bg-[#E85A2A]">确定关闭</button>
+              <button onClick={() => setConfirmDisableAI(null)} className="flex-1 px-3 py-2 text-xs text-[#666] border border-[#D9D9D9] rounded-lg hover:bg-[#F7F8FA]">取消</button>
+              <button onClick={() => { updatePlatformAccount(confirmDisableAI, { aiEnabled: false }); setConfirmDisableAI(null); }} className="flex-1 px-3 py-2 text-xs text-white bg-[#FF6B35] rounded-lg hover:bg-[#E85A2A]">确定关闭</button>
             </div>
           </div>
         </div>
@@ -525,7 +525,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 )} />
                 {!sidebarCollapsed && (
                   <>
-                    <span className="flex-1 text-left text-sm font-medium">{item.name}</span>
+                    <span className="flex-1 text-left text-xs font-medium">{item.name}</span>
                     {item.badge !== null && item.badge > 0 && (
                       <span className="px-2 py-0.5 text-xs font-medium bg-[#FF6B35] text-white rounded-full">
                         {item.badge > 99 ? '99+' : item.badge}
@@ -554,7 +554,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <button
                   onClick={() => setSelectedPlatform('all')}
                   className={cn(
-                    "w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-sm",
+                    "w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-xs",
                     selectedPlatform === 'all'
                       ? "bg-[#F2F2F2] text-[#1A1A1A] font-medium"
                       : "text-[#666] hover:bg-[#F7F8FA]"
@@ -588,7 +588,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                           }
                         }}
                         className={cn(
-                          "w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-sm",
+                          "w-full flex items-center gap-2 px-3 py-2 rounded-lg transition-all text-xs",
                           isSelected
                             ? "bg-[#F2F2F2] text-[#1A1A1A] font-medium"
                             : "text-[#666] hover:bg-[#F7F8FA]"
@@ -648,7 +648,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   sidebarCollapsed ? "w-5 h-5 mx-auto" : "w-5 h-5"
                 )} />
                 {!sidebarCollapsed && (
-                  <span className="text-left text-sm font-medium">{item.name}</span>
+                  <span className="text-left text-xs font-medium">{item.name}</span>
                 )}
               </button>
             ))}
@@ -670,7 +670,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   sidebarCollapsed ? "w-5 h-5" : "w-5 h-5"
                 )} />
                 {!sidebarCollapsed && (
-                  <span className="text-left text-sm font-medium">管理中心</span>
+                  <span className="text-left text-xs font-medium">管理中心</span>
                 )}
               </button>
             )}

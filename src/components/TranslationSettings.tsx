@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { X, Languages, ChevronDown, Download, Send, Settings2, HelpCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStore } from '@/store/useStore';
@@ -31,7 +31,7 @@ const translationEngines = [
 export const TranslationSettings: React.FC<TranslationSettingsProps> = ({ onClose }) => {
   const { userSettings, updateUserSettings } = useStore();
 
-  // 下拉选择组件
+  // 自定义下拉选择组件
   const SelectField = ({
     label,
     value,
@@ -44,25 +44,57 @@ export const TranslationSettings: React.FC<TranslationSettingsProps> = ({ onClos
     onChange: (v: string) => void;
     options: typeof languages;
     showFlag?: boolean;
-  }) => (
-    <div className="flex items-center gap-3 bg-white/70 rounded-lg px-3 py-2">
-      <span className="text-xs text-gray-600 w-28 flex-shrink-0 font-medium">{label}</span>
-      <div className="relative flex-1">
-        <select
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg appearance-none focus:outline-none focus:border-[#FF6B35] bg-white shadow-sm"
-        >
-          {options.map((opt) => (
-            <option key={opt.code} value={opt.code}>
-              {showFlag && opt.flag} {opt.name}
-            </option>
-          ))}
-        </select>
-        <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+  }) => {
+    const [open, setOpen] = useState(false);
+    const ref = useRef<HTMLDivElement>(null);
+    const selected = options.find(o => o.code === value);
+
+    useEffect(() => {
+      const handler = (e: MouseEvent) => {
+        if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      };
+      document.addEventListener('mousedown', handler);
+      return () => document.removeEventListener('mousedown', handler);
+    }, []);
+
+    return (
+      <div className="flex items-center gap-3 bg-[#F7F8FA] rounded-lg px-3 py-2">
+        <span className="text-xs text-[#1A1A1A] w-28 flex-shrink-0">{label}</span>
+        <div className="relative flex-1" ref={ref}>
+          <button
+            type="button"
+            onClick={() => setOpen(!open)}
+            className={cn(
+              "w-full flex items-center justify-between px-3 py-1.5 text-xs border rounded-lg bg-white shadow-sm transition-colors whitespace-nowrap overflow-hidden",
+              open ? "border-[#FF6B35] ring-1 ring-[#FF6B35]/20" : "border-[#D9D9D9]"
+            )}
+          >
+            <span className="truncate">{showFlag && selected?.flag} {selected?.name}</span>
+            <ChevronDown className={cn("w-3.5 h-3.5 text-[#999] transition-transform", open && "rotate-180")} />
+          </button>
+          {open && (
+            <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-[#E8E8E8] rounded-lg shadow-lg max-h-48 overflow-y-auto">
+              {options.map((opt) => (
+                <button
+                  key={opt.code}
+                  type="button"
+                  onClick={() => { onChange(opt.code); setOpen(false); }}
+                  className={cn(
+                    "w-full text-left px-3 py-2 text-xs transition-colors",
+                    opt.code === value
+                      ? "bg-[#FFF0E8] text-[#FF6B35] font-medium"
+                      : "text-[#333] hover:bg-[#F7F8FA]"
+                  )}
+                >
+                  {showFlag && opt.flag} {opt.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // 开关组件
   const ToggleSwitch = ({
@@ -71,7 +103,6 @@ export const TranslationSettings: React.FC<TranslationSettingsProps> = ({ onClos
     checked,
     onChange,
     tooltip,
-    color = 'blue'
   }: {
     label: string;
     description: string;
@@ -80,30 +111,28 @@ export const TranslationSettings: React.FC<TranslationSettingsProps> = ({ onClos
     tooltip?: string;
     color?: 'blue' | 'green';
   }) => (
-    <div className="flex items-center justify-between bg-white/70 rounded-lg px-3 py-2.5">
+    <div className="flex items-center justify-between bg-[#F7F8FA] rounded-lg px-3 py-2.5">
       <div className="flex items-center gap-1">
         <div>
-          <p className="text-xs font-medium text-gray-900 flex items-center gap-1">
+          <p className="text-xs font-medium text-[#1A1A1A] flex items-center gap-1">
             {label}
             {tooltip && (
               <span className="group relative">
-                <HelpCircle className="w-3 h-3 text-gray-400 cursor-help" />
-                <span className="absolute left-0 bottom-full mb-1 hidden group-hover:block w-48 p-2 text-xs text-white bg-gray-800 rounded-lg shadow-lg z-10">
+                <HelpCircle className="w-3 h-3 text-[#999] cursor-help" />
+                <span className="absolute left-0 bottom-full mb-1 hidden group-hover:block w-48 p-2 text-xs text-white bg-[#1A1A1A] rounded-lg shadow-lg z-10">
                   {tooltip}
                 </span>
               </span>
             )}
           </p>
-          <p className="text-[11px] text-gray-500">{description}</p>
+          <p className="text-[11px] text-[#999]">{description}</p>
         </div>
       </div>
       <button
         onClick={onChange}
         className={cn(
           "w-9 h-5 rounded-full transition-colors relative flex-shrink-0",
-          checked
-            ? color === 'green' ? "bg-green-500" : "bg-[#FF6B35]"
-            : "bg-gray-300"
+          checked ? "bg-[#FF6B35]" : "bg-[#D9D9D9]"
         )}
       >
         <span className={cn(
@@ -117,26 +146,28 @@ export const TranslationSettings: React.FC<TranslationSettingsProps> = ({ onClos
   return (
     <div className="h-full bg-white rounded-xl shadow-sm flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-        <div className="flex items-center gap-2">
-          <Languages className="w-5 h-5 text-[#FF6B35]" />
-          <h3 className="font-semibold text-gray-900">翻译设置</h3>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#E8E8E8]">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#FF6B35] to-[#FF8F5E] flex items-center justify-center shadow-sm">
+            <Languages className="w-5 h-5 text-white" />
+          </div>
+          <h3 className="font-semibold text-[#1A1A1A]">翻译设置</h3>
         </div>
-        <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-          <X className="w-4 h-4 text-gray-500" />
+        <button onClick={onClose} className="p-1.5 hover:bg-[#F2F2F2] rounded-lg transition-colors">
+          <X className="w-4 h-4 text-[#999]" />
         </button>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {/* 接收设置 */}
-        <div className="bg-gradient-to-br from-orange-50/80 to-amber-50/50 rounded-xl p-4 border border-orange-100/60">
-          <h4 className="text-sm font-semibold text-gray-900 pb-3 mb-3 border-b border-orange-200/50 flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-[#FF6B35]/10 flex items-center justify-center">
-              <Download className="w-4 h-4 text-[#FF6B35]" />
+        <div className="bg-white rounded-xl p-4 border border-[#E8E8E8] border-l-[3px] border-l-[#FF6B35]">
+          <h4 className="text-sm font-semibold text-[#1A1A1A] pb-3 mb-3 border-b border-[#E8E8E8] flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-[#1A1A1A] flex items-center justify-center shadow-sm">
+              <Download className="w-5 h-5 text-white" />
             </div>
             接收设置
-            <span className="text-[11px] font-normal text-gray-500 bg-white/60 px-2 py-0.5 rounded-full">全局译文</span>
+            <span className="text-[11px] font-normal text-[#FF6B35] bg-[#FFF0E8] px-2 py-0.5 rounded-full">全局译文</span>
           </h4>
 
           <div className="space-y-3">
@@ -195,13 +226,13 @@ export const TranslationSettings: React.FC<TranslationSettingsProps> = ({ onClos
         </div>
 
         {/* 发送设置 */}
-        <div className="bg-gradient-to-br from-blue-50/80 to-indigo-50/50 rounded-xl p-4 border border-blue-100/60">
-          <h4 className="text-sm font-semibold text-gray-900 pb-3 mb-3 border-b border-blue-200/50 flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center">
-              <Send className="w-4 h-4 text-blue-500" />
+        <div className="bg-white rounded-xl p-4 border border-[#E8E8E8] border-l-[3px] border-l-[#FF6B35]">
+          <h4 className="text-sm font-semibold text-[#1A1A1A] pb-3 mb-3 border-b border-[#E8E8E8] flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-[#1A1A1A] flex items-center justify-center shadow-sm">
+              <Send className="w-5 h-5 text-white" />
             </div>
             发送设置
-            <span className="text-[11px] font-normal text-gray-500 bg-white/60 px-2 py-0.5 rounded-full">目标输出</span>
+            <span className="text-[11px] font-normal text-[#FF6B35] bg-[#FFF0E8] px-2 py-0.5 rounded-full">目标输出</span>
           </h4>
 
           <div className="space-y-3">
@@ -248,10 +279,10 @@ export const TranslationSettings: React.FC<TranslationSettingsProps> = ({ onClos
         </div>
 
         {/* 高级设置 */}
-        <div className="bg-gradient-to-br from-purple-50/80 to-violet-50/50 rounded-xl p-4 border border-purple-100/60">
-          <h4 className="text-sm font-semibold text-gray-900 pb-3 mb-3 border-b border-purple-200/50 flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-purple-500/10 flex items-center justify-center">
-              <Settings2 className="w-4 h-4 text-purple-500" />
+        <div className="bg-white rounded-xl p-4 border border-[#E8E8E8] border-l-[3px] border-l-[#FF6B35]">
+          <h4 className="text-sm font-semibold text-[#1A1A1A] pb-3 mb-3 border-b border-[#E8E8E8] flex items-center gap-3">
+            <div className="w-9 h-9 rounded-lg bg-[#1A1A1A] flex items-center justify-center shadow-sm">
+              <Settings2 className="w-5 h-5 text-white" />
             </div>
             高级设置
           </h4>
@@ -325,8 +356,8 @@ export const TranslationSettings: React.FC<TranslationSettingsProps> = ({ onClos
       </div>
 
       {/* Footer */}
-      <div className="flex items-center gap-2 px-4 py-3 border-t border-gray-100">
-        <button className="flex-1 px-3 py-2 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">
+      <div className="flex items-center gap-2 px-4 py-3 border-t border-[#E8E8E8]">
+        <button className="flex-1 px-3 py-2 text-xs font-medium text-[#FF6B35] bg-[#FFF0E8] rounded-lg hover:bg-[#FFE0D0] border border-[#FF6B35]/20">
           重置
         </button>
         <button className="flex-1 px-3 py-2 text-xs font-medium text-white bg-[#FF6B35] rounded-lg hover:bg-[#E85A2A]">

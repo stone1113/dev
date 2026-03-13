@@ -1,6 +1,63 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { X, ChevronDown, Globe, Shield, Fingerprint, Cookie } from 'lucide-react';
 import { cn } from '@/lib/utils';
+
+// 自定义下拉组件
+const CustomSelect: React.FC<{
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+  placeholder?: string;
+}> = ({ value, onChange, options, placeholder }) => {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const selected = options.find(o => o.value === value);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  return (
+    <div ref={ref} className="relative flex-1">
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className={cn(
+          "w-full flex items-center justify-between px-3 py-1.5 text-xs border rounded-lg bg-white transition-colors",
+          open ? "border-[#FF6B35] ring-2 ring-[#FF6B35]/20" : "border-[#D9D9D9]"
+        )}
+      >
+        <span className={cn("truncate", selected ? "text-[#1A1A1A]" : "text-[#999]")}>
+          {selected?.label || placeholder || '请选择'}
+        </span>
+        <ChevronDown className={cn("w-3.5 h-3.5 flex-shrink-0 text-[#999] transition-transform", open && "rotate-180")} />
+      </button>
+      {open && (
+        <div className="absolute z-50 mt-1 w-full bg-white border border-[#D9D9D9] rounded-lg shadow-lg py-1 max-h-48 overflow-y-auto">
+          {options.map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              onClick={() => { onChange(opt.value); setOpen(false); }}
+              className={cn(
+                "w-full text-left px-3 py-1.5 text-xs whitespace-nowrap transition-colors",
+                opt.value === value
+                  ? "bg-[#FFF0E8] text-[#FF6B35] font-medium"
+                  : "text-[#333] hover:bg-[#F7F8FA]"
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
 
 interface ProxySettingsProps {
   onClose: () => void;
@@ -38,18 +95,20 @@ export const ProxySettings: React.FC<ProxySettingsProps> = ({ onClose }) => {
   return (
     <div className="h-full bg-white rounded-xl shadow-sm flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-        <div className="flex items-center gap-2">
-          <Globe className="w-5 h-5 text-[#FF6B35]" />
-          <h3 className="font-semibold text-gray-900">环境配置</h3>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#E8E8E8]">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#FF6B35] to-[#FF8F5E] flex items-center justify-center shadow-sm">
+            <Globe className="w-5 h-5 text-white" />
+          </div>
+          <h3 className="font-semibold text-[#1A1A1A]">环境配置</h3>
         </div>
-        <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-          <X className="w-4 h-4 text-gray-500" />
+        <button onClick={onClose} className="p-1.5 hover:bg-[#F2F2F2] rounded-lg transition-colors">
+          <X className="w-4 h-4 text-[#999]" />
         </button>
       </div>
 
       {/* Tabs - 用于快速定位 */}
-      <div className="flex border-b border-gray-100">
+      <div className="flex border-b border-[#E8E8E8]">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -58,7 +117,7 @@ export const ProxySettings: React.FC<ProxySettingsProps> = ({ onClose }) => {
               "flex-1 px-2 py-2.5 text-xs font-medium transition-colors whitespace-nowrap",
               activeTab === tab.id
                 ? "text-[#FF6B35] border-b-2 border-[#FF6B35]"
-                : "text-gray-500 hover:text-gray-700"
+                : "text-[#999] hover:text-[#333]"
             )}
           >
             {tab.label}
@@ -93,8 +152,8 @@ export const ProxySettings: React.FC<ProxySettingsProps> = ({ onClose }) => {
       </div>
 
       {/* Footer */}
-      <div className="flex items-center gap-2 px-4 py-3 border-t border-gray-100">
-        <button className="flex-1 px-3 py-2 text-xs font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">
+      <div className="flex items-center gap-2 px-4 py-3 border-t border-[#E8E8E8]">
+        <button className="flex-1 px-3 py-2 text-xs font-medium text-[#1A1A1A] bg-[#F2F2F2] rounded-lg hover:bg-[#E8E8E8]">
           随机生成
         </button>
         <button className="flex-1 px-3 py-2 text-xs font-medium text-white bg-[#FF6B35] rounded-lg hover:bg-[#E85A2A]">
@@ -115,18 +174,18 @@ interface ProxyTabProps {
 
 const ProxyTab: React.FC<ProxyTabProps> = ({ proxyType, setProxyType, protocol, setProtocol }) => {
   return (
-    <div className="bg-gradient-to-br from-orange-50/80 to-amber-50/50 rounded-xl p-4 border border-orange-100/60">
+    <div className="bg-white rounded-xl p-4 border border-[#E8E8E8]">
       {/* 代理配置 */}
-      <h4 className="text-sm font-semibold text-gray-900 pb-3 mb-3 border-b border-orange-200/50 flex items-center gap-2">
-        <div className="w-7 h-7 rounded-lg bg-[#FF6B35]/10 flex items-center justify-center">
-          <Shield className="w-4 h-4 text-[#FF6B35]" />
+      <h4 className="text-sm font-semibold text-[#1A1A1A] pb-3 mb-3 border-b border-[#E8E8E8] flex items-center gap-3">
+        <div className="w-9 h-9 rounded-lg bg-[#1A1A1A] flex items-center justify-center shadow-sm">
+          <Shield className="w-5 h-5 text-white" />
         </div>
         代理配置
       </h4>
       <div className="space-y-3">
         {/* 选择代理 */}
-        <div className="flex items-center gap-3 bg-white/70 rounded-lg px-3 py-2.5">
-          <span className="text-xs text-gray-600 w-16 flex-shrink-0 font-medium">选择代理</span>
+        <div className="flex items-center gap-3 bg-[#F7F8FA] rounded-lg px-3 py-2.5">
+          <span className="text-xs text-[#1A1A1A] w-16 flex-shrink-0 font-medium">选择代理</span>
           <div className="flex items-center gap-4">
             <label className="flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
               <input
@@ -135,7 +194,7 @@ const ProxyTab: React.FC<ProxyTabProps> = ({ proxyType, setProxyType, protocol, 
                 onChange={() => setProxyType('custom')}
                 className="w-4 h-4 text-[#FF6B35] accent-[#FF6B35]"
               />
-              <span className={cn("text-xs", proxyType === 'custom' ? "text-[#FF6B35] font-medium" : "text-gray-600")}>自定义代理</span>
+              <span className={cn("text-xs", proxyType === 'custom' ? "text-[#FF6B35] font-medium" : "text-[#666]")}>自定义代理</span>
             </label>
             <label className="flex items-center gap-1.5 cursor-pointer whitespace-nowrap">
               <input
@@ -144,42 +203,37 @@ const ProxyTab: React.FC<ProxyTabProps> = ({ proxyType, setProxyType, protocol, 
                 onChange={() => setProxyType('managed')}
                 className="w-4 h-4 text-[#FF6B35] accent-[#FF6B35]"
               />
-              <span className={cn("text-xs", proxyType === 'managed' ? "text-[#FF6B35] font-medium" : "text-gray-600")}>代理IP管理</span>
+              <span className={cn("text-xs", proxyType === 'managed' ? "text-[#FF6B35] font-medium" : "text-[#666]")}>代理IP管理</span>
             </label>
           </div>
         </div>
 
         {/* 协议/代理IP */}
-        <div className="flex items-center gap-3 bg-white/70 rounded-lg px-3 py-2.5">
-          <span className="text-xs text-gray-600 w-16 flex-shrink-0 font-medium">
+        <div className="flex items-center gap-3 bg-[#F7F8FA] rounded-lg px-3 py-2.5">
+          <span className="text-xs text-[#1A1A1A] w-16 flex-shrink-0 font-medium">
             {proxyType === 'managed' ? '代理IP' : '协议'}
           </span>
-          <div className="relative flex-1">
-            <select
+          <CustomSelect
               value={proxyType === 'managed' ? '' : protocol}
-              onChange={(e) => setProtocol(e.target.value)}
-              className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] bg-white shadow-sm"
-            >
-              {proxyType === 'managed' ? (
-                <option value="">请选择</option>
-              ) : (
-                <>
-                  <option>直连模式 (不设置代理)</option>
-                  <option>HTTP</option>
-                  <option>HTTPS</option>
-                  <option>SOCKS5</option>
-                </>
-              )}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-          </div>
+              onChange={(v) => setProtocol(v)}
+              placeholder="请选择"
+              options={proxyType === 'managed'
+                ? [{ value: '', label: '请选择' }]
+                : [
+                    { value: '直连模式 (不设置代理)', label: '直连模式 (不设置代理)' },
+                    { value: 'HTTP', label: 'HTTP' },
+                    { value: 'HTTPS', label: 'HTTPS' },
+                    { value: 'SOCKS5', label: 'SOCKS5' },
+                  ]
+              }
+            />
         </div>
 
         {/* 本机IP信息 */}
-        <div className="p-3 bg-white/80 rounded-lg border border-green-200/50">
-          <div className="flex items-center gap-2 text-xs text-gray-600">
-            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <span className="font-medium">(本机) 109.122.3.167 / Hong Kong</span>
+        <div className="p-3 bg-[#FFF7F3] rounded-lg border border-[#FFD4BE]">
+          <div className="flex items-center gap-2 text-xs text-[#1A1A1A]">
+            <span className="w-2 h-2 rounded-full bg-[#FF6B35] animate-pulse" />
+            <span className="font-semibold">(本机) 109.122.3.167 / Hong Kong</span>
           </div>
         </div>
       </div>
@@ -206,44 +260,38 @@ const FingerprintTab: React.FC = () => {
   const [deviceMemory, setDeviceMemory] = React.useState('8');
 
   return (
-    <div className="bg-gradient-to-br from-blue-50/80 to-indigo-50/50 rounded-xl p-4 border border-blue-100/60">
-      <h4 className="text-sm font-semibold text-gray-900 pb-3 mb-3 border-b border-blue-200/50 flex items-center gap-2">
-        <div className="w-7 h-7 rounded-lg bg-blue-500/10 flex items-center justify-center">
-          <Fingerprint className="w-4 h-4 text-blue-500" />
+    <div className="bg-white rounded-xl p-4 border border-[#E8E8E8]">
+      <h4 className="text-sm font-semibold text-[#1A1A1A] pb-3 mb-3 border-b border-[#E8E8E8] flex items-center gap-3">
+        <div className="w-9 h-9 rounded-lg bg-[#1A1A1A] flex items-center justify-center shadow-sm">
+          <Fingerprint className="w-5 h-5 text-white" />
         </div>
         指纹设置
       </h4>
       <div className="space-y-2.5">
       <FormRow label="浏览器版本">
-        <div className="relative flex-1">
-          <select
-            value={browserVersion}
-            onChange={(e) => setBrowserVersion(e.target.value)}
-            className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] bg-white"
-          >
-            <option value="142">142</option>
-            <option value="141">141</option>
-            <option value="140">140</option>
-          </select>
-          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
-        </div>
+        <CustomSelect
+          value={browserVersion}
+          onChange={(v) => setBrowserVersion(v)}
+          options={[
+            { value: '142', label: '142' },
+            { value: '141', label: '141' },
+            { value: '140', label: '140' },
+          ]}
+        />
       </FormRow>
-      <p className="text-xs text-gray-400 ml-[84px] -mt-1">建议选择最新内核，若切换不同内核请清除缓存，以免异常</p>
+      <p className="text-xs text-[#999] ml-[84px] -mt-1">建议选择最新内核，若切换不同内核请清除缓存，以免异常</p>
 
       {/* 操作系统 */}
       <FormRow label="操作系统">
-        <div className="relative flex-1">
-          <select
-            value={os}
-            onChange={(e) => setOs(e.target.value)}
-            className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] bg-white"
-          >
-            <option value="Windows">Windows</option>
-            <option value="macOS">macOS</option>
-            <option value="Linux">Linux</option>
-          </select>
-          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
-        </div>
+        <CustomSelect
+          value={os}
+          onChange={(v) => setOs(v)}
+          options={[
+            { value: 'Windows', label: 'Windows' },
+            { value: 'macOS', label: 'macOS' },
+            { value: 'Linux', label: 'Linux' },
+          ]}
+        />
       </FormRow>
 
       {/* User Agent */}
@@ -252,7 +300,7 @@ const FingerprintTab: React.FC = () => {
           value={userAgent}
           onChange={(e) => setUserAgent(e.target.value)}
           rows={3}
-          className="flex-1 px-3 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:border-[#FF6B35] resize-none"
+          className="flex-1 px-3 py-1.5 text-xs border border-[#D9D9D9] rounded-lg focus:outline-none focus:border-[#FF6B35] resize-none"
         />
       </FormRow>
       <div className="flex justify-end -mt-2">
@@ -267,7 +315,7 @@ const FingerprintTab: React.FC = () => {
           <ToggleButton active={webRTC === 'disable'} onClick={() => setWebRTC('disable')} variant="primary">禁止</ToggleButton>
         </div>
       </FormRow>
-      <p className="text-xs text-gray-400 ml-[84px] -mt-1">WebRTC被关闭，网站会检测到您关闭了WebRTC</p>
+      <p className="text-xs text-[#999] ml-[84px] -mt-1">WebRTC被关闭，网站会检测到您关闭了WebRTC</p>
 
       {/* 地理位置 */}
       <FormRow label="地理位置">
@@ -292,14 +340,14 @@ const FingerprintTab: React.FC = () => {
             type="text"
             value={resWidth}
             onChange={(e) => setResWidth(e.target.value)}
-            className="w-16 px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:border-[#FF6B35] text-center"
+            className="w-16 px-2 py-1.5 text-xs border border-[#D9D9D9] rounded-lg focus:outline-none focus:border-[#FF6B35] text-center"
           />
-          <span className="text-xs text-gray-400">×</span>
+          <span className="text-xs text-[#999]">×</span>
           <input
             type="text"
             value={resHeight}
             onChange={(e) => setResHeight(e.target.value)}
-            className="w-16 px-2 py-1.5 text-xs border border-gray-200 rounded-lg focus:outline-none focus:border-[#FF6B35] text-center"
+            className="w-16 px-2 py-1.5 text-xs border border-[#D9D9D9] rounded-lg focus:outline-none focus:border-[#FF6B35] text-center"
           />
         </div>
       </FormRow>
@@ -313,35 +361,35 @@ const FingerprintTab: React.FC = () => {
       </FormRow>
 
       {/* Canvas */}
-      <FormRow label={<span>Canvas<br/><span className="text-gray-400 text-[10px]">(新建会话生效)</span></span>}>
+      <FormRow label={<span>Canvas<br/><span className="text-[#999] text-[10px]">(新建会话生效)</span></span>}>
         <div className="flex-1">
           <div className="flex gap-1.5">
             <ToggleButton active={canvas === 'random'} onClick={() => setCanvas('random')}>随机</ToggleButton>
             <ToggleButton active={canvas === 'off'} onClick={() => setCanvas('off')} variant="primary">关闭</ToggleButton>
           </div>
-          <p className="text-xs text-gray-400 mt-1">每个浏览器使用当前电脑默认的Canvas</p>
+          <p className="text-xs text-[#999] mt-1">每个浏览器使用当前电脑默认的Canvas</p>
         </div>
       </FormRow>
 
       {/* AudioContext */}
-      <FormRow label={<span>AudioContext<br/><span className="text-gray-400 text-[10px]">(新建会话生效)</span></span>}>
+      <FormRow label={<span>AudioContext<br/><span className="text-[#999] text-[10px]">(新建会话生效)</span></span>}>
         <div className="flex-1">
           <div className="flex gap-1.5">
             <ToggleButton active={audioContext === 'random'} onClick={() => setAudioContext('random')}>随机</ToggleButton>
             <ToggleButton active={audioContext === 'off'} onClick={() => setAudioContext('off')} variant="primary">关闭</ToggleButton>
           </div>
-          <p className="text-xs text-gray-400 mt-1">每个浏览器使用当前电脑默认的Audio</p>
+          <p className="text-xs text-[#999] mt-1">每个浏览器使用当前电脑默认的Audio</p>
         </div>
       </FormRow>
 
       {/* ClientRects */}
-      <FormRow label={<span>ClientRects<br/><span className="text-gray-400 text-[10px]">(新建会话生效)</span></span>}>
+      <FormRow label={<span>ClientRects<br/><span className="text-[#999] text-[10px]">(新建会话生效)</span></span>}>
         <div className="flex-1">
           <div className="flex gap-1.5">
             <ToggleButton active={clientRects === 'random'} onClick={() => setClientRects('random')}>随机</ToggleButton>
             <ToggleButton active={clientRects === 'off'} onClick={() => setClientRects('off')} variant="primary">关闭</ToggleButton>
           </div>
-          <p className="text-xs text-gray-400 mt-1">每个浏览器使用当前电脑默认的ClientRects</p>
+          <p className="text-xs text-[#999] mt-1">每个浏览器使用当前电脑默认的ClientRects</p>
         </div>
       </FormRow>
 
@@ -352,48 +400,42 @@ const FingerprintTab: React.FC = () => {
             <ToggleButton active={deviceInfo === 'custom'} onClick={() => setDeviceInfo('custom')}>自定义</ToggleButton>
             <ToggleButton active={deviceInfo === 'off'} onClick={() => setDeviceInfo('off')} variant="primary">关闭</ToggleButton>
           </div>
-          <p className="text-xs text-gray-400 mt-1">每个浏览器使用当前电脑默认的设备名称和MAC地址</p>
+          <p className="text-xs text-[#999] mt-1">每个浏览器使用当前电脑默认的设备名称和MAC地址</p>
         </div>
       </FormRow>
 
       {/* 硬件并发数 */}
       <FormRow label="硬件并发数">
         <div className="flex-1">
-          <div className="relative">
-            <select
-              value={hardwareConcurrency}
-              onChange={(e) => setHardwareConcurrency(e.target.value)}
-              className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] bg-white"
-            >
-              <option value="2">2</option>
-              <option value="4">4</option>
-              <option value="8">8</option>
-              <option value="16">16</option>
-            </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
-          </div>
-          <p className="text-xs text-gray-400 mt-1">设置当前浏览器环境的CPU核心数</p>
+          <CustomSelect
+            value={hardwareConcurrency}
+            onChange={(v) => setHardwareConcurrency(v)}
+            options={[
+              { value: '2', label: '2' },
+              { value: '4', label: '4' },
+              { value: '8', label: '8' },
+              { value: '16', label: '16' },
+            ]}
+          />
+          <p className="text-xs text-[#999] mt-1">设置当前浏览器环境的CPU核心数</p>
         </div>
       </FormRow>
 
       {/* 设备内存 */}
       <FormRow label="设备内存">
         <div className="flex-1">
-          <div className="relative">
-            <select
-              value={deviceMemory}
-              onChange={(e) => setDeviceMemory(e.target.value)}
-              className="w-full px-3 py-1.5 text-xs border border-gray-200 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] bg-white"
-            >
-              <option value="2">2</option>
-              <option value="4">4</option>
-              <option value="8">8</option>
-              <option value="16">16</option>
-              <option value="32">32</option>
-            </select>
-            <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
-          </div>
-          <p className="text-xs text-gray-400 mt-1">设置当前浏览器环境环境的机器内存</p>
+          <CustomSelect
+            value={deviceMemory}
+            onChange={(v) => setDeviceMemory(v)}
+            options={[
+              { value: '2', label: '2' },
+              { value: '4', label: '4' },
+              { value: '8', label: '8' },
+              { value: '16', label: '16' },
+              { value: '32', label: '32' },
+            ]}
+          />
+          <p className="text-xs text-[#999] mt-1">设置当前浏览器环境环境的机器内存</p>
         </div>
       </FormRow>
       </div>
@@ -404,29 +446,29 @@ const FingerprintTab: React.FC = () => {
 // Cookie标签页
 const CookieTab: React.FC = () => {
   return (
-    <div className="bg-gradient-to-br from-purple-50/80 to-violet-50/50 rounded-xl p-4 border border-purple-100/60">
-      <h4 className="text-sm font-semibold text-gray-900 pb-3 mb-3 border-b border-purple-200/50 flex items-center gap-2">
-        <div className="w-7 h-7 rounded-lg bg-purple-500/10 flex items-center justify-center">
-          <Cookie className="w-4 h-4 text-purple-500" />
+    <div className="bg-white rounded-xl p-4 border border-[#E8E8E8]">
+      <h4 className="text-sm font-semibold text-[#1A1A1A] pb-3 mb-3 border-b border-[#E8E8E8] flex items-center gap-3">
+        <div className="w-9 h-9 rounded-lg bg-[#1A1A1A] flex items-center justify-center shadow-sm">
+          <Cookie className="w-5 h-5 text-white" />
         </div>
         Cookie
       </h4>
       <div className="space-y-3">
-        <div className="bg-white/70 rounded-lg p-3">
+        <div className="bg-[#F7F8FA] rounded-lg p-3">
           <textarea
             placeholder="粘贴 Cookie 内容..."
             rows={6}
-            className="w-full px-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:border-[#FF6B35] resize-none font-mono bg-white shadow-sm"
+            className="w-full px-3 py-2 text-xs border border-[#D9D9D9] rounded-lg focus:outline-none focus:border-[#FF6B35] resize-none font-mono bg-white shadow-sm"
           />
         </div>
         <div className="flex gap-2">
-          <button className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white/80 rounded-lg hover:bg-white whitespace-nowrap border border-gray-200 shadow-sm">
+          <button className="px-3 py-1.5 text-xs font-medium text-[#1A1A1A] bg-[#F2F2F2] rounded-lg hover:bg-[#E8E8E8] whitespace-nowrap border border-[#D9D9D9] shadow-sm">
             导入
           </button>
-          <button className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-white/80 rounded-lg hover:bg-white whitespace-nowrap border border-gray-200 shadow-sm">
+          <button className="px-3 py-1.5 text-xs font-medium text-[#1A1A1A] bg-[#F2F2F2] rounded-lg hover:bg-[#E8E8E8] whitespace-nowrap border border-[#D9D9D9] shadow-sm">
             导出
           </button>
-          <button className="px-3 py-1.5 text-xs font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 whitespace-nowrap shadow-sm">
+          <button className="px-3 py-1.5 text-xs font-medium text-white bg-[#1A1A1A] rounded-lg hover:bg-[#333] whitespace-nowrap shadow-sm">
             清除
           </button>
         </div>
@@ -438,7 +480,7 @@ const CookieTab: React.FC = () => {
 // 表单行组件
 const FormRow: React.FC<{ label: React.ReactNode; children: React.ReactNode }> = ({ label, children }) => (
   <div className="flex items-start gap-4">
-    <span className="text-xs text-gray-500 w-[68px] pt-1.5 flex-shrink-0 leading-tight">{label}</span>
+    <span className="text-xs text-[#1A1A1A] w-[68px] pt-1.5 flex-shrink-0 leading-tight">{label}</span>
     {children}
   </div>
 );
@@ -454,11 +496,11 @@ interface ToggleButtonProps {
 const ToggleButton: React.FC<ToggleButtonProps> = ({ active, onClick, children, variant = 'default' }) => {
   const getStyles = () => {
     if (active) {
-      if (variant === 'danger') return 'bg-red-500 text-white border-red-500';
+      if (variant === 'danger') return 'bg-[#1A1A1A] text-white border-[#1A1A1A]';
       if (variant === 'primary') return 'bg-[#FF6B35] text-white border-[#FF6B35]';
       return 'bg-[#FF6B35] text-white border-[#FF6B35]';
     }
-    return 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50';
+    return 'bg-white text-[#666] border-[#D9D9D9] hover:bg-[#F7F8FA]';
   };
 
   return (

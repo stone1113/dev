@@ -167,12 +167,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
 
   if (!conversation) {
     return (
-      <div className="flex flex-col items-center justify-center h-full bg-gray-50 rounded-xl">
+      <div className="flex flex-col items-center justify-center h-full bg-[#F7F8FA] rounded-xl">
         <div className="w-24 h-24 bg-[#FF6B35]/10 rounded-full flex items-center justify-center mb-4">
           <MessageCircle className="w-12 h-12 text-[#FF6B35]" />
         </div>
-        <h3 className="text-lg font-medium text-gray-700 mb-2">选择一个会话开始聊天</h3>
-        <p className="text-sm text-gray-500">从左侧列表选择一个客户开始对话</p>
+        <h3 className="text-lg font-medium text-[#1A1A1A] mb-2">选择一个会话开始聊天</h3>
+        <p className="text-sm text-[#999]">从左侧列表选择一个客户开始对话</p>
       </div>
     );
   }
@@ -274,13 +274,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
   const getMessageStatus = (status: string) => {
     switch (status) {
       case 'sent':
-        return <Check className="w-3 h-3 text-gray-400" />;
+        return <Check className="w-3 h-3 text-[#B3B3B3]" />;
       case 'delivered':
-        return <CheckCheck className="w-3 h-3 text-gray-400" />;
+        return <CheckCheck className="w-3 h-3 text-[#B3B3B3]" />;
       case 'read':
-        return <CheckCheck className="w-3 h-3 text-blue-500" />;
+        return <CheckCheck className="w-3 h-3 text-[#FF6B35]" />;
       default:
-        return <Clock className="w-3 h-3 text-gray-400" />;
+        return <Clock className="w-3 h-3 text-[#B3B3B3]" />;
     }
   };
   
@@ -290,13 +290,13 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
   return (
     <div className="flex flex-col h-full bg-white rounded-xl shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#E8E8E8]">
         <div className="flex items-center gap-3">
           <div className="relative">
             <img
               src={conversation.customer.avatar}
               alt={conversation.customer.name}
-              className="w-10 h-10 rounded-full object-cover bg-gray-100"
+              className="w-10 h-10 rounded-full object-cover bg-[#F2F2F2]"
             />
             <div 
               className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full flex items-center justify-center border-2 border-white"
@@ -308,7 +308,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
           
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-medium text-gray-900">{conversation.customer.name}</h3>
+              <h3 className="font-medium text-[#1A1A1A]">{conversation.customer.name}</h3>
               {(() => {
                 const pConfig = platformConfigs.find(p => p.id === conversation.platform);
                 return pConfig ? (
@@ -322,7 +322,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
                 ) : null;
               })()}
             </div>
-            <div className="flex items-center gap-2 text-xs text-gray-500">
+            <div className="flex items-center gap-2 text-xs text-[#999]">
               <span>{conversation.customer.country}</span>
               <span>·</span>
               <span className="flex items-center gap-1">
@@ -336,7 +336,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
         <div className="flex items-center gap-2">
           {/* 平台账号信息 */}
           {platformAccount && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg mr-2">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-[#F7F8FA] rounded-lg mr-2">
               <div className="relative">
                 <img
                   src={platformAccount.avatar}
@@ -345,33 +345,33 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
                 />
                 <span className={cn(
                   "absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border border-white",
-                  platformAccount.status === 'online' ? "bg-green-500" :
-                  platformAccount.status === 'busy' ? "bg-amber-500" : "bg-gray-400"
+                  platformAccount.status === 'online' ? "bg-[#FF6B35]" :
+                  platformAccount.status === 'busy' ? "bg-[#FFB088]" : "bg-[#B3B3B3]"
                 )} />
               </div>
               <div className="hidden sm:block">
-                <p className="text-xs font-medium text-gray-700">{platformAccount.name}</p>
-                <p className="text-[10px] text-gray-400">{platformAccount.accountId}</p>
+                <p className="text-xs font-medium text-[#1A1A1A]">{platformAccount.name}</p>
+                <p className="text-[10px] text-[#999]">{platformAccount.accountId}</p>
               </div>
             </div>
           )}
           
           <div className="flex items-center gap-1">
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <Phone className="w-5 h-5 text-gray-500" />
+            <button className="p-2 hover:bg-[#F2F2F2] rounded-lg transition-colors">
+              <Phone className="w-5 h-5 text-[#999]" />
             </button>
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <Video className="w-5 h-5 text-gray-500" />
+            <button className="p-2 hover:bg-[#F2F2F2] rounded-lg transition-colors">
+              <Video className="w-5 h-5 text-[#999]" />
             </button>
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <MoreVertical className="w-5 h-5 text-gray-500" />
+            <button className="p-2 hover:bg-[#F2F2F2] rounded-lg transition-colors">
+              <MoreVertical className="w-5 h-5 text-[#999]" />
             </button>
           </div>
         </div>
       </div>
       
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-[#F7F8FA]/50">
         {conversation.messages.map((message, index) => {
           const isCustomer = message.senderType === 'customer';
           const isAI = message.senderType === 'ai';
@@ -391,7 +391,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
                 <img
                   src={conversation.customer.avatar}
                   alt={conversation.customer.name}
-                  className="w-8 h-8 rounded-full object-cover bg-gray-100 flex-shrink-0"
+                  className="w-8 h-8 rounded-full object-cover bg-[#F2F2F2] flex-shrink-0"
                 />
               )}
               {isCustomer && !showAvatar && <div className="w-8 flex-shrink-0" />}
@@ -404,7 +404,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
                 {/* Sender Name */}
                 {showAvatar && (
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-[#999]">
                       {isCustomer ? conversation.customer.name : 
                        isAI ? 'AI助手' : userSettings.name}
                     </span>
@@ -420,10 +420,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
                 <div className={cn(
                   "relative group px-4 py-2.5 rounded-2xl text-sm",
                   isCustomer
-                    ? "bg-white border border-gray-200 rounded-tl-sm"
-                    : isAI
-                    ? "bg-[#E6EFFF] border border-[#FF6B35]/10 rounded-tr-sm"
-                    : "bg-[#FF6B35] text-white rounded-tr-sm"
+                    ? "bg-white border border-[#D9D9D9] rounded-tl-sm"
+                    : "bg-[#FFF0E8] text-[#1A1A1A] rounded-tr-sm"
                 )}>
                   {/* Primary Content */}
                   <p>{message.content}</p>
@@ -433,8 +431,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
                   {translatedMessages[message.id] && (
                     <div className={cn(
                       "mt-1.5 pt-1.5 border-t text-xs",
-                      isCustomer ? "border-gray-200/60 text-gray-500" :
-                      isAI ? "border-[#FF6B35]/15 text-gray-600" : "border-white/20 text-white/70"
+                      isCustomer ? "border-[#D9D9D9]/60 text-[#999]" :
+                      "border-[#E8855A]/20 text-[#999]"
                     )}>
                       <div className="flex items-center gap-1.5">
                         <p className="flex-1">{translatedMessages[message.id]}</p>
@@ -443,9 +441,8 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
                           disabled={isTranslating}
                           className={cn(
                             "p-0.5 rounded transition-colors flex-shrink-0",
-                            isCustomer ? "hover:bg-gray-100 text-gray-400 hover:text-gray-600" :
-                            isAI ? "hover:bg-[#FF6B35]/10 text-gray-400 hover:text-[#FF6B35]" :
-                            "hover:bg-white/10 text-white/50 hover:text-white/80"
+                            isCustomer ? "hover:bg-[#F2F2F2] text-[#B3B3B3] hover:text-[#666]" :
+                            "hover:bg-[#E8855A]/10 text-[#B3B3B3] hover:text-[#666]"
                           )}
                           title="重新翻译"
                         >
@@ -458,7 +455,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
                   {!isCustomer && !translatedMessages[message.id] && message.translatedContent && message.translatedContent !== message.content && (
                     <div className={cn(
                       "mt-1.5 pt-1.5 border-t text-xs",
-                      isAI ? "border-[#FF6B35]/15 text-gray-600" : "border-white/20 text-white/70"
+                      isAI ? "border-[#E8855A]/20 text-[#999]" : "border-[#E8855A]/20 text-[#999]"
                     )}>
                       <p className="flex-1">{message.translatedContent}</p>
                     </div>
@@ -472,10 +469,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
                     <button
                       onClick={() => handleTranslateMessage(message)}
                       disabled={isTranslating}
-                      className="p-1.5 bg-white border border-gray-200 rounded-lg shadow-sm hover:bg-gray-50 transition-colors"
+                      className="p-1.5 bg-white border border-[#D9D9D9] rounded-lg shadow-sm hover:bg-[#F7F8FA] transition-colors"
                       title="翻译"
                     >
-                      <Languages className="w-3.5 h-3.5 text-gray-500" />
+                      <Languages className="w-3.5 h-3.5 text-[#999]" />
                     </button>
                   </div>
                 </div>
@@ -485,7 +482,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
                   "flex items-center gap-1 mt-1",
                   isCustomer ? "justify-start" : "justify-end"
                 )}>
-                  <span className="text-[10px] text-gray-400">
+                  <span className="text-[10px] text-[#B3B3B3]">
                     {formatMessageTime(message.timestamp)}
                   </span>
                   {!isCustomer && getMessageStatus(message.status)}
@@ -494,16 +491,21 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
               
               {/* Avatar (right side for agent/AI) */}
               {!isCustomer && showAvatar && (
-                <div className={cn(
-                  "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0",
-                  isAI ? "bg-[#FF6B35]/10" : "bg-gray-200"
-                )}>
-                  {isAI ? (
+                isAI ? (
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-[#FF6B35]/10">
                     <Bot className="w-5 h-5 text-[#FF6B35]" />
-                  ) : (
-                    <User className="w-5 h-5 text-gray-500" />
-                  )}
-                </div>
+                  </div>
+                ) : platformAccount?.avatar ? (
+                  <img
+                    src={platformAccount.avatar}
+                    alt={platformAccount.name}
+                    className="w-8 h-8 rounded-full object-cover flex-shrink-0 bg-[#F2F2F2]"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 bg-[#E8E8E8]">
+                    <User className="w-5 h-5 text-[#999]" />
+                  </div>
+                )
               )}
               {!isCustomer && !showAvatar && <div className="w-8 flex-shrink-0" />}
             </div>
@@ -514,10 +516,10 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
       </div>
 
       {/* Input Area */}
-      <div className="p-4 border-t border-gray-100 bg-white">
+      <div className="p-4 border-t border-[#E8E8E8] bg-white">
         {/* AI Takeover Mode - AI完全接管 */}
         {userSettings.preferences.ai.enabled && userSettings.preferences.ai.autoReply && (
-          <div className="mb-3 p-4 bg-gradient-to-r from-orange-50/80 via-amber-50/60 to-[#FF6B35]/5 border border-[#FF6B35]/20 rounded-xl">
+          <div className="mb-3 p-4 bg-gradient-to-r from-[#FFF7F3] via-[#FFD4BE]/30 to-[#FF6B35]/5 border border-[#FF6B35]/20 rounded-xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-[#FF6B35]/10 rounded-xl flex items-center justify-center">
@@ -553,7 +555,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-[#FF6B35]" />
-                <span className="text-xs font-medium text-gray-700">AI辅助模式</span>
+                <span className="text-xs font-medium text-[#1A1A1A]">AI辅助模式</span>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -562,7 +564,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
                     "text-xs px-2 py-1 rounded-lg transition-colors",
                     showAIReplyPanel
                       ? "bg-[#FF6B35]/10 text-[#FF6B35]"
-                      : "text-gray-500 hover:bg-gray-100"
+                      : "text-[#999] hover:bg-[#F2F2F2]"
                   )}
                 >
                   {showAIReplyPanel ? '收起建议' : '展开建议'}
@@ -577,7 +579,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
                       }
                     }
                   })}
-                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-lg hover:from-amber-600 hover:to-orange-600 shadow-sm hover:shadow-md transition-all"
+                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-gradient-to-r from-[#FF8F5E] to-[#FF6B35] text-white font-medium rounded-lg hover:from-[#FF6B35] hover:to-[#E85A2A] shadow-sm hover:shadow-md transition-all"
                 >
                   <Bot className="w-3.5 h-3.5" />
                   <span>切换AI接管</span>
@@ -595,7 +597,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
                     className={cn(
                       "w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all",
                       isGeneratingReply
-                        ? "bg-gray-100 text-gray-400"
+                        ? "bg-[#F2F2F2] text-[#B3B3B3]"
                         : "bg-gradient-to-r from-[#FF6B35] to-[#E85A2A] text-white hover:shadow-md"
                     )}
                   >
@@ -619,27 +621,27 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
                     {aiSuggestions.map((suggestion, index) => (
                       <div
                         key={index}
-                        className="group p-3 bg-gradient-to-r from-[#FF6B35]/5 to-purple-50 border border-[#FF6B35]/10 rounded-xl hover:border-[#FF6B35]/30 transition-all"
+                        className="group p-3 bg-gradient-to-r from-[#FF6B35]/5 to-[#FFF7F3] border border-[#FF6B35]/10 rounded-xl hover:border-[#FF6B35]/30 transition-all"
                       >
-                        <p className="text-sm text-gray-700 mb-2 leading-relaxed">
+                        <p className="text-sm text-[#333] mb-2 leading-relaxed">
                           {suggestion}
                         </p>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1">
-                            <button className="p-1 hover:bg-gray-200 rounded transition-colors">
-                              <ThumbsUp className="w-3.5 h-3.5 text-gray-400" />
+                            <button className="p-1 hover:bg-[#E8E8E8] rounded transition-colors">
+                              <ThumbsUp className="w-3.5 h-3.5 text-[#B3B3B3]" />
                             </button>
-                            <button className="p-1 hover:bg-gray-200 rounded transition-colors">
-                              <ThumbsDown className="w-3.5 h-3.5 text-gray-400" />
+                            <button className="p-1 hover:bg-[#E8E8E8] rounded transition-colors">
+                              <ThumbsDown className="w-3.5 h-3.5 text-[#B3B3B3]" />
                             </button>
                           </div>
                           <div className="flex items-center gap-2">
                             <button
                               onClick={() => navigator.clipboard.writeText(suggestion)}
-                              className="p-1 hover:bg-gray-200 rounded transition-colors"
+                              className="p-1 hover:bg-[#E8E8E8] rounded transition-colors"
                               title="复制"
                             >
-                              <Copy className="w-3.5 h-3.5 text-gray-400" />
+                              <Copy className="w-3.5 h-3.5 text-[#B3B3B3]" />
                             </button>
                             <button
                               onClick={() => handleUseAIReply(suggestion)}
@@ -669,11 +671,11 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
         
 
         <div className="flex items-end gap-2">
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <Smile className="w-5 h-5 text-gray-500" />
+          <button className="p-2 hover:bg-[#F2F2F2] rounded-lg transition-colors">
+            <Smile className="w-5 h-5 text-[#999]" />
           </button>
-          <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <Paperclip className="w-5 h-5 text-gray-500" />
+          <button className="p-2 hover:bg-[#F2F2F2] rounded-lg transition-colors">
+            <Paperclip className="w-5 h-5 text-[#999]" />
           </button>
           
           <div className="flex-1 relative">
@@ -687,7 +689,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
                 }
               }}
               placeholder={`输入消息... (客户语言: ${customerLanguage.name})`}
-              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-all"
+              className="w-full px-4 py-2.5 bg-[#F7F8FA] border border-[#D9D9D9] rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] transition-all"
               rows={1}
               style={{ minHeight: '44px', maxHeight: '120px' }}
             />
@@ -700,7 +702,7 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
               "p-2.5 rounded-xl transition-all",
               inputMessage.trim()
                 ? "bg-[#FF6B35] text-white hover:bg-[#E85A2A] shadow-md"
-                : "bg-gray-100 text-gray-400"
+                : "bg-[#F2F2F2] text-[#B3B3B3]"
             )}
           >
             <SendHorizonal className="w-5 h-5" />
@@ -709,12 +711,12 @@ export const ChatInterface: React.FC<ChatInterfaceProps> = () => {
 
         {/* Quick Actions */}
         <div className="flex items-center gap-2 mt-3 overflow-x-auto">
-          <span className="text-xs text-gray-400 flex-shrink-0">快捷回复:</span>
+          <span className="text-xs text-[#B3B3B3] flex-shrink-0">快捷回复:</span>
           {['您好，有什么可以帮您？', '请稍等，我为您查询', '感谢您的耐心等待'].map((text, i) => (
             <button
               key={i}
               onClick={() => setInputMessage(text)}
-              className="px-2.5 py-1 text-xs bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition-colors flex-shrink-0"
+              className="px-2.5 py-1 text-xs bg-[#F2F2F2] text-[#666] rounded-full hover:bg-[#E8E8E8] transition-colors flex-shrink-0"
             >
               {text.length > 8 ? text.slice(0, 8) + '...' : text}
             </button>

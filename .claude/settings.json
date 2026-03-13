@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx vite:*)",
+      "Bash(node:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(grep -r \"violet\\\\|purple\\\\|indigo\\\\|fuchsia\" d:devsrc --include=*.tsx --include=*.ts)",
+      "Bash(find src:*)",
+      "Bash(grep -l \"violet\\\\|purple\\\\|indigo\\\\|fuchsia\" src/components/*.tsx)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\11935\\.claude\\skills"
+    ]
+  }
+}

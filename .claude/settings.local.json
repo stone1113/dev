@@ -1,0 +1,36 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: 优化筛选面板、翻译功能与联系人管理\n\n- 新增AdvancedFilterPanel高级筛选组件，支持国家/地区筛选\n- 添加全局筛选按钮到搜索框旁边\n- 优化消息翻译显示，添加重新翻译图标\n- 修复自动翻译功能，正确使用receiveLanguage配置\n- 联系人管理支持群聊数据筛选和显示\n- 移除账号管理中的默认账号功能\n- 统一AI接管模式的视觉风格\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npx tsc:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfix\\(ChatInterface\\): 修复接收翻译功能，支持翻译所有消息类型\n\n- 移除消息类型过滤，翻译整个消息流到用户母语\n- 支持翻译客户消息、用户消息、AI消息和客服消息\n- 优化翻译结果显示样式，适配不同消息类型\nEOF\n\\)\")",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat: 增强概览页面与AI画像功能\n\n- 概览页面新增订阅信息卡片，显示套餐、到期时间、激活码、端口、AI绑定数\n- AI画像面板新增tab导航，支持快速滚动定位到各区域\n- AI分析状态持久化，切换会话后保留已生成的分析内容\n- 侧边栏账号信息卡片新增激活码和端口信息显示\n- 在线客服账号卡片显示未读消息数量角标\nEOF\n\\)\")",
+      "Bash(npx vite build:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nfeat\\(AdminCenter\\): 重构管理中心为激活码管理页面\n\n- 将原有标签页式组织设置重构为左右分栏布局\n- 左侧：部门层级树（支持展开/折叠、选中筛选）+ 登录模式切换\n- 右侧：激活码列表（统计卡片、搜索、状态筛选、操作菜单）\n- 新增 Department 和 ActivationCode 类型定义\n- 新增部门和激活码 mock 数据（3级部门树 + 15条激活码）\n- Store 新增部门选择、激活码增删改查、递归子部门筛选等状态管理\nEOF\n\\)\")",
+      "Bash(npm ls:*)",
+      "Bash(netstat:*)",
+      "Bash(curl:*)",
+      "Bash(wmic process:*)",
+      "Bash(python:*)",
+      "Bash(ls -la \"d:\\\\dev\\\\src\\\\components\"\" | grep -i \".tsx \")",
+      "Bash(where:*)",
+      "Bash(ren:*)",
+      "Bash(ren d:devscriptsgen-prd-docx.js gen-prd-docx.cjs)",
+      "Bash(move d:devscriptsprd-helpers.js d:devscriptsprd-helpers.cjs)",
+      "Bash(move:*)",
+      "Bash(\"C:\\\\Users\\\\11935\\\\AppData\\\\Local\\\\Microsoft\\\\WindowsApps\\\\python.exe\" -c \"import sys; print\\(sys.version\\)\")",
+      "WebFetch(domain:github.com)",
+      "Bash(git -C d:/dev log --oneline -10)",
+      "mcp__figma__generate_figma_design",
+      "Bash(start:*)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\11935\\.claude\\skills\\superpowers"
+    ]
+  }
+}

@@ -313,58 +313,49 @@ function App() {
                 return { PIcon, pColor: config?.color || '#666' };
               };
 
-              const MAX_VISIBLE = 16;
+              const MAX_VISIBLE = 8;
 
               return (
                 <div className="hidden md:flex items-center gap-3 ml-4 pl-4 border-l border-gray-200">
-                  <div className="flex items-center gap-2">
-                    <Inbox className="w-4 h-4 text-amber-600" />
-                    <span className="text-xs font-medium text-amber-600">待处理</span>
-                    <span className="px-1.5 py-0.5 text-xs font-semibold bg-amber-500 text-white rounded-full">
+                  <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#FFF7F3] rounded-lg border border-[#FF6B35]/15">
+                    <Inbox className="w-3.5 h-3.5 text-[#FF6B35]" />
+                    <span className="text-xs font-medium text-[#FF6B35]">待处理</span>
+                    <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-[#FF6B35] text-white rounded-full min-w-[20px] text-center">
                       {pendingConversations.length}
                     </span>
                   </div>
 
                   {/* 头像列表 - 重叠显示 */}
-                  <div className="flex items-center overflow-x-auto scrollbar-hide">
-                    {pendingConversations.slice(0, MAX_VISIBLE).map((conv, index) => {
-                      const { PIcon, pColor } = getPlatformInfo(conv.platform);
-                      return (
+                  <div className="flex items-center">
+                    {pendingConversations.slice(0, MAX_VISIBLE).map((conv, index) => (
                         <button
                           key={conv.id}
                           onClick={() => setSelectedConversation(conv.id)}
                           className="relative flex-shrink-0 transition-all duration-200 hover:scale-110 hover:z-10"
-                          style={{ marginLeft: index === 0 ? 0 : '-6px', zIndex: MAX_VISIBLE - index }}
+                          style={{ marginLeft: index === 0 ? 0 : '-4px', zIndex: MAX_VISIBLE - index }}
                           title={conv.customer.name}
                         >
                           <img
                             src={conv.customer.avatar}
                             alt={conv.customer.name}
                             className={cn(
-                              "w-7 h-7 rounded-full object-cover border-2 border-white hover:border-amber-300 transition-all shadow-sm",
-                              index >= MAX_VISIBLE - 3 && "opacity-60"
+                              "w-7 h-7 rounded-full object-cover border-2 border-white transition-all shadow-sm",
+                              selectedConversationId === conv.id ? "border-[#FF6B35]" : "hover:border-[#FF6B35]/50"
                             )}
                           />
-                          <div
-                            className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full flex items-center justify-center border border-white"
-                            style={{ backgroundColor: pColor }}
-                          >
-                            <PIcon className="w-2 h-2 text-white" />
-                          </div>
                         </button>
-                      );
-                    })}
+                    ))}
                   </div>
 
                   {/* 超过MAX_VISIBLE个时显示更多数量 */}
                   {pendingConversations.length > MAX_VISIBLE && (
-                    <div className="relative flex-shrink-0">
+                    <div className="relative flex-shrink-0" style={{ marginLeft: '-4px', zIndex: 0 }}>
                       <button
                         onClick={() => setShowMorePending(!showMorePending)}
-                        className="w-7 h-7 rounded-full bg-amber-100 border-2 border-amber-300 flex items-center justify-center hover:bg-amber-200 hover:border-amber-400 transition-colors cursor-pointer"
+                        className="w-7 h-7 rounded-full bg-[#FFF0E8] border-2 border-white flex items-center justify-center hover:bg-[#FFE0D0] transition-colors cursor-pointer shadow-sm"
                         title={`还有 ${pendingConversations.length - MAX_VISIBLE} 个待处理会话`}
                       >
-                        <span className="text-[10px] font-bold text-amber-700">
+                        <span className="text-[10px] font-bold text-[#FF6B35]">
                           +{pendingConversations.length - MAX_VISIBLE}
                         </span>
                       </button>
@@ -427,17 +418,17 @@ function App() {
                   <div className="flex items-center gap-0.5">
                     <button
                       onClick={handlePrev}
-                      className="p-1 hover:bg-amber-100 rounded transition-colors"
+                      className="p-1 hover:bg-[#FFF0E8] rounded transition-colors"
                       title="上一个"
                     >
-                      <ChevronLeft className="w-4 h-4 text-amber-600" />
+                      <ChevronLeft className="w-4 h-4 text-gray-400 hover:text-[#FF6B35]" />
                     </button>
                     <button
                       onClick={handleNext}
-                      className="p-1 hover:bg-amber-100 rounded transition-colors"
+                      className="p-1 hover:bg-[#FFF0E8] rounded transition-colors"
                       title="下一个"
                     >
-                      <ChevronRight className="w-4 h-4 text-amber-600" />
+                      <ChevronRight className="w-4 h-4 text-gray-400 hover:text-[#FF6B35]" />
                     </button>
                   </div>
                 </div>
@@ -680,27 +671,27 @@ function AIBindingPage({ platformAccounts, aiEmployeeConfig, iconMap, onBack, on
         </div>
 
         {/* AI员工信息卡片 */}
-        <div className="bg-gradient-to-r from-[#FF6B35] to-[#E85A2A] rounded-xl p-5 text-white">
+        <div className="bg-gradient-to-r from-[#1A1A1A] to-[#333] rounded-xl p-5 text-white">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
-              <Bot className="w-7 h-7 text-white" />
+            <div className="w-14 h-14 bg-[#FF6B35]/20 rounded-2xl flex items-center justify-center">
+              <Bot className="w-7 h-7 text-[#FF6B35]" />
             </div>
             <div className="flex-1">
               <h2 className="text-lg font-semibold">{ai.name}</h2>
               <p className="text-sm text-white/70 mt-0.5">
-                {ai.status === 'online' ? '在线工作中' : '离线'} · 已绑定 {boundCount} 个账号
+                {ai.status === 'online' ? '在线工作中' : '离线'} · 已绑定 <span className="text-[#FF6B35] font-medium">{boundCount}</span> 个账号
               </p>
             </div>
             <div className="text-right">
               <p className="text-xs text-white/60">工作时间</p>
-              <p className="text-sm font-medium">{ai.workStartTime} - {ai.workEndTime}</p>
+              <p className="text-sm font-medium text-[#FF6B35]">{ai.workStartTime} - {ai.workEndTime}</p>
               <p className="text-[10px] text-white/50 mt-0.5">
                 {getTimezoneLabel(ai.timezone)} · 自动适配客户时区
               </p>
             </div>
           </div>
           <div className="mt-3 pt-3 border-t border-white/15 flex items-start gap-2">
-            <Lightbulb className="w-3.5 h-3.5 text-white/50 mt-0.5 flex-shrink-0" />
+            <Lightbulb className="w-3.5 h-3.5 text-[#FF6B35]/60 mt-0.5 flex-shrink-0" />
             <p className="text-xs text-white/60 leading-relaxed">
               开启AI绑定后，该账号收到的私信将由AI员工自动回复。AI员工会根据知识库和话术库内容进行智能应答，你可以随时手动接管对话。
             </p>
@@ -762,7 +753,7 @@ function AIBindingPage({ platformAccounts, aiEmployeeConfig, iconMap, onBack, on
                         {capabilities.length > 0 ? (
                           <div className="grid grid-cols-2 gap-x-2 gap-y-1">
                             {capabilities.map((cap, i) => (
-                              <span key={i} className="text-[10px] text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full text-center whitespace-nowrap">{cap}</span>
+                              <span key={i} className="text-[10px] text-[#FF6B35] bg-[#FFF0E8] border border-[#FF6B35]/20 px-2 py-0.5 rounded-full text-center whitespace-nowrap">{cap}</span>
                             ))}
                           </div>
                         ) : (
@@ -792,7 +783,7 @@ function AIBindingPage({ platformAccounts, aiEmployeeConfig, iconMap, onBack, on
         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
           <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-[#FF6B35]" />
+              <Users className="w-4 h-4 text-gray-500" />
               <h3 className="text-sm font-semibold text-gray-900">平台账号列表</h3>
             </div>
             <span className="text-xs text-gray-400">
@@ -802,16 +793,16 @@ function AIBindingPage({ platformAccounts, aiEmployeeConfig, iconMap, onBack, on
 
           {/* 未登录账号提示横幅 */}
           {notLoggedInCount > 0 && (
-            <div className="mx-5 mt-3 mb-1 flex items-center justify-between px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="mx-5 mt-3 mb-1 flex items-center justify-between px-4 py-3 bg-[#FFF7F3] border border-[#FF6B35]/20 rounded-lg">
               <div className="flex items-center gap-2.5">
-                <AlertTriangle className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                <p className="text-xs text-blue-700 leading-relaxed">
+                <AlertTriangle className="w-4 h-4 text-[#FF6B35] flex-shrink-0" />
+                <p className="text-xs text-[#1A1A1A] leading-relaxed">
                   请先在左侧会话页面扫码登录客服账号后，再回到此处开启AI绑定。
                 </p>
               </div>
               <button
                 onClick={onGoToConversations}
-                className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-md transition-colors flex-shrink-0"
+                className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-[#FF6B35] bg-[#FFF0E8] hover:bg-[#FFE0D0] rounded-md transition-colors flex-shrink-0"
               >
                 前往登录
                 <ChevronRight className="w-3.5 h-3.5" />
@@ -843,7 +834,7 @@ function AIBindingPage({ platformAccounts, aiEmployeeConfig, iconMap, onBack, on
                     <span>{pc?.name || pid}</span>
                     <span className={cn(
                       "text-[10px] px-1.5 py-0.5 rounded-full",
-                      enabledCount > 0 ? "bg-[#FF6B35]/10 text-[#FF6B35]" : "bg-gray-100 text-gray-400"
+                      enabledCount > 0 ? "bg-[#FFF0E8] text-[#FF6B35]" : "bg-gray-100 text-gray-400"
                     )}>{enabledCount}/{accts.length}</span>
                   </button>
                 );
@@ -897,19 +888,19 @@ function AIBindingPage({ platformAccounts, aiEmployeeConfig, iconMap, onBack, on
         <div className="fixed inset-0 z-[60] flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setConfirmDisableAI(null)} />
           <div className="relative bg-white rounded-xl p-5 shadow-2xl w-80">
-            <div className="flex items-center justify-center w-12 h-12 mx-auto mb-3 bg-amber-100 rounded-full">
-              <AlertTriangle className="w-6 h-6 text-amber-500" />
+            <div className="flex items-center justify-center w-12 h-12 mx-auto mb-3 bg-[#FFF0E8] rounded-full">
+              <AlertTriangle className="w-6 h-6 text-[#FF6B35]" />
             </div>
             <h4 className="text-center font-medium text-gray-900 mb-2">确认关闭AI员工</h4>
             <p className="text-xs text-gray-500 text-center mb-3">关闭后该账号将无法使用以下AI能力：</p>
             <div className="grid grid-cols-2 gap-1.5 mb-4">
               {['智能销售对话', '主动营销触达', '客户召回', '质量检测'].map(cap => (
-                <span key={cap} className="text-[10px] text-center text-amber-700 bg-amber-50 border border-amber-200 px-2 py-1 rounded-md">{cap}</span>
+                <span key={cap} className="text-[10px] text-center text-gray-600 bg-gray-100 border border-gray-200 px-2 py-1 rounded-md">{cap}</span>
               ))}
             </div>
             <div className="flex gap-2">
               <button onClick={() => setConfirmDisableAI(null)} className="flex-1 px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">取消</button>
-              <button onClick={() => { onToggleAI(confirmDisableAI, false); setConfirmDisableAI(null); }} className="flex-1 px-3 py-2 text-sm text-white bg-amber-500 rounded-lg hover:bg-amber-600">确定关闭</button>
+              <button onClick={() => { onToggleAI(confirmDisableAI, false); setConfirmDisableAI(null); }} className="flex-1 px-3 py-2 text-sm text-white bg-[#FF6B35] rounded-lg hover:bg-[#E85A2A]">确定关闭</button>
             </div>
           </div>
         </div>
@@ -958,7 +949,7 @@ function AIBindingRow({ account, platformConfig, PIcon, onToggle }: {
       {/* 操作 */}
       <div className="flex items-center gap-3 flex-shrink-0">
         {isEnabled && (
-          <span className="text-xs text-[#FF6B35] font-medium whitespace-nowrap">AI员工服务中</span>
+          <span className="text-xs text-gray-500 font-medium whitespace-nowrap">AI员工服务中</span>
         )}
         <button
           onClick={onToggle}
@@ -1025,68 +1016,68 @@ function DashboardView({ onGoToConversations }: { onGoToConversations: () => voi
       {/* 订阅套餐信息 */}
       <div className="bg-white rounded-xl shadow-sm p-4">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-gray-900">订阅信息</h3>
+          <h3 className="font-semibold text-[#1A1A1A]">订阅信息</h3>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
           {/* 当前套餐 */}
-          <div className="p-3 bg-gradient-to-br from-[#FF6B35]/10 to-orange-50 rounded-xl">
+          <div className="p-3 bg-[#FFF7F3] rounded-xl">
             <div className="flex items-center gap-2 mb-1">
               <Crown className="w-4 h-4 text-[#FF6B35]" />
-              <span className="text-xs text-gray-500">当前套餐</span>
+              <span className="text-xs text-[#999]">当前套餐</span>
             </div>
-            <p className="text-sm font-bold text-gray-900">专业版</p>
+            <p className="text-sm font-bold text-[#1A1A1A]">专业版</p>
           </div>
           {/* 到期时间 */}
-          <div className="p-3 bg-gray-50 rounded-xl">
+          <div className="p-3 bg-[#F7F8FA] rounded-xl">
             <div className="flex items-center gap-2 mb-1">
-              <Calendar className="w-4 h-4 text-gray-500" />
-              <span className="text-xs text-gray-500">到期时间</span>
+              <Calendar className="w-4 h-4 text-[#999]" />
+              <span className="text-xs text-[#999]">到期时间</span>
             </div>
-            <p className="text-sm font-bold text-gray-900">
+            <p className="text-sm font-bold text-[#1A1A1A]">
               {organization.expiresAt instanceof Date
                 ? organization.expiresAt.toLocaleDateString('zh-CN')
                 : organization.expiresAt || '2026-12-31'}
             </p>
           </div>
           {/* 激活码 */}
-          <div className="p-3 bg-gray-50 rounded-xl">
+          <div className="p-3 bg-[#F7F8FA] rounded-xl">
             <div className="flex items-center gap-2 mb-1">
-              <Key className="w-4 h-4 text-gray-500" />
-              <span className="text-xs text-gray-500">激活码</span>
+              <Key className="w-4 h-4 text-[#999]" />
+              <span className="text-xs text-[#999]">激活码</span>
             </div>
-            <p className="text-sm font-bold text-gray-900 truncate" title={organization.activationCode}>
+            <p className="text-sm font-bold text-[#1A1A1A] truncate" title={organization.activationCode}>
               {organization.activationCode}
             </p>
           </div>
           {/* 会话端口 */}
-          <div className="p-3 bg-gray-50 rounded-xl">
+          <div className="p-3 bg-[#F7F8FA] rounded-xl">
             <div className="flex items-center gap-2 mb-1">
-              <Server className="w-4 h-4 text-gray-500" />
-              <span className="text-xs text-gray-500">会话端口</span>
+              <Server className="w-4 h-4 text-[#999]" />
+              <span className="text-xs text-[#999]">会话端口</span>
             </div>
-            <p className="text-sm font-bold text-gray-900">
+            <p className="text-sm font-bold text-[#1A1A1A]">
               <span className="text-[#FF6B35]">{platformAccounts.filter(a => a.status === 'online').length}</span>
-              <span className="text-gray-400 mx-0.5">/</span>
+              <span className="text-[#D9D9D9] mx-0.5">/</span>
               <span>10</span>
             </p>
           </div>
           {/* AI绑定账号 */}
-          <div className="p-3 bg-purple-50 rounded-xl">
+          <div className="p-3 bg-[#FFF7F3] rounded-xl">
             <div className="flex items-center gap-2 mb-1">
-              <Bot className="w-4 h-4 text-purple-500" />
-              <span className="text-xs text-gray-500">AI绑定</span>
+              <Bot className="w-4 h-4 text-[#FF6B35]" />
+              <span className="text-xs text-[#999]">AI绑定</span>
             </div>
-            <p className="text-sm font-bold text-purple-700">
+            <p className="text-sm font-bold text-[#FF6B35]">
               {platformAccounts.filter(a => a.aiEnabled).length} 个账号
             </p>
           </div>
           {/* 组织名称 */}
-          <div className="p-3 bg-gray-50 rounded-xl">
+          <div className="p-3 bg-[#F7F8FA] rounded-xl">
             <div className="flex items-center gap-2 mb-1">
-              <Building2 className="w-4 h-4 text-gray-500" />
-              <span className="text-xs text-gray-500">组织</span>
+              <Building2 className="w-4 h-4 text-[#999]" />
+              <span className="text-xs text-[#999]">组织</span>
             </div>
-            <p className="text-sm font-bold text-gray-900 truncate" title={organization.name}>
+            <p className="text-sm font-bold text-[#1A1A1A] truncate" title={organization.name}>
               {organization.name}
             </p>
           </div>
@@ -1096,16 +1087,16 @@ function DashboardView({ onGoToConversations }: { onGoToConversations: () => voi
       {/* AI员工绑定 + AI智能客服 并排 */}
       <div className="grid grid-cols-2 gap-4">
         {/* AI员工绑定入口 */}
-        <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl p-5 text-white shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
+        <div className="bg-gradient-to-r from-[#1A1A1A] to-[#333] rounded-xl p-5 text-white shadow-lg cursor-pointer hover:shadow-xl transition-shadow"
           onClick={() => setShowAIBinding(true)}
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="relative flex-shrink-0">
-                <div className="w-11 h-11 bg-white/20 rounded-full flex items-center justify-center">
-                  <Bot className="w-5.5 h-5.5 text-white" />
+                <div className="w-11 h-11 bg-white/10 rounded-full flex items-center justify-center">
+                  <Bot className="w-5.5 h-5.5 text-[#FF8F5E]" />
                 </div>
-                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-purple-600 bg-green-400" />
+                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-[#333] bg-[#FF6B35]" />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
@@ -1140,18 +1131,18 @@ function DashboardView({ onGoToConversations }: { onGoToConversations: () => voi
           </div>
           <div className="mt-3 pt-3 border-t border-white/15 flex items-center gap-4">
             <div className="flex items-center gap-1.5 text-xs text-white/60">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#FF6B35]" />
               在线 {platformAccounts.filter(a => a.status === 'online').length}
             </div>
             <div className="flex items-center gap-1.5 text-xs text-white/60">
-              <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#999]" />
               离线 {platformAccounts.filter(a => a.status === 'offline').length}
             </div>
           </div>
         </div>
 
         {/* AI客服状态卡片 */}
-        <div className="bg-gradient-to-r from-[#FF6B35] to-[#E85A2A] rounded-xl p-5 text-white shadow-lg">
+        <div className="bg-gradient-to-r from-[#FF6B35] to-[#FF8F5E] rounded-xl p-5 text-white shadow-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="relative flex-shrink-0">
@@ -1170,19 +1161,19 @@ function DashboardView({ onGoToConversations }: { onGoToConversations: () => voi
           </div>
           <div className="mt-3 pt-3 border-t border-white/15 flex items-center gap-4">
             <div className="flex items-center gap-1.5 text-xs text-white/60">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
+              <span className="w-1.5 h-1.5 rounded-full bg-white" />
               在线 {platformAccounts.filter(a => a.status === 'online').length}
             </div>
             <div className="flex items-center gap-1.5 text-xs text-white/60">
-              <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+              <span className="w-1.5 h-1.5 rounded-full bg-white/40" />
               离线 {platformAccounts.filter(a => a.status === 'offline').length}
             </div>
             <div className="flex items-center gap-1.5 text-xs text-white/60">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-300" />
+              <span className="w-1.5 h-1.5 rounded-full bg-[#FFD4BE]" />
               启用 {platformAccounts.filter(a => a.status === 'online' && a.aiEnabled).length}
             </div>
             <div className="flex items-center gap-1.5 text-xs text-white/60">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
+              <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
               关闭 {platformAccounts.filter(a => a.status === 'online' && !a.aiEnabled).length}
             </div>
           </div>
@@ -1196,53 +1187,53 @@ function DashboardView({ onGoToConversations }: { onGoToConversations: () => voi
         <div className="bg-white rounded-xl p-5 shadow-sm border-l-4 border-[#FF6B35]">
           <div className="flex items-center justify-between mb-3">
             <div>
-              <p className="text-sm text-gray-500">今日总会话</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">{stats.total}</p>
+              <p className="text-sm text-[#666]">今日总会话</p>
+              <p className="text-3xl font-bold text-[#1A1A1A] mt-1">{stats.total}</p>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-[#FF6B35]/10 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-xl bg-[#FFF7F3] flex items-center justify-center">
               <MessageCircle className="w-6 h-6 text-[#FF6B35]" />
             </div>
           </div>
           <div className="flex items-center gap-4 text-xs">
             <div className="flex items-center gap-1">
-              <span className="text-gray-400">昨日</span>
-              <span className="font-medium text-gray-600">28</span>
+              <span className="text-[#999]">昨日</span>
+              <span className="font-medium text-[#333]">28</span>
             </div>
-            <div className="w-px h-3 bg-gray-200" />
+            <div className="w-px h-3 bg-[#E8E8E8]" />
             <div className="flex items-center gap-1">
-              <span className="text-gray-400">近7日</span>
-              <span className="font-medium text-gray-600">186</span>
+              <span className="text-[#999]">近7日</span>
+              <span className="font-medium text-[#333]">186</span>
             </div>
-            <div className="w-px h-3 bg-gray-200" />
+            <div className="w-px h-3 bg-[#E8E8E8]" />
             <div className="flex items-center gap-1">
-              <span className="text-gray-400">近30日</span>
-              <span className="font-medium text-gray-600">742</span>
+              <span className="text-[#999]">近30日</span>
+              <span className="font-medium text-[#333]">742</span>
             </div>
           </div>
         </div>
 
         {/* 今日未读 */}
-        <div className="bg-white rounded-xl p-5 shadow-sm border-l-4 border-amber-500">
+        <div className="bg-white rounded-xl p-5 shadow-sm border-l-4 border-[#FF8F5E]">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">今日未读</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">{stats.unread}</p>
+              <p className="text-sm text-[#666]">今日未读</p>
+              <p className="text-3xl font-bold text-[#1A1A1A] mt-1">{stats.unread}</p>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
-              <MessageCircle className="w-6 h-6 text-amber-500" />
+            <div className="w-12 h-12 rounded-xl bg-[#FFF7F3] flex items-center justify-center">
+              <MessageCircle className="w-6 h-6 text-[#FF8F5E]" />
             </div>
           </div>
         </div>
 
         {/* 今日未回复 */}
-        <div className="bg-white rounded-xl p-5 shadow-sm border-l-4 border-red-500">
+        <div className="bg-white rounded-xl p-5 shadow-sm border-l-4 border-[#FFB088]">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">今日未回复</p>
-              <p className="text-3xl font-bold text-gray-900 mt-1">{stats.pending}</p>
+              <p className="text-sm text-[#666]">今日未回复</p>
+              <p className="text-3xl font-bold text-[#1A1A1A] mt-1">{stats.pending}</p>
             </div>
-            <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center">
-              <MessageCircle className="w-6 h-6 text-red-500" />
+            <div className="w-12 h-12 rounded-xl bg-[#FFF7F3] flex items-center justify-center">
+              <MessageCircle className="w-6 h-6 text-[#FFB088]" />
             </div>
           </div>
         </div>
@@ -1251,8 +1242,8 @@ function DashboardView({ onGoToConversations }: { onGoToConversations: () => voi
       {/* AI数据统计 */}
       <div className="bg-white rounded-xl shadow-sm p-4">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-semibold text-gray-900">AI 员工{dashTimeLabels[aiDataTimeRange]}数据</h3>
-          <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+          <h3 className="font-semibold text-[#1A1A1A]">AI 员工{dashTimeLabels[aiDataTimeRange]}数据</h3>
+          <div className="flex items-center gap-1 bg-[#F2F2F2] rounded-lg p-0.5">
             {(['today', 'weekly', 'monthly'] as const).map((range) => (
               <button
                 key={range}
@@ -1261,7 +1252,7 @@ function DashboardView({ onGoToConversations }: { onGoToConversations: () => voi
                   "px-2.5 py-1 text-xs font-medium rounded-md transition-all",
                   aiDataTimeRange === range
                     ? "bg-white text-[#FF6B35] shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
+                    : "text-[#666] hover:text-[#333]"
                 )}
               >
                 {dashTimeLabels[range]}
@@ -1271,19 +1262,19 @@ function DashboardView({ onGoToConversations }: { onGoToConversations: () => voi
         </div>
         <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
           {[
-            { name: '接待人数', value: aiDataPeriod.customersServed, icon: Users, color: 'text-[#FF6B35]', bgColor: 'bg-[#FF6B35]/10' },
-            { name: 'AI生成回复', value: aiDataPeriod.aiGeneratedReplies, icon: Sparkles, color: 'text-purple-600', bgColor: 'bg-purple-100' },
-            { name: 'AI生成总结', value: aiDataPeriod.aiSummaryCount, icon: FileText, color: 'text-blue-600', bgColor: 'bg-blue-100' },
-            { name: 'AI标签提取', value: aiDataPeriod.aiLabelExtracted, icon: Target, color: 'text-green-600', bgColor: 'bg-green-100' },
-            { name: '会话平均响应', value: `${aiDataPeriod.avgResponseTime}s`, icon: Clock, color: 'text-amber-600', bgColor: 'bg-amber-100' },
-            { name: '翻译次数', value: aiDataPeriod.translationCount, icon: Languages, color: 'text-cyan-600', bgColor: 'bg-cyan-100' },
+            { name: '接待人数', value: aiDataPeriod.customersServed, icon: Users, color: 'text-[#FF6B35]', bgColor: 'bg-[#FFF7F3]' },
+            { name: 'AI生成回复', value: aiDataPeriod.aiGeneratedReplies, icon: Sparkles, color: 'text-[#FF6B35]', bgColor: 'bg-[#FFF7F3]' },
+            { name: 'AI生成总结', value: aiDataPeriod.aiSummaryCount, icon: FileText, color: 'text-[#FF6B35]', bgColor: 'bg-[#FFF7F3]' },
+            { name: 'AI标签提取', value: aiDataPeriod.aiLabelExtracted, icon: Target, color: 'text-[#FF6B35]', bgColor: 'bg-[#FFF7F3]' },
+            { name: '会话平均响应', value: `${aiDataPeriod.avgResponseTime}s`, icon: Clock, color: 'text-[#FF6B35]', bgColor: 'bg-[#FFF7F3]' },
+            { name: '翻译次数', value: aiDataPeriod.translationCount, icon: Languages, color: 'text-[#FF6B35]', bgColor: 'bg-[#FFF7F3]' },
           ].map((stat, i) => (
-            <div key={i} className="text-center p-3 rounded-xl hover:bg-gray-50 transition-colors">
+            <div key={i} className="text-center p-3 rounded-xl hover:bg-[#FFF7F3] transition-colors">
               <div className={cn("w-10 h-10 rounded-lg mx-auto mb-2 flex items-center justify-center", stat.bgColor)}>
                 <stat.icon className={cn("w-5 h-5", stat.color)} />
               </div>
-              <p className="text-xl font-bold text-gray-900">{stat.value}</p>
-              <p className="text-xs text-gray-500 mt-0.5">{stat.name}</p>
+              <p className="text-xl font-bold text-[#1A1A1A]">{stat.value}</p>
+              <p className="text-xs text-[#999] mt-0.5">{stat.name}</p>
             </div>
           ))}
         </div>
@@ -1291,9 +1282,9 @@ function DashboardView({ onGoToConversations }: { onGoToConversations: () => voi
       
       {/* AI接待统计 */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-            <h3 className="font-semibold text-gray-900">AI接待统计</h3>
-            <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-0.5">
+          <div className="px-4 py-3 border-b border-[#F2F2F2] flex items-center justify-between">
+            <h3 className="font-semibold text-[#1A1A1A]">AI接待统计</h3>
+            <div className="flex items-center gap-1 bg-[#F2F2F2] rounded-lg p-0.5">
               {(['today', 'weekly', 'monthly'] as const).map((range) => (
                 <button
                   key={range}
@@ -1302,7 +1293,7 @@ function DashboardView({ onGoToConversations }: { onGoToConversations: () => voi
                     "px-2.5 py-1 text-xs font-medium rounded-md transition-all",
                     aiReceptionTimeRange === range
                       ? "bg-white text-[#FF6B35] shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
+                      : "text-[#666] hover:text-[#333]"
                   )}
                 >
                   {dashTimeLabels[range]}
@@ -1313,29 +1304,29 @@ function DashboardView({ onGoToConversations }: { onGoToConversations: () => voi
           <div className="p-4">
             {/* 回复类型分布 */}
             <div className="grid grid-cols-3 gap-3">
-              <div className="p-3 bg-purple-50 rounded-xl">
+              <div className="p-3 bg-[#FFF7F3] rounded-xl">
                 <div className="flex items-center gap-2 mb-1">
-                  <Sparkles className="w-4 h-4 text-purple-600" />
-                  <span className="text-sm text-gray-600">AI自动回复</span>
+                  <Sparkles className="w-4 h-4 text-[#FF6B35]" />
+                  <span className="text-sm text-[#666]">AI自动回复</span>
                 </div>
-                <p className="text-2xl font-bold text-purple-700">{aiStats.aiUsage.autoReplies}</p>
-                <p className="text-xs text-purple-500">占比 {Math.round(aiStats.aiUsage.autoReplies / (aiStats.aiUsage.autoReplies + aiStats.aiUsage.adoptedSuggestions + aiStats.aiUsage.manualReplies || 1) * 100)}%</p>
+                <p className="text-2xl font-bold text-[#FF6B35]">{aiStats.aiUsage.autoReplies}</p>
+                <p className="text-xs text-[#FF8F5E]">占比 {Math.round(aiStats.aiUsage.autoReplies / (aiStats.aiUsage.autoReplies + aiStats.aiUsage.adoptedSuggestions + aiStats.aiUsage.manualReplies || 1) * 100)}%</p>
               </div>
-              <div className="p-3 bg-amber-50 rounded-xl">
+              <div className="p-3 bg-[#FFF7F3] rounded-xl">
                 <div className="flex items-center gap-2 mb-1">
-                  <Bot className="w-4 h-4 text-amber-600" />
-                  <span className="text-sm text-gray-600">AI辅助生成</span>
+                  <Bot className="w-4 h-4 text-[#FF8F5E]" />
+                  <span className="text-sm text-[#666]">AI辅助生成</span>
                 </div>
-                <p className="text-2xl font-bold text-amber-700">{aiStats.aiUsage.adoptedSuggestions}</p>
-                <p className="text-xs text-amber-500">占比 {Math.round(aiStats.aiUsage.adoptedSuggestions / (aiStats.aiUsage.autoReplies + aiStats.aiUsage.adoptedSuggestions + aiStats.aiUsage.manualReplies || 1) * 100)}%</p>
+                <p className="text-2xl font-bold text-[#FF6B35]">{aiStats.aiUsage.adoptedSuggestions}</p>
+                <p className="text-xs text-[#FF8F5E]">占比 {Math.round(aiStats.aiUsage.adoptedSuggestions / (aiStats.aiUsage.autoReplies + aiStats.aiUsage.adoptedSuggestions + aiStats.aiUsage.manualReplies || 1) * 100)}%</p>
               </div>
-              <div className="p-3 bg-blue-50 rounded-xl">
+              <div className="p-3 bg-[#F2F2F2] rounded-xl">
                 <div className="flex items-center gap-2 mb-1">
-                  <User className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm text-gray-600">人工回复</span>
+                  <User className="w-4 h-4 text-[#666]" />
+                  <span className="text-sm text-[#666]">人工回复</span>
                 </div>
-                <p className="text-2xl font-bold text-blue-700">{aiStats.aiUsage.manualReplies}</p>
-                <p className="text-xs text-blue-500">占比 {Math.round(aiStats.aiUsage.manualReplies / (aiStats.aiUsage.autoReplies + aiStats.aiUsage.adoptedSuggestions + aiStats.aiUsage.manualReplies || 1) * 100)}%</p>
+                <p className="text-2xl font-bold text-[#333]">{aiStats.aiUsage.manualReplies}</p>
+                <p className="text-xs text-[#999]">占比 {Math.round(aiStats.aiUsage.manualReplies / (aiStats.aiUsage.autoReplies + aiStats.aiUsage.adoptedSuggestions + aiStats.aiUsage.manualReplies || 1) * 100)}%</p>
               </div>
             </div>
           </div>
@@ -1343,22 +1334,19 @@ function DashboardView({ onGoToConversations }: { onGoToConversations: () => voi
 
       {/* Platform Stats */}
       <div className="bg-white rounded-xl shadow-sm p-4">
-        <h3 className="font-semibold text-gray-900 mb-4">平台分布</h3>
+        <h3 className="font-semibold text-[#1A1A1A] mb-4">平台分布</h3>
         <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
           {['whatsapp', 'telegram'].map((platformId) => {
             const count = platformAccounts.filter(a => a.platformId === platformId && a.aiEnabled).length;
             const platform = platformConfigs.find(p => p.id === platformId);
             return (
               <div key={platformId} className="text-center">
-                <div 
-                  className="w-12 h-12 rounded-xl mx-auto mb-2 flex items-center justify-center"
-                  style={{ backgroundColor: `${platform?.color}20` }}
-                >
-                  <span style={{ color: platform?.color }} className="text-lg font-bold">
+                <div className="w-12 h-12 rounded-xl mx-auto mb-2 flex items-center justify-center bg-[#FFF7F3]">
+                  <span className="text-lg font-bold text-[#FF6B35]">
                     {count}
                   </span>
                 </div>
-                <p className="text-xs text-gray-500">{platform?.name}</p>
+                <p className="text-xs text-[#999]">{platform?.name}</p>
               </div>
             );
           })}
@@ -1629,7 +1617,7 @@ function CustomersView() {
                         return (
                           <>
                             {displayTags.slice(0, 6).map((tag, i) => (
-                              <span key={i} className="px-2.5 py-1 text-xs bg-blue-50 text-blue-600 rounded-md font-medium whitespace-nowrap">
+                              <span key={i} className="px-2.5 py-1 text-xs bg-[#FFF0E8] text-[#FF6B35] rounded-md font-medium whitespace-nowrap border border-[#FF6B35]/15">
                                 {tag}
                               </span>
                             ))}
@@ -1684,23 +1672,23 @@ function InsightCard({ icon: Icon, title, value, desc, color }: {
   title: string;
   value: string;
   desc: string;
-  color: 'emerald' | 'blue' | 'rose';
+  color: 'light' | 'medium' | 'dark';
 }) {
   const colorMap = {
-    emerald: {
-      bg: 'bg-emerald-100',
-      text: 'text-emerald-600',
-      value: 'text-emerald-700'
+    light: {
+      bg: 'bg-[#FFF7F3]',
+      text: 'text-[#FF6B35]',
+      value: 'text-[#FF6B35]'
     },
-    blue: {
-      bg: 'bg-blue-100',
-      text: 'text-blue-600',
-      value: 'text-blue-700'
+    medium: {
+      bg: 'bg-[#FFF0E8]',
+      text: 'text-[#FF6B35]',
+      value: 'text-[#E85A2A]'
     },
-    rose: {
-      bg: 'bg-rose-100',
-      text: 'text-rose-600',
-      value: 'text-rose-700'
+    dark: {
+      bg: 'bg-[#FFE0D0]',
+      text: 'text-[#E85A2A]',
+      value: 'text-[#E85A2A]'
     }
   };
   const colors = colorMap[color];
@@ -1749,56 +1737,24 @@ function AnalyticsView() {
         </div>
       </div>
 
-      {/* AI客服核心指标 - 渐变卡片风格 */}
+      {/* AI客服核心指标 */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          {
-            name: `${timeLabels[timeRange]}接待`,
-            value: periodData.customersServed,
-            change: timeRange === 'today' ? `+${Math.round((periodData.customersServed - aiStats.dailyTrend[5].customers) / aiStats.dailyTrend[5].customers * 100)}%` : '',
-            icon: Users,
-            gradient: 'from-blue-500 to-indigo-600',
-            bgLight: 'from-blue-50 to-indigo-50'
-          },
-          {
-            name: 'AI回复数',
-            value: periodData.aiGeneratedReplies,
-            change: timeRange === 'today' ? `+${Math.round((periodData.aiGeneratedReplies - aiStats.dailyTrend[5].aiReplies) / aiStats.dailyTrend[5].aiReplies * 100)}%` : '',
-            icon: Sparkles,
-            gradient: 'from-violet-500 to-purple-600',
-            bgLight: 'from-violet-50 to-purple-50'
-          },
-          {
-            name: '平均响应',
-            value: `${periodData.avgResponseTime}s`,
-            change: timeRange === 'today' ? '-3s' : '',
-            icon: Clock,
-            gradient: 'from-emerald-500 to-teal-600',
-            bgLight: 'from-emerald-50 to-teal-50'
-          },
-          {
-            name: '翻译次数',
-            value: periodData.translationCount,
-            change: timeRange === 'today' ? '+12' : '',
-            icon: Languages,
-            gradient: 'from-amber-500 to-orange-600',
-            bgLight: 'from-amber-50 to-orange-50'
-          },
+          { name: `${timeLabels[timeRange]}接待`, value: periodData.customersServed, change: timeRange === 'today' ? `+${Math.round((periodData.customersServed - aiStats.dailyTrend[5].customers) / aiStats.dailyTrend[5].customers * 100)}%` : '', icon: Users },
+          { name: 'AI回复数', value: periodData.aiGeneratedReplies, change: timeRange === 'today' ? `+${Math.round((periodData.aiGeneratedReplies - aiStats.dailyTrend[5].aiReplies) / aiStats.dailyTrend[5].aiReplies * 100)}%` : '', icon: Sparkles },
+          { name: '平均响应', value: `${periodData.avgResponseTime}s`, change: timeRange === 'today' ? '-3s' : '', icon: Clock },
+          { name: '翻译次数', value: periodData.translationCount, change: timeRange === 'today' ? '+12' : '', icon: Languages },
         ].map((stat, i) => (
-          <div key={i} className={cn("rounded-xl p-5 shadow-sm bg-gradient-to-br border", stat.bgLight, "border-white/50")}>
+          <div key={i} className="rounded-xl p-5 shadow-sm bg-white border border-[#E8E8E8]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">{stat.name}</p>
-                <p className="text-2xl font-bold text-gray-900 mt-1">{stat.value}</p>
-                <p className={cn(
-                  "text-xs mt-1 font-medium",
-                  stat.change.startsWith('+') ? "text-emerald-600" :
-                  stat.change.startsWith('-') && stat.name === '平均响应' ? "text-emerald-600" : "text-red-500"
-                )}>
+                <p className="text-sm text-[#666]">{stat.name}</p>
+                <p className="text-2xl font-bold text-[#1A1A1A] mt-1">{stat.value}</p>
+                <p className="text-xs mt-1 font-medium text-[#FF6B35]">
                   {stat.change}{stat.change ? (timeRange === 'today' ? ' 较昨日' : timeRange === 'weekly' ? ' 较上周' : ' 较上月') : ''}
                 </p>
               </div>
-              <div className={cn("w-12 h-12 rounded-xl flex items-center justify-center bg-gradient-to-br shadow-lg", stat.gradient)}>
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center bg-[#1A1A1A]">
                 <stat.icon className="w-6 h-6 text-white" />
               </div>
             </div>
@@ -1807,61 +1763,43 @@ function AnalyticsView() {
       </div>
 
       {/* AI智能洞察 */}
-      <div className="bg-gradient-to-br from-amber-50 to-yellow-50 rounded-xl shadow-sm p-5 border border-amber-100">
+      <div className="bg-white rounded-xl shadow-sm p-5 border border-[#E8E8E8]">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Lightbulb className="w-5 h-5 text-amber-600" />
-            <h3 className="font-semibold text-gray-900">AI智能洞察</h3>
+            <Lightbulb className="w-5 h-5 text-[#FF6B35]" />
+            <h3 className="font-semibold text-[#1A1A1A]">AI智能洞察</h3>
           </div>
-          <span className="text-xs text-amber-600 bg-amber-100 px-2 py-1 rounded-lg">实时分析</span>
+          <span className="text-xs text-[#FF6B35] bg-[#FFF7F3] px-2 py-1 rounded-lg border border-[#FFD4BE]">实时分析</span>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <InsightCard
-            icon={Target}
-            title="转化机会"
-            value="12"
-            desc="高意向客户待跟进"
-            color="emerald"
-          />
-          <InsightCard
-            icon={Zap}
-            title="效率提升"
-            value="+23%"
-            desc="AI辅助后响应速度"
-            color="blue"
-          />
-          <InsightCard
-            icon={AlertTriangle}
-            title="风险预警"
-            value="3"
-            desc="客户流失风险提醒"
-            color="rose"
-          />
+          <InsightCard icon={Target} title="转化机会" value="12" desc="高意向客户待跟进" color="light" />
+          <InsightCard icon={Zap} title="效率提升" value="+23%" desc="AI辅助后响应速度" color="medium" />
+          <InsightCard icon={AlertTriangle} title="风险预警" value="3" desc="客户流失风险提醒" color="dark" />
         </div>
       </div>
 
-      {/* 数据汇总 - 渐变背景 */}
-      <div className="bg-gradient-to-br from-slate-50 to-gray-100 rounded-xl shadow-sm p-5 border border-gray-100">
+      {/* 数据汇总 */}
+      <div className="bg-white rounded-xl shadow-sm p-5 border border-[#E8E8E8]">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <BarChart3 className="w-5 h-5 text-slate-600" />
-            <h3 className="font-semibold text-gray-900">{timeLabels[timeRange]}汇总</h3>
+            <BarChart3 className="w-5 h-5 text-[#FF6B35]" />
+            <h3 className="font-semibold text-[#1A1A1A]">{timeLabels[timeRange]}汇总</h3>
           </div>
-          <span className="text-xs text-gray-400 bg-white px-2 py-1 rounded-lg">{new Date().toLocaleDateString('zh-CN')} 为止</span>
+          <span className="text-xs text-[#999] bg-[#F7F8FA] px-2 py-1 rounded-lg border border-[#E8E8E8]">{new Date().toLocaleDateString('zh-CN')} 为止</span>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-7 gap-4">
           {[
-            { name: '接待人数', value: periodData.customersServed, unit: '人', color: 'text-blue-600' },
-            { name: '回复消息', value: periodData.messagesReplied, unit: '条', color: 'text-indigo-600' },
-            { name: 'AI生成回复', value: periodData.aiGeneratedReplies, unit: '条', color: 'text-violet-600' },
-            { name: 'AI生成总结', value: periodData.aiSummaryCount, unit: '条', color: 'text-blue-600' },
-            { name: 'AI标签提取', value: periodData.aiLabelExtracted, unit: '个', color: 'text-green-600' },
-            { name: '翻译次数', value: periodData.translationCount, unit: '次', color: 'text-cyan-600' },
-            { name: '平均响应', value: `${periodData.avgResponseTime}s`, unit: '', color: 'text-emerald-600' },
+            { name: '接待人数', value: periodData.customersServed, unit: '人', accent: true },
+            { name: '回复消息', value: periodData.messagesReplied, unit: '条' },
+            { name: 'AI生成回复', value: periodData.aiGeneratedReplies, unit: '条' },
+            { name: 'AI生成总结', value: periodData.aiSummaryCount, unit: '条' },
+            { name: 'AI标签提取', value: periodData.aiLabelExtracted, unit: '个' },
+            { name: '翻译次数', value: periodData.translationCount, unit: '次' },
+            { name: '平均响应', value: `${periodData.avgResponseTime}s`, unit: '' },
           ].map((item, i) => (
-            <div key={i} className="text-center p-4 bg-white rounded-xl shadow-sm">
-              <p className={cn("text-2xl font-bold", item.color)}>{item.value}</p>
-              <p className="text-xs text-gray-500 mt-1">{item.name} {item.unit}</p>
+            <div key={i} className="text-center p-4 rounded-xl bg-[#1A1A1A]">
+              <p className={`text-2xl font-bold ${item.accent ? 'text-[#FF6B35]' : 'text-white'}`}>{item.value}</p>
+              <p className="text-xs mt-1 text-white/70">{item.name} {item.unit}</p>
             </div>
           ))}
         </div>
@@ -1870,32 +1808,32 @@ function AnalyticsView() {
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* AI总结统计 */}
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6 shadow-sm border border-blue-100">
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-[#E8E8E8]">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <FileText className="w-5 h-5 text-blue-600" />
-              <h3 className="font-semibold text-gray-900">AI总结统计</h3>
+              <FileText className="w-5 h-5 text-[#FF6B35]" />
+              <h3 className="font-semibold text-[#1A1A1A]">AI总结统计</h3>
             </div>
-            <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded-lg">{timeLabels[timeRange]}数据</span>
+            <span className="text-xs text-[#FF6B35] bg-[#FFF7F3] px-2 py-1 rounded-lg border border-[#FFD4BE]">{timeLabels[timeRange]}数据</span>
           </div>
 
           <div className="space-y-4">
             {/* 总结生成率 */}
-            <div className="bg-white/60 rounded-xl p-4">
+            <div className="bg-[#F7F8FA] rounded-xl p-4 border border-[#E8E8E8]">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-600">总结生成率</span>
-                <span className="text-lg font-bold text-blue-600">{Math.round(periodData.aiSummaryCount / periodData.customersServed * 100)}%</span>
+                <span className="text-sm text-[#666]">总结生成率</span>
+                <span className="text-lg font-bold text-[#FF6B35]">{Math.round(periodData.aiSummaryCount / periodData.customersServed * 100)}%</span>
               </div>
-              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full" style={{ width: `${Math.round(periodData.aiSummaryCount / periodData.customersServed * 100)}%` }} />
+              <div className="h-2 bg-[#E8E8E8] rounded-full overflow-hidden">
+                <div className="h-full bg-[#FF6B35] rounded-full" style={{ width: `${Math.round(periodData.aiSummaryCount / periodData.customersServed * 100)}%` }} />
               </div>
-              <p className="text-xs text-gray-400 mt-1">已生成 {periodData.aiSummaryCount} / 总会话 {periodData.customersServed}</p>
+              <p className="text-xs text-[#999] mt-1">已生成 {periodData.aiSummaryCount} / 总会话 {periodData.customersServed}</p>
             </div>
 
           </div>
 
           {/* 底部统计 */}
-          <div className="mt-4 p-3 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-xl">
+          <div className="mt-4 p-3 bg-[#1A1A1A] rounded-xl">
             <div className="flex items-center justify-between text-white">
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4" />
@@ -1907,42 +1845,39 @@ function AnalyticsView() {
         </div>
 
         {/* AI画像标签统计 */}
-        <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-xl p-6 shadow-sm border border-violet-100">
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-[#E8E8E8]">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Target className="w-5 h-5 text-violet-600" />
-              <h3 className="font-semibold text-gray-900">AI画像标签统计</h3>
+              <Target className="w-5 h-5 text-[#FF6B35]" />
+              <h3 className="font-semibold text-[#1A1A1A]">AI画像标签统计</h3>
             </div>
-            <span className="text-xs text-violet-600 bg-violet-100 px-2 py-1 rounded-lg">{timeLabels[timeRange]}数据</span>
+            <span className="text-xs text-[#FF6B35] bg-[#FFF7F3] px-2 py-1 rounded-lg border border-[#FFD4BE]">{timeLabels[timeRange]}数据</span>
           </div>
-          <div className="space-y-3 bg-white/50 rounded-xl p-4">
+          <div className="space-y-3 bg-[#F7F8FA] rounded-xl p-4 border border-[#E8E8E8]">
             {[
-              { field: '客户等级', count: 186, percent: 35, color: 'from-[#FF6B35] to-orange-500' },
-              { field: '客户类型', count: 156, percent: 29, color: 'from-blue-500 to-blue-600' },
-              { field: '意向品类', count: 134, percent: 25, color: 'from-violet-500 to-purple-600' },
-              { field: '预算区间', count: 98, percent: 18, color: 'from-emerald-500 to-teal-600' },
-              { field: '购买紧迫度', count: 72, percent: 14, color: 'from-red-500 to-rose-600' },
+              { field: '客户等级', count: 186, percent: 35, color: '#1A1A1A' },
+              { field: '客户类型', count: 156, percent: 29, color: '#444' },
+              { field: '意向品类', count: 134, percent: 25, color: '#666' },
+              { field: '预算区间', count: 98, percent: 18, color: '#999' },
+              { field: '购买紧迫度', count: 72, percent: 14, color: '#B3B3B3' },
             ].map((item, i) => (
               <div key={i}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-700">{item.field}</span>
+                  <span className="text-sm font-medium text-[#333]">{item.field}</span>
                   <div className="flex items-center gap-3">
-                    <span className="text-sm text-gray-500">{item.count} 次</span>
-                    <span className="text-sm font-bold text-gray-900">{item.percent}%</span>
+                    <span className="text-sm text-[#666]">{item.count} 次</span>
+                    <span className="text-sm font-bold text-[#1A1A1A]">{item.percent}%</span>
                   </div>
                 </div>
-                <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className={cn("h-full rounded-full bg-gradient-to-r", item.color)}
-                    style={{ width: `${item.percent * 2.8}%` }}
-                  />
+                <div className="h-2.5 bg-[#E8E8E8] rounded-full overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: `${item.percent * 2.8}%`, backgroundColor: item.color }} />
                 </div>
               </div>
             ))}
           </div>
 
           {/* 总标签数 */}
-          <div className="mt-4 p-3 bg-gradient-to-r from-violet-500 to-purple-500 rounded-xl">
+          <div className="mt-4 p-3 bg-[#FF6B35] rounded-xl">
             <div className="flex items-center justify-between text-white">
               <div className="flex items-center gap-2">
                 <Target className="w-4 h-4" />
@@ -1957,26 +1892,26 @@ function AnalyticsView() {
       {/* AI标签下钻统计 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* 客户类型分布 */}
-        <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl shadow-sm p-5 border border-blue-100">
+        <div className="bg-white rounded-xl shadow-sm p-5 border border-[#E8E8E8]">
           <div className="flex items-center gap-2 mb-4">
-            <Users className="w-4 h-4 text-blue-600" />
-            <h3 className="text-sm font-semibold text-gray-900">客户类型分布</h3>
+            <Users className="w-4 h-4 text-[#FF6B35]" />
+            <h3 className="text-sm font-semibold text-[#1A1A1A]">客户类型分布</h3>
           </div>
           <div className="space-y-3">
             {[
-              { name: '批发商', count: 42, percent: 27, color: 'bg-blue-500' },
-              { name: '平台卖家', count: 38, percent: 24, color: 'bg-indigo-500' },
-              { name: '零售终端', count: 35, percent: 22, color: 'bg-violet-500' },
-              { name: '品牌代理', count: 25, percent: 16, color: 'bg-purple-500' },
-              { name: '个人消费者', count: 16, percent: 11, color: 'bg-fuchsia-400' },
+              { name: '批发商', count: 42, percent: 27, color: '#FF6B35' },
+              { name: '平台卖家', count: 38, percent: 24, color: '#FF8F5E' },
+              { name: '零售终端', count: 35, percent: 22, color: '#FFB088' },
+              { name: '品牌代理', count: 25, percent: 16, color: '#FFD4BE' },
+              { name: '个人消费者', count: 16, percent: 11, color: '#FFE8D9' },
             ].map((item, i) => (
               <div key={i}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-gray-600">{item.name}</span>
-                  <span className="text-xs font-semibold text-gray-700">{item.count}</span>
+                  <span className="text-xs text-[#666]">{item.name}</span>
+                  <span className="text-xs font-semibold text-[#333]">{item.count}</span>
                 </div>
-                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div className={cn("h-full rounded-full", item.color)} style={{ width: `${item.percent * 3.7}%` }} />
+                <div className="h-1.5 bg-[#E8E8E8] rounded-full overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: `${item.percent * 3.7}%`, backgroundColor: item.color }} />
                 </div>
               </div>
             ))}
@@ -1984,26 +1919,26 @@ function AnalyticsView() {
         </div>
 
         {/* 意向品类分布 */}
-        <div className="bg-gradient-to-br from-violet-50 to-purple-50 rounded-xl shadow-sm p-5 border border-violet-100">
+        <div className="bg-white rounded-xl shadow-sm p-5 border border-[#E8E8E8]">
           <div className="flex items-center gap-2 mb-4">
-            <Target className="w-4 h-4 text-violet-600" />
-            <h3 className="text-sm font-semibold text-gray-900">意向品类分布</h3>
+            <Target className="w-4 h-4 text-[#FF6B35]" />
+            <h3 className="text-sm font-semibold text-[#1A1A1A]">意向品类分布</h3>
           </div>
           <div className="space-y-3">
             {[
-              { name: '电子产品', count: 58, percent: 32, color: 'bg-violet-500' },
-              { name: '鞋类', count: 41, percent: 23, color: 'bg-purple-500' },
-              { name: '运动服饰', count: 34, percent: 19, color: 'bg-fuchsia-500' },
-              { name: '美妆护肤', count: 28, percent: 15, color: 'bg-pink-500' },
-              { name: '家居用品', count: 21, percent: 11, color: 'bg-rose-400' },
+              { name: '电子产品', count: 58, percent: 32, color: '#1A1A1A' },
+              { name: '鞋类', count: 41, percent: 23, color: '#444' },
+              { name: '运动服饰', count: 34, percent: 19, color: '#666' },
+              { name: '美妆护肤', count: 28, percent: 15, color: '#999' },
+              { name: '家居用品', count: 21, percent: 11, color: '#B3B3B3' },
             ].map((item, i) => (
               <div key={i}>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs text-gray-600">{item.name}</span>
-                  <span className="text-xs font-semibold text-gray-700">{item.count}</span>
+                  <span className="text-xs text-[#666]">{item.name}</span>
+                  <span className="text-xs font-semibold text-[#333]">{item.count}</span>
                 </div>
-                <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div className={cn("h-full rounded-full", item.color)} style={{ width: `${item.percent * 3.1}%` }} />
+                <div className="h-1.5 bg-[#E8E8E8] rounded-full overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: `${item.percent * 3.1}%`, backgroundColor: item.color }} />
                 </div>
               </div>
             ))}
@@ -2012,41 +1947,41 @@ function AnalyticsView() {
 
         {/* 购买紧迫度 & 预算区间 */}
         <div className="space-y-6">
-          <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl shadow-sm p-5 border border-amber-100">
+          <div className="bg-white rounded-xl shadow-sm p-5 border border-[#E8E8E8]">
             <div className="flex items-center gap-2 mb-3">
-              <Clock className="w-4 h-4 text-amber-600" />
-              <h3 className="text-sm font-semibold text-gray-900">购买紧迫度</h3>
+              <Clock className="w-4 h-4 text-[#FF6B35]" />
+              <h3 className="text-sm font-semibold text-[#1A1A1A]">购买紧迫度</h3>
             </div>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { name: '本周内', count: 18, color: 'bg-red-500', textColor: 'text-red-700' },
-                { name: '本月内', count: 45, color: 'bg-orange-500', textColor: 'text-orange-700' },
-                { name: '近期考虑', count: 62, color: 'bg-amber-400', textColor: 'text-amber-700' },
-                { name: '观望中', count: 31, color: 'bg-gray-400', textColor: 'text-gray-600' },
+                { name: '本周内', count: 18, color: '#FF6B35' },
+                { name: '本月内', count: 45, color: '#1A1A1A' },
+                { name: '近期考虑', count: 62, color: '#444' },
+                { name: '观望中', count: 31, color: '#1A1A1A' },
               ].map((item, i) => (
-                <div key={i} className="bg-white/70 rounded-lg p-2.5 text-center">
-                  <p className={cn("text-lg font-bold", item.textColor)}>{item.count}</p>
-                  <p className="text-[10px] text-gray-500">{item.name}</p>
+                <div key={i} className="bg-[#F7F8FA] rounded-lg p-2.5 text-center border border-[#E8E8E8]">
+                  <p className="text-lg font-bold" style={{ color: item.color }}>{item.count}</p>
+                  <p className="text-[10px] text-[#666]">{item.name}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl shadow-sm p-5 border border-emerald-100">
+          <div className="bg-white rounded-xl shadow-sm p-5 border border-[#E8E8E8]">
             <div className="flex items-center gap-2 mb-3">
-              <BarChart3 className="w-4 h-4 text-emerald-600" />
-              <h3 className="text-sm font-semibold text-gray-900">预算区间</h3>
+              <BarChart3 className="w-4 h-4 text-[#FF6B35]" />
+              <h3 className="text-sm font-semibold text-[#1A1A1A]">预算区间</h3>
             </div>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { name: '<$500', count: 34, textColor: 'text-gray-600' },
-                { name: '$500-$5K', count: 52, textColor: 'text-emerald-700' },
-                { name: '$5K-$50K', count: 28, textColor: 'text-teal-700' },
-                { name: '>$50K', count: 12, textColor: 'text-cyan-700' },
+                { name: '<$500', count: 34, color: '#1A1A1A' },
+                { name: '$500-$5K', count: 52, color: '#444' },
+                { name: '$5K-$50K', count: 28, color: '#1A1A1A' },
+                { name: '>$50K', count: 12, color: '#FF6B35' },
               ].map((item, i) => (
-                <div key={i} className="bg-white/70 rounded-lg p-2.5 text-center">
-                  <p className={cn("text-lg font-bold", item.textColor)}>{item.count}</p>
-                  <p className="text-[10px] text-gray-500">{item.name}</p>
+                <div key={i} className="bg-[#F7F8FA] rounded-lg p-2.5 text-center border border-[#E8E8E8]">
+                  <p className="text-lg font-bold" style={{ color: item.color }}>{item.count}</p>
+                  <p className="text-[10px] text-[#666]">{item.name}</p>
                 </div>
               ))}
             </div>
@@ -2057,65 +1992,29 @@ function AnalyticsView() {
       {/* 客户画像分析 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* 客户等级分布 */}
-        <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl shadow-sm p-6 border border-indigo-100">
+        <div className="bg-white rounded-xl shadow-sm p-6 border border-[#E8E8E8]">
           <div className="flex items-center gap-2 mb-4">
-            <Users className="w-5 h-5 text-indigo-600" />
-            <h3 className="font-semibold text-gray-900">客户等级分布</h3>
+            <Users className="w-5 h-5 text-[#FF6B35]" />
+            <h3 className="font-semibold text-[#1A1A1A]">客户等级分布</h3>
           </div>
           <div className="space-y-3">
             {[
-              { level: 'A级', desc: '已成交', count: 28, percent: 15, color: 'from-emerald-500 to-emerald-600', dotColor: 'bg-emerald-500' },
-              { level: 'B级', desc: '高意向询价', count: 56, percent: 30, color: 'from-blue-500 to-blue-600', dotColor: 'bg-blue-500' },
-              { level: 'C级', desc: '观望', count: 74, percent: 40, color: 'from-amber-500 to-amber-600', dotColor: 'bg-amber-500' },
-              { level: 'D级', desc: '仅加好友', count: 28, percent: 15, color: 'from-gray-400 to-gray-500', dotColor: 'bg-gray-400' },
+              { level: 'A级', desc: '已成交', count: 28, percent: 15, color: '#FF6B35' },
+              { level: 'B级', desc: '高意向询价', count: 56, percent: 30, color: '#FF8F5E' },
+              { level: 'C级', desc: '观望', count: 74, percent: 40, color: '#FFB088' },
+              { level: 'D级', desc: '仅加好友', count: 28, percent: 15, color: '#FFD4BE' },
             ].map((item, i) => (
-              <div key={i} className="bg-white/60 rounded-lg p-3">
+              <div key={i} className="bg-[#F7F8FA] rounded-lg p-3 border border-[#E8E8E8]">
                 <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center gap-2">
-                    <span className={cn("w-2 h-2 rounded-full", item.dotColor)} />
-                    <span className="text-sm font-medium text-gray-700">{item.level}</span>
-                    <span className="text-xs text-gray-400">{item.desc}</span>
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+                    <span className="text-sm font-medium text-[#333]">{item.level}</span>
+                    <span className="text-xs text-[#999]">{item.desc}</span>
                   </div>
-                  <span className="text-sm text-gray-500">{item.count}人 ({item.percent}%)</span>
+                  <span className="text-sm text-[#666]">{item.count}人 ({item.percent}%)</span>
                 </div>
-                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className={cn("h-full rounded-full bg-gradient-to-r", item.color)}
-                    style={{ width: `${item.percent * 2.5}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* 敏感度特征统计 */}
-        <div className="bg-gradient-to-br from-indigo-50 to-violet-50 rounded-xl shadow-sm p-6 border border-indigo-100">
-          <div className="flex items-center gap-2 mb-4">
-            <AlertTriangle className="w-5 h-5 text-indigo-600" />
-            <h3 className="font-semibold text-gray-900">敏感度特征统计</h3>
-          </div>
-          <div className="space-y-3">
-            {[
-              { name: '价格敏感', count: 89, percent: 38, color: 'from-red-500 to-rose-500', dotColor: 'bg-red-500' },
-              { name: '物流敏感', count: 67, percent: 29, color: 'from-orange-500 to-amber-500', dotColor: 'bg-orange-500' },
-              { name: '质量敏感', count: 54, percent: 23, color: 'from-blue-500 to-indigo-500', dotColor: 'bg-blue-500' },
-              { name: '付款安全敏感', count: 38, percent: 16, color: 'from-violet-500 to-purple-500', dotColor: 'bg-violet-500' },
-              { name: '真实性敏感', count: 28, percent: 12, color: 'from-teal-500 to-cyan-500', dotColor: 'bg-teal-500' },
-            ].map((item, i) => (
-              <div key={i} className="bg-white/60 rounded-lg p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <span className={cn("w-2 h-2 rounded-full", item.dotColor)} />
-                    <span className="text-sm font-medium text-gray-700">{item.name}</span>
-                  </div>
-                  <span className="text-sm text-gray-500">{item.count}人 ({item.percent}%)</span>
-                </div>
-                <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className={cn("h-full rounded-full bg-gradient-to-r", item.color)}
-                    style={{ width: `${item.percent * 2.6}%` }}
-                  />
+                <div className="h-2 bg-[#E8E8E8] rounded-full overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: `${item.percent * 2.6}%`, backgroundColor: item.color }} />
                 </div>
               </div>
             ))}
