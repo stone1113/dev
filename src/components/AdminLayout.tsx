@@ -1451,18 +1451,6 @@ const AIConfigDetailPage: React.FC<{
                 )} />
               </button>
             </div>
-            <div className="flex items-center gap-1.5 mt-1.5">
-              <span className={cn(
-                "w-2 h-2 rounded-full",
-                aiConfig.status === 'online' ? "bg-green-500" : "bg-gray-300"
-              )} />
-              <span className={cn(
-                "text-xs font-medium",
-                aiConfig.status === 'online' ? "text-green-600" : "text-gray-400"
-              )}>
-                {aiConfig.status === 'online' ? '在线接单中' : '已离线'}
-              </span>
-            </div>
           </div>
 
           {/* 已激活平台 */}

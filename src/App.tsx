@@ -679,7 +679,7 @@ function AIBindingPage({ platformAccounts, aiEmployeeConfig, iconMap, onBack, on
             <div className="flex-1">
               <h2 className="text-lg font-semibold">{ai.name}</h2>
               <p className="text-sm text-white/70 mt-0.5">
-                {ai.status === 'online' ? '在线工作中' : '离线'} · 已绑定 <span className="text-[#FF6B35] font-medium">{boundCount}</span> 个账号
+                {ai.status === 'online' ? '在线工作中' : ''} {ai.status === 'online' && '·'} 已绑定 <span className="text-[#FF6B35] font-medium">{boundCount}</span> 个账号
               </p>
             </div>
             <div className="text-right">
@@ -1157,24 +1157,6 @@ function DashboardView({ onGoToConversations }: { onGoToConversations: () => voi
                   回复 <span className="font-semibold text-white">{aiStats.today.messagesReplied}</span> 条消息
                 </p>
               </div>
-            </div>
-          </div>
-          <div className="mt-3 pt-3 border-t border-white/15 flex items-center gap-4">
-            <div className="flex items-center gap-1.5 text-xs text-white/60">
-              <span className="w-1.5 h-1.5 rounded-full bg-white" />
-              在线 {platformAccounts.filter(a => a.status === 'online').length}
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-white/60">
-              <span className="w-1.5 h-1.5 rounded-full bg-white/40" />
-              离线 {platformAccounts.filter(a => a.status === 'offline').length}
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-white/60">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#FFD4BE]" />
-              启用 {platformAccounts.filter(a => a.status === 'online' && a.aiEnabled).length}
-            </div>
-            <div className="flex items-center gap-1.5 text-xs text-white/60">
-              <span className="w-1.5 h-1.5 rounded-full bg-white/20" />
-              关闭 {platformAccounts.filter(a => a.status === 'online' && !a.aiEnabled).length}
             </div>
           </div>
         </div>
