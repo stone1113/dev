@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>洽小秘 - 全链路 AI 获客与营销系统</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;800&display=swap');
+    body {
+      font-family: 'Inter', 'Noto Sans SC', sans-serif;
+      background:
+        radial-gradient(circle at top center, rgba(255, 106, 61, 0.12), transparent 30%),
+        radial-gradient(circle at 20% 0%, rgba(255, 90, 72, 0.06), transparent 22%),
+        linear-gradient(180deg, #000000 0%, #0a0a0a 48%, #000000 100%);
+    }
+    .page-grid {
+      background-image:
+        linear-gradient(rgba(148, 163, 184, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.035) 1px, transparent 1px);
+      background-size: 52px 52px;
+      mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent 78%);
+    }
+    .hero-glow {
+      background:
+        radial-gradient(circle at top center, rgba(255, 90, 72, 0.16), transparent 34%),
+        radial-gradient(circle at 50% 18%, rgba(255, 106, 61, 0.10), transparent 28%);
+      filter: blur(14px);
+    }
+    .hero-sheen { background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0)); }
+    .ambient-orb { filter: blur(64px); opacity: 0.7; }
+    .office-backdrop {
+      background-image:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.16), rgba(0, 0, 0, 0.8)),
+        linear-gradient(90deg, rgba(0, 0, 0, 0.74), rgba(0, 0, 0, 0.34) 38%, rgba(0, 0, 0, 0.46) 100%),
+        url('https://images.unsplash.com/photo-1557804506-669a67965ba0?auto=format&fit=crop&w=1800&q=80');
+      background-size: cover;
+      background-position: center;
+      opacity: 0.42;
+      filter: saturate(0.74) contrast(0.96) brightness(0.82);
+    }
+    .glass-card {
+      position: relative;
+      background: linear-gradient(180deg, rgba(20, 20, 20, 0.78), rgba(10, 10, 10, 0.54));
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(18px);
+    }
+    .glass-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,106,61,0.65), rgba(255,255,255,0));
+      pointer-events: none;
+    }
+    .metric-chip {
+      background: rgba(20, 20, 20, 0.68);
+      border: 1px solid rgba(255, 106, 61, 0.18);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+      backdrop-filter: blur(10px);
+    }
+    .btn-primary {
+      background-image: linear-gradient(135deg, #ff6a3d, #ff5a48 58%, #ff4d4f);
+      box-shadow: 0 16px 42px rgba(255, 90, 72, 0.3);
+    }
+    .btn-primary:hover { box-shadow: 0 22px 52px rgba(255, 90, 72, 0.36); }
+    .btn-secondary {
+      background: rgba(20, 20, 20, 0.52);
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+      backdrop-filter: blur(10px);
+    }
+    .feature-badge {
+      background: linear-gradient(180deg, rgba(255, 106, 61, 0.18), rgba(255, 90, 72, 0.08));
+      border: 1px solid rgba(255, 106, 61, 0.2);
+      box-shadow: 0 12px 30px rgba(255, 90, 72, 0.12);
+    }
+    .subfeature-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+    }
+    .soft-ring { box-shadow: 0 0 0 1px rgba(255,255,255,0.08); }
+    .icon-shell {
+      background: linear-gradient(180deg, rgba(255,106,61,0.14), rgba(255,90,72,0.06));
+      border: 1px solid rgba(255,106,61,0.16);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+      backdrop-filter: blur(8px);
+    }
+  </style>
+</head>
+<body class="text-white antialiased selection:bg-orange-500/30">
+  <div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+    <div class="page-grid absolute inset-0"></div>
+    <div class="ambient-orb absolute left-[10%] top-0 h-72 w-72 rounded-full bg-orange-500/15"></div>
+    <div class="ambient-orb absolute right-[10%] top-24 h-80 w-80 rounded-full bg-red-500/10"></div>
+    <div class="ambient-orb absolute bottom-10 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-orange-900/20"></div>
+  </div>
+
+  <nav class="sticky top-0 z-50 border-b border-white/10 bg-black/80 backdrop-blur-xl">
+    <div class="container mx-auto flex items-center justify-between px-6 py-4">
+      <div class="text-xl font-bold tracking-[-0.03em] text-white">
+        洽小秘
+      </div>
+      <div class="hidden md:flex items-center gap-8 text-base font-semibold text-slate-200">
+        <a href="/landing.html" class="text-orange-300 transition-colors hover:text-orange-200">产品首页</a>
+        <a href="/download.html" class="transition-colors hover:text-orange-200">下载中心</a>
+        <a href="#team" class="transition-colors hover:text-orange-200">团队介绍</a>
+        <a href="#contact" class="transition-colors hover:text-orange-200">联系我们</a>
+      </div>
+    </div>
+  </nav>
+
+  <section class="relative overflow-hidden min-h-screen">
+    <div class="office-backdrop absolute inset-0"></div>
+    <div class="absolute inset-0 hero-glow"></div>
+    <div class="absolute inset-0 hero-sheen"></div>
+
+    <div class="container mx-auto px-6 py-32 md:py-40 relative min-h-screen flex items-center">
+
+      <div class="max-w-6xl mx-auto text-center space-y-8">
+        
+
+        <div class="space-y-5 md:space-y-6">
+          <div class="mx-auto flex max-w-6xl flex-col items-center justify-center gap-3 md:flex-row md:flex-nowrap md:items-baseline md:gap-5">
+            <div class="shrink-0 text-5xl font-bold tracking-[-0.05em] text-white md:text-7xl md:leading-none">
+              洽小秘
+            </div>
+            <div class="hidden h-12 w-px bg-white/18 md:block lg:h-14"></div>
+            <div class="whitespace-nowrap text-3xl font-semibold tracking-[-0.04em] text-slate-300 md:text-5xl md:leading-none lg:text-6xl">
+              面向跨境团队的全链路增长引擎
+            </div>
+          </div>
+          <h1 class="mx-auto max-w-4xl text-4xl font-bold tracking-[-0.05em] text-slate-200 md:text-6xl md:leading-[1.08]">
+            基于指纹浏览器的
+            <span class="mt-2 block bg-gradient-to-r from-orange-400 via-orange-300 to-red-400 bg-clip-text text-transparent">
+              全链路 AI 获客与营销系统
+            </span>
+          </h1>
+        </div>
+
+        <div class="mx-auto max-w-6xl space-y-3 text-base leading-7 text-slate-300 md:text-lg">
+          <p class="md:whitespace-nowrap">聚合 WhatsApp / Telegram 等 18+ 平台，内置原生环境隔离、实时翻译与 AI 销售能力。</p>
+          <p class="md:whitespace-nowrap">从安全多开到客户画像、智能私信与主动营销触达，让每一次跨境沟通都更安全、更智能、更高效。</p>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4 justify-center pt-6">
+          <button class="btn-primary rounded-2xl px-8 py-4 text-lg font-semibold text-white transition-all duration-300 hover:-translate-y-1">立即申请演示 →</button>
+          <a href="/download.html" class="btn-secondary inline-flex items-center justify-center rounded-2xl px-8 py-4 text-lg font-semibold text-slate-100 transition-all duration-300 hover:-translate-y-1 hover:border-orange-300/20 hover:bg-black/70">下载客户端</a>
+        </div>
+
+        <div class="mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-3 pt-4">
+          <span class="metric-chip rounded-full px-4 py-2 text-sm text-slate-200">AI 销售自动化</span>
+          <span class="metric-chip rounded-full px-4 py-2 text-sm text-slate-200">多开防封与指纹隔离</span>
+          <span class="metric-chip rounded-full px-4 py-2 text-sm text-slate-200">200+ 语种实时翻译</span>
+          <span class="metric-chip rounded-full px-4 py-2 text-sm text-slate-200">7x24 主动营销触达</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-24 relative">
+    <div class="container mx-auto px-6">
+      <div class="mx-auto mb-16 max-w-3xl text-center">
+        <div class="mb-4 inline-flex rounded-full border border-orange-400/15 bg-orange-500/10 px-4 py-2 text-sm text-orange-100/90 backdrop-blur">
+          Foundation Layer
+        </div>
+        <h2 class="mb-4 text-4xl font-bold tracking-tight">坚实的业务基座</h2>
+        <p class="text-lg leading-8 text-slate-400 md:text-xl">工欲善其事，必先利其器。我们为您提供最硬核的 SCRM 基础设施，让跨境团队在统一平台上安全、高效地完成增长动作。</p>
+      </div>
+
+      <div class="grid max-w-6xl mx-auto gap-8 md:grid-cols-3">
+        <div class="glass-card rounded-[28px] p-8">
+          <div class="mb-6 inline-flex rounded-full border border-orange-400/15 bg-orange-500/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-orange-200">Platform Hub</div>
+          <div class="feature-badge mb-6 flex h-14 w-14 items-center justify-center rounded-2xl">
+            <svg class="h-6 w-6 text-orange-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <h3 class="mb-4 text-2xl font-bold tracking-tight">多平台聚合接待</h3>
+          <div class="space-y-4 text-slate-300">
+            <div class="subfeature-card rounded-2xl p-4">
+              <h4 class="mb-2 font-semibold text-white">一屏管全球</h4>
+              <p class="text-sm leading-7">一个客户端聚合 WhatsApp、Telegram、Messenger、Instagram、Line 等 18+ 主流社交平台。</p>
+            </div>
+            <div class="subfeature-card rounded-2xl p-4">
+              <h4 class="mb-2 font-semibold text-white">全渠道消息中心</h4>
+              <p class="text-sm leading-7">无论客户来自哪个平台，都在统一窗口完成接待，消息零遗漏，管理零切换。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-[28px] p-8">
+          <div class="mb-6 inline-flex rounded-full border border-orange-400/15 bg-orange-500/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-orange-200">Security Core</div>
+          <div class="feature-badge mb-6 flex h-14 w-14 items-center justify-center rounded-2xl">
+            <svg class="h-6 w-6 text-orange-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3l7 3v5c0 4.5-2.9 8.3-7 10-4.1-1.7-7-5.5-7-10V6l7-3z"></path>
+            </svg>
+          </div>
+          <h3 class="mb-4 text-2xl font-bold tracking-tight">内置指纹浏览器</h3>
+          <div class="space-y-4 text-slate-300">
+            <div class="subfeature-card rounded-2xl p-4">
+              <h4 class="mb-2 font-semibold text-white">账号防弹衣</h4>
+              <p class="text-sm leading-7">无需额外购买 AdsPower 或 HubStudio。内置底层指纹隔离引擎，为每个账号生成独立 IP、设备指纹与缓存环境。</p>
+            </div>
+            <div class="subfeature-card rounded-2xl p-4">
+              <h4 class="mb-2 font-semibold text-white">矩阵安全多开</h4>
+              <p class="text-sm leading-7">一台电脑稳定运行 100+ 营销账号，从源头彻底解决关联封号难题。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-[28px] p-8">
+          <div class="mb-6 inline-flex rounded-full border border-orange-400/15 bg-orange-500/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.24em] text-orange-200">Translation AI</div>
+          <div class="feature-badge mb-6 flex h-14 w-14 items-center justify-center rounded-2xl">
+            <svg class="h-6 w-6 text-orange-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"></path>
+            </svg>
+          </div>
+          <h3 class="mb-4 text-2xl font-bold tracking-tight">实时双向翻译</h3>
+          <div class="space-y-4 text-slate-300">
+            <div class="subfeature-card rounded-2xl p-4">
+              <h4 class="mb-2 font-semibold text-white">母语级沟通</h4>
+              <p class="text-sm leading-7">支持全球 200+ 语种实时互译。接收消息自动译为中文，发送消息自动译为目标语言。</p>
+            </div>
+            <div class="subfeature-card rounded-2xl p-4">
+              <h4 class="mb-2 font-semibold text-white">多线路校准</h4>
+              <p class="text-sm leading-7">集成 Google、DeepL、ChatGPT 等多条翻译线路，确保商务沟通的精准度与专业性。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="relative py-24">
+    <div class="container mx-auto px-6">
+      <div class="mx-auto mb-16 max-w-3xl text-center">
+        <div class="mb-4 inline-flex rounded-full border border-orange-400/15 bg-orange-500/10 px-4 py-2 text-sm text-orange-100/90 backdrop-blur">
+          Growth Engine
+        </div>
+        <h2 class="mb-4 text-4xl font-bold tracking-tight">强大的 AI 增长引擎</h2>
+        <p class="text-lg leading-8 text-slate-400 md:text-xl">有了安全的基座，AI 帮您把“流量”变成“留量”与“销量”，让线索洞察、私信转化与营销触达形成闭环。</p>
+      </div>
+
+      <div class="max-w-6xl mx-auto space-y-12">
+        <div class="glass-card overflow-hidden rounded-[32px] p-8 md:p-10">
+          <div class="mb-6 flex items-center gap-4">
+            <div class="feature-badge flex h-14 w-14 items-center justify-center rounded-2xl">
+              <svg class="h-6 w-6 text-orange-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+              </svg>
+            </div>
+            <div>
+              <div class="mb-2 text-xs uppercase tracking-[0.3em] text-orange-200/80">Smart Reception</div>
+              <h3 class="text-3xl font-bold">智接待：AI 销售</h3>
+            </div>
+          </div>
+          <p class="mb-8 max-w-3xl text-slate-300">用 AI 先看懂客户，再帮助团队用最合适的方式沟通，把每一轮对话都推进到更高的成交概率。</p>
+          <div class="grid gap-6 md:grid-cols-3">
+            <div class="subfeature-card rounded-2xl p-5 space-y-2">
+              <h4 class="font-semibold text-lg text-orange-50">AI 实时画像</h4>
+              <p class="text-slate-300 text-sm leading-7">聊天即“识人”。AI 自动提取预算、痛点、偏好并实时打标，让销售在开口前先掌握客户底牌。</p>
+            </div>
+            <div class="subfeature-card rounded-2xl p-5 space-y-2">
+              <h4 class="font-semibold text-lg text-orange-50">AI 智能私信</h4>
+              <p class="text-slate-300 text-sm leading-7">AI 基于上下文与企业知识库，自动生成高情商、营销导向的回复建议，一键发送，小白也能聊出销冠水准。</p>
+            </div>
+            <div class="subfeature-card rounded-2xl p-5 space-y-2">
+              <h4 class="font-semibold text-lg text-orange-50">AI 沉默召回</h4>
+              <p class="text-slate-300 text-sm leading-7">自动扫描“已读不回”或“久未联系”的客户，生成破冰话术并重新激活私域资产，让僵尸粉变回头客。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card overflow-hidden rounded-[32px] p-8 md:p-10">
+          <div class="mb-6 flex items-center gap-4">
+            <div class="feature-badge flex h-14 w-14 items-center justify-center rounded-2xl">
+              <svg class="h-6 w-6 text-orange-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
+            </div>
+            <div>
+              <div class="mb-2 text-xs uppercase tracking-[0.3em] text-orange-200/80">Smart Outreach</div>
+              <h3 class="text-3xl font-bold">智触达：AI 主动营销</h3>
+            </div>
+          </div>
+          <p class="mb-8 max-w-3xl text-slate-300">让获客不再靠人海战术。AI 根据标签、时间和行为自动编排动作，持续放大有效触达与转化率。</p>
+          <div class="grid gap-6 md:grid-cols-2">
+            <div class="subfeature-card rounded-2xl p-5 space-y-2">
+              <h4 class="font-semibold text-lg text-orange-50">精准批量触达</h4>
+              <p class="text-slate-300 text-sm leading-7">基于指纹环境的安全保护，AI 自动执行批量打招呼与新品推送任务，触达率提升 300%。</p>
+            </div>
+            <div class="subfeature-card rounded-2xl p-5 space-y-2">
+              <h4 class="font-semibold text-lg text-orange-50">自动化营销流</h4>
+              <p class="text-slate-300 text-sm leading-7">设定节日、生日、新注册等触发条件，AI 自动执行“千人千面”的私信营销计划，7x24 小时主动出击。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card overflow-hidden rounded-[32px] p-8 md:p-10">
+          <div class="mb-6 flex items-center gap-4">
+            <div class="feature-badge flex h-14 w-14 items-center justify-center rounded-2xl">
+              <svg class="h-6 w-6 text-orange-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 19V9m7 10V5m7 14v-7"></path>
+              </svg>
+            </div>
+            <div>
+              <div class="mb-2 text-xs uppercase tracking-[0.3em] text-orange-200/80">Smart Insights</div>
+              <h3 class="text-3xl font-bold">智洞察：AI 业务大脑</h3>
+            </div>
+          </div>
+          <p class="mb-8 max-w-3xl text-slate-300">不仅执行，更要洞察。用 AI 看懂海量会话背后的趋势、风险与机会，帮助团队持续优化产品与销售打法。</p>
+          <div class="grid gap-6 md:grid-cols-2">
+            <div class="subfeature-card rounded-2xl p-5 space-y-2">
+              <h4 class="font-semibold text-lg text-orange-50">VOC 客户原声分析</h4>
+              <p class="text-slate-300 text-sm leading-7">AI 深度分析海量聊天记录，提炼客户最关注的“痛点”与“竞品信息”，反哺话术与产品策略。</p>
+            </div>
+            <div class="subfeature-card rounded-2xl p-5 space-y-2">
+              <h4 class="font-semibold text-lg text-orange-50">会话质检</h4>
+              <p class="text-slate-300 text-sm leading-7">不止看回复量，更看回复质量。AI 自动评估员工服务态度与话术专业度，持续优化团队执行力。</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-24 relative">
+    <div class="container mx-auto px-6">
+      <div class="mx-auto mb-16 max-w-3xl text-center">
+        <div class="mb-4 inline-flex rounded-full border border-orange-400/15 bg-orange-500/10 px-4 py-2 text-sm text-orange-100/90 backdrop-blur">
+          Why Chamie
+        </div>
+        <h2 class="mb-4 text-4xl font-bold text-center tracking-tight">为什么选择洽小秘 AI？</h2>
+        <p class="text-lg leading-8 text-slate-400">不是更多工具的堆叠，而是一套从账号安全、客户沟通到增长转化的完整基础设施。</p>
+      </div>
+
+      <div class="glass-card mx-auto max-w-5xl rounded-[32px] p-8 md:p-12">
+        <div class="grid gap-8 md:grid-cols-2">
+          <div class="space-y-6">
+            <div class="soft-ring flex items-start gap-4 rounded-2xl bg-white/[0.02] p-5">
+              <div class="icon-shell mt-1 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-orange-50">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13 3L5 14h6l-1 7 8-11h-6l1-7z"></path>
+                </svg>
+              </div>
+              <div>
+                <h4 class="font-semibold mb-1">一体化解决方案</h4>
+                <p class="text-sm leading-7 text-slate-400">无需拼凑多个工具，从账号安全到 AI 营销一站式搞定。</p>
+              </div>
+            </div>
+            <div class="soft-ring flex items-start gap-4 rounded-2xl bg-white/[0.02] p-5">
+              <div class="icon-shell mt-1 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-orange-50">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 3l7 3v5c0 4.5-2.9 8.3-7 10-4.1-1.7-7-5.5-7-10V6l7-3z"></path>
+                </svg>
+              </div>
+              <div>
+                <h4 class="font-semibold mb-1">安全第一</h4>
+                <p class="text-sm leading-7 text-slate-400">内置指纹浏览器，彻底解决账号关联封号问题。</p>
+              </div>
+            </div>
+            <div class="soft-ring flex items-start gap-4 rounded-2xl bg-white/[0.02] p-5">
+              <div class="icon-shell mt-1 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-orange-50">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9.5 7a3.5 3.5 0 016.7-1.2A3.5 3.5 0 0118 12v1a3 3 0 01-3 3h-1v2h-4v-2H9a3 3 0 01-3-3v-1a3.5 3.5 0 011.8-6.2A3.5 3.5 0 019.5 7z"></path>
+                </svg>
+              </div>
+              <div>
+                <h4 class="font-semibold mb-1">AI 驱动增长</h4>
+                <p class="text-sm leading-7 text-slate-400">从客户画像到智能回复，AI 全程赋能销售转化。</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-6">
+            <div class="soft-ring flex items-start gap-4 rounded-2xl bg-white/[0.02] p-5">
+              <div class="icon-shell mt-1 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-orange-50">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="8" stroke-width="1.8"></circle>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4.5 12h15M12 4a12 12 0 010 16M12 4a12 12 0 000 16"></path>
+                </svg>
+              </div>
+              <div>
+                <h4 class="font-semibold mb-1">全球化支持</h4>
+                <p class="text-sm leading-7 text-slate-400">200+ 语种实时翻译，轻松开拓国际市场。</p>
+              </div>
+            </div>
+            <div class="soft-ring flex items-start gap-4 rounded-2xl bg-white/[0.02] p-5">
+              <div class="icon-shell mt-1 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-orange-50">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="7" stroke-width="1.8"></circle>
+                  <circle cx="12" cy="12" r="3" stroke-width="1.8"></circle>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 9l4-4"></path>
+                </svg>
+              </div>
+              <div>
+                <h4 class="font-semibold mb-1">精准营销</h4>
+                <p class="text-sm leading-7 text-slate-400">基于 AI 画像的千人千面营销，转化率提升 3 倍。</p>
+              </div>
+            </div>
+            <div class="soft-ring flex items-start gap-4 rounded-2xl bg-white/[0.02] p-5">
+              <div class="icon-shell mt-1 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-orange-50">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M5 19V9m7 10V5m7 14v-7"></path>
+                </svg>
+              </div>
+              <div>
+                <h4 class="font-semibold mb-1">数据驱动决策</h4>
+                <p class="text-sm leading-7 text-slate-400">深度洞察客户需求，优化产品与话术策略。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="py-24 relative overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-t from-orange-900/20 via-transparent to-transparent"></div>
+    <div class="ambient-orb absolute left-1/2 top-10 h-64 w-64 -translate-x-1/2 rounded-full bg-orange-500/20"></div>
+
+    <div class="container mx-auto px-6 relative">
+      <div class="glass-card relative mx-auto max-w-5xl overflow-hidden rounded-[36px] px-8 py-14 text-center space-y-8 md:px-16">
+        <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-orange-400/60 to-transparent"></div>
+        <div class="inline-flex items-center justify-center rounded-full border border-orange-400/20 bg-orange-500/10 px-4 py-2 text-sm text-orange-100/90">让每一条私信，都更接近成交</div>
+        <h2 class="text-4xl md:text-5xl font-bold">Chamie 洽小秘</h2>
+        <p class="mx-auto max-w-3xl text-xl leading-8 text-slate-300 md:text-2xl">懂 AI，更懂成交的跨境营销专家</p>
+
+        <div class="flex flex-wrap justify-center gap-4 pt-4 text-sm text-slate-400">
+          <span class="metric-chip rounded-full px-4 py-2">多开防封</span>
+          <span class="metric-chip rounded-full px-4 py-2">实时翻译</span>
+          <span class="metric-chip rounded-full px-4 py-2">AI 销售</span>
+          <span class="metric-chip rounded-full px-4 py-2">主动获客</span>
+          <span class="metric-chip rounded-full px-4 py-2">内容质检</span>
+          <span class="metric-chip rounded-full px-4 py-2">AI 洞察</span>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4 justify-center pt-8">
+          <button class="btn-primary rounded-2xl px-8 py-4 text-lg font-semibold text-white transition-all duration-300 hover:-translate-y-1">立即申请演示 →</button>
+          <button class="btn-secondary rounded-2xl px-8 py-4 text-lg font-semibold text-slate-100 transition-all duration-300 hover:-translate-y-1 hover:border-orange-300/20 hover:bg-black/70">联系我们</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="border-t border-slate-800 py-8">
+    <div class="container mx-auto px-6">
+      <div class="text-center text-sm text-slate-500">
+        <p>© 2026 Chamie 洽小秘. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
