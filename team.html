@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>团队介绍 - 洽小秘</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+SC:wght@400;500;700;800&display=swap');
+    body {
+      font-family: 'Inter', 'Noto Sans SC', sans-serif;
+      background: linear-gradient(180deg, #000000 0%, #0a0a0a 48%, #000000 100%);
+    }
+    .page-grid {
+      background-image:
+        linear-gradient(rgba(148, 163, 184, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.035) 1px, transparent 1px);
+      background-size: 52px 52px;
+      mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.55), transparent 78%);
+    }
+    .ambient-orb { filter: blur(64px); opacity: 0.7; }
+    .glass-card {
+      background: linear-gradient(180deg, rgba(20, 20, 20, 0.78), rgba(10, 10, 10, 0.54));
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(18px);
+    }
+  </style>
+</head>
+<body class="text-white antialiased selection:bg-orange-500/30">
+  <div class="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
+    <div class="page-grid absolute inset-0"></div>
+    <div class="ambient-orb absolute left-[12%] top-0 h-72 w-72 rounded-full bg-orange-500/15"></div>
+    <div class="ambient-orb absolute right-[10%] top-28 h-80 w-80 rounded-full bg-red-500/10"></div>
+  </div>
+
+  <nav class="sticky top-0 z-50 border-b border-white/10 bg-black/80 backdrop-blur-xl">
+    <div class="container mx-auto flex items-center justify-between px-6 py-4">
+      <a href="/landing.html" class="text-xl font-bold tracking-[-0.03em] text-white">洽小秘</a>
+      <div class="flex items-center gap-8">
+        <div class="hidden md:flex items-center gap-8 text-base font-semibold text-slate-200">
+          <a href="/landing.html" class="transition-colors hover:text-orange-200">产品首页</a>
+          <a href="/download.html" class="transition-colors hover:text-orange-200">下载中心</a>
+          <a href="/team.html" class="text-orange-300 transition-colors hover:text-orange-200">团队介绍</a>
+          <a href="/contact.html" class="transition-colors hover:text-orange-200">联系我们</a>
+        </div>
+        <a href="http://localhost:5174/?admin=true" class="rounded-lg border border-orange-400/30 bg-orange-500/10 px-4 py-2 text-sm font-semibold text-orange-200 transition-all hover:border-orange-400/50 hover:bg-orange-500/20">登录</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container mx-auto px-6 pb-20 md:pb-24">
+    <section class="relative min-h-screen py-24">
+      <div class="mx-auto mb-16 max-w-3xl text-center">
+        <div class="mb-4 inline-flex rounded-full border border-orange-400/15 bg-orange-500/10 px-4 py-2 text-sm text-orange-100/90 backdrop-blur">
+          Our Team
+        </div>
+        <h1 class="mb-4 text-5xl font-bold tracking-[-0.05em] text-white md:text-7xl">团队介绍</h1>
+        <p class="text-lg leading-8 text-slate-300 md:text-xl">我们是一支专注于 AI 跨境营销的专业团队，致力于为全球企业提供智能化的客户服务解决方案。</p>
+      </div>
+
+      <div class="mx-auto max-w-6xl space-y-12">
+        <div class="glass-card rounded-[32px] p-8 md:p-12">
+          <h2 class="mb-6 text-3xl font-bold">关于我们</h2>
+          <div class="space-y-4 text-lg leading-8 text-slate-300">
+            <p>洽小秘团队成立于 2024 年，由一群来自硅谷和国内顶尖科技公司的工程师、产品经理和营销专家组成。我们深刻理解跨境企业在客户服务和营销方面的痛点，致力于通过 AI 技术帮助企业提升效率、降低成本。</p>
+            <p>我们的核心团队拥有丰富的 AI、大数据、云计算和跨境电商经验，曾服务过多家世界 500 强企业和独角兽公司。</p>
+          </div>
+        </div>
+
+        <div class="glass-card rounded-[32px] p-8 md:p-12">
+          <h2 class="mb-8 text-3xl font-bold">核心团队</h2>
+          <div class="grid gap-8 md:grid-cols-3">
+            <div class="text-center">
+              <div class="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-orange-500/20">
+                <span class="text-4xl font-bold text-orange-400">A</span>
+              </div>
+              <h3 class="mb-2 text-xl font-bold">创始人 & CEO</h3>
+              <p class="text-sm text-slate-400">前硅谷科技公司技术总监</p>
+              <p class="mt-2 text-sm text-slate-300">10+ 年 AI 和大数据经验</p>
+            </div>
+            <div class="text-center">
+              <div class="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-orange-500/20">
+                <span class="text-4xl font-bold text-orange-400">B</span>
+              </div>
+              <h3 class="mb-2 text-xl font-bold">联合创始人 & CTO</h3>
+              <p class="text-sm text-slate-400">前国内顶尖互联网公司架构师</p>
+              <p class="mt-2 text-sm text-slate-300">15+ 年技术研发经验</p>
+            </div>
+            <div class="text-center">
+              <div class="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full bg-orange-500/20">
+                <span class="text-4xl font-bold text-orange-400">C</span>
+              </div>
+              <h3 class="mb-2 text-xl font-bold">产品总监</h3>
+              <p class="text-sm text-slate-400">前跨境电商平台产品负责人</p>
+              <p class="mt-2 text-sm text-slate-300">8+ 年跨境业务经验</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <footer class="border-t border-slate-800 py-8">
+    <div class="container mx-auto px-6">
+      <div class="text-center text-sm text-slate-500">
+        <p>© 2026 Chamie 洽小秘. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>
