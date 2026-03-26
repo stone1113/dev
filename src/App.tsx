@@ -77,7 +77,10 @@ function App() {
   });
 
   // 管理中心状态
-  const [showAdminCenter, setShowAdminCenter] = useState(false);
+  const [showAdminCenter, setShowAdminCenter] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('admin') === 'true';
+  });
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
 
   const [activeSection, setActiveSection] = useState('dashboard');
@@ -2340,10 +2343,4 @@ export function _SettingsView() {
   );
 }
 
-const AppWithGate = () => (
-  <AccessGate>
-    <App />
-  </AccessGate>
-);
-
-export default AppWithGate;
+export default App;

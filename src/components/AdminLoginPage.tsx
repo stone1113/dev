@@ -45,7 +45,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
     {/* 登录卡片 */}
     <div className="relative z-10 w-full max-w-md bg-white rounded-2xl shadow-xl shadow-gray-200/50 p-8">
       {/* Logo */}
-      <div className="flex items-center gap-3 mb-6">
+      <a href="http://127.0.0.1:8010/landing.html" className="flex items-center gap-3 mb-6 cursor-pointer hover:opacity-80 transition-opacity">
         <div className="w-10 h-10 bg-[#FF6B35] rounded-xl flex items-center justify-center">
           <span className="text-white font-bold text-lg">洽</span>
         </div>
@@ -53,7 +53,7 @@ const LoginForm: React.FC<LoginFormProps> = ({
           <span className="text-2xl font-bold text-gray-900">洽小秘</span>
           <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-[#FF6B35]/10 text-[#FF6B35] rounded">管理端</span>
         </div>
-      </div>
+      </a>
 
       {/* 标题 */}
       <h2 className="text-xl font-semibold text-gray-900 mb-1">账号登录</h2>
@@ -198,7 +198,7 @@ const LeftPanel: React.FC = () => (
     <div className="relative z-10 flex flex-col pt-16 px-16 w-full">
       {/* 产品名称和Slogan */}
       <div className="mb-10">
-        <div className="flex items-center gap-4 mb-4">
+        <a href="http://127.0.0.1:8010/landing.html" className="flex items-center gap-4 mb-4 cursor-pointer hover:opacity-80 transition-opacity">
           <div className="w-14 h-14 bg-[#FF6B35] rounded-2xl flex items-center justify-center shadow-lg shadow-[#FF6B35]/30">
             <span className="text-white font-bold text-2xl">洽</span>
           </div>
@@ -206,7 +206,7 @@ const LeftPanel: React.FC = () => (
             <h1 className="text-3xl font-bold text-gray-900">洽小秘</h1>
             <p className="text-sm text-[#FF6B35] font-medium">Chamie AI</p>
           </div>
-        </div>
+        </a>
         <p className="text-xl font-semibold text-gray-800">
           全渠道的 AI 跨境智能营销平台
         </p>
