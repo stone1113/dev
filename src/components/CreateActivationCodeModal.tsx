@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { X, ChevronRight, Check, Search } from 'lucide-react';
+import { X, Search, ChevronDown, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useStore } from '@/store/useStore';
+import type { Department } from '@/types';
 
 interface Platform {
   id: string;
@@ -30,24 +32,44 @@ const PLATFORMS: Platform[] = [
 interface CreateActivationCodeModalProps {
   onClose: () => void;
   onSave: (data: any) => void;
+  initialData?: any;
 }
 
-export const CreateActivationCodeModal: React.FC<CreateActivationCodeModalProps> = ({ onClose, onSave }) => {
+export const CreateActivationCodeModal: React.FC<CreateActivationCodeModalProps> = ({ onClose, onSave, initialData }) => {
   const [formData, setFormData] = useState({
-    platforms: [] as string[],
-    portAllocation: 'dynamic' as 'dynamic' | 'fixed',
-    portLimit: 1,
-    workingHours: 'none' as 'none' | 'fixed',
-    dedupeScope: 'current' as 'current' | 'account' | 'related',
-    multiDevice: false,
-    profileSharing: true,
-    autoReplyKeyword: false,
-    autoReplyWelcome: false,
-    chatBackup: true,
-    dataMasking: false,
-    remark: '',
+    platforms: initialData?.platforms ?? [] as string[],
+    portAllocation: initialData?.portAllocation ?? 'dynamic' as 'dynamic' | 'fixed',
+    portLimit: initialData?.portLimit ?? 1,
+    workingHours: initialData?.workingHours ?? 'none' as 'none' | 'fixed',
+    dedupeScope: initialData?.dedupeScope ?? 'current' as 'current' | 'account' | 'related',
+    multiDevice: initialData?.multiDevice ?? false,
+    profileSharing: initialData?.profileSharing ?? true,
+    autoReplyKeyword: initialData?.autoReplyKeyword ?? false,
+    autoReplyWelcome: initialData?.autoReplyWelcome ?? false,
+    aiEmployee: initialData?.aiEmployee ?? false,
+    chatBackup: initialData?.chatBackup ?? true,
+    dataMasking: initialData?.dataMasking ?? false,
+    dataPermissions: initialData?.dataPermissions ?? [] as string[],
+    remark: initialData?.remark ?? '',
   });
   const [platformSearch, setPlatformSearch] = useState('');
+  const [deptDropdownOpen, setDeptDropdownOpen] = useState(false);
+
+  const departments = useStore(s => s.departments);
+
+  // 扁平化部门树
+  const flattenDepts = (depts: Department[], depth = 0): { id: string; name: string; depth: number }[] =>
+    depts.flatMap(d => [{ id: d.id, name: d.name, depth }, ...flattenDepts(d.children ?? [], depth + 1)]);
+  const flatDepts = flattenDepts(departments);
+
+  const toggleDeptPermission = (id: string) => {
+    setFormData(prev => ({
+      ...prev,
+      dataPermissions: prev.dataPermissions.includes(id)
+        ? prev.dataPermissions.filter((d: string) => d !== id)
+        : [...prev.dataPermissions, id],
+    }));
+  };
 
   const filteredPlatforms = PLATFORMS.filter(p =>
     p.name.toLowerCase().includes(platformSearch.toLowerCase())
@@ -57,7 +79,7 @@ export const CreateActivationCodeModal: React.FC<CreateActivationCodeModalProps>
     setFormData(prev => ({
       ...prev,
       platforms: prev.platforms.includes(id)
-        ? prev.platforms.filter(p => p !== id)
+        ? prev.platforms.filter((p: string) => p !== id)
         : [...prev.platforms, id]
     }));
   };
@@ -275,27 +297,53 @@ export const CreateActivationCodeModal: React.FC<CreateActivationCodeModalProps>
             </div>
 
             {/* 自动回复 */}
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-gray-700">自动回复</label>
-              <div className="flex items-center gap-4">
+            <div className="flex items-start justify-between">
+              <label className="text-sm font-medium text-gray-700 mt-0.5">自动回复</label>
+              <div className="flex flex-col items-end gap-2.5">
+                {/* AI员工开关 */}
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.autoReplyKeyword}
-                    onChange={(e) => setFormData({ ...formData, autoReplyKeyword: e.target.checked })}
-                    className="w-4 h-4 text-[#FF6B35] rounded"
-                  />
-                  <span className="text-sm text-gray-700">关键词回复</span>
+                  <span className="text-sm text-gray-700">AI员工</span>
+                  <button
+                    type="button"
+                    onClick={() => setFormData(prev => ({
+                      ...prev,
+                      aiEmployee: !prev.aiEmployee,
+                      ...((!prev.aiEmployee) ? { autoReplyKeyword: false, autoReplyWelcome: false } : {})
+                    }))}
+                    className={cn(
+                      "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
+                      formData.aiEmployee ? "bg-[#FF6B35]" : "bg-gray-200"
+                    )}
+                  >
+                    <span className={cn(
+                      "inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform",
+                      formData.aiEmployee ? "translate-x-4.5" : "translate-x-0.5"
+                    )} />
+                  </button>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.autoReplyWelcome}
-                    onChange={(e) => setFormData({ ...formData, autoReplyWelcome: e.target.checked })}
-                    className="w-4 h-4 text-[#FF6B35] rounded"
-                  />
-                  <span className="text-sm text-gray-700">欢迎语回复</span>
-                </label>
+                {/* 关键词回复 & 欢迎语回复 */}
+                <div className="flex items-center gap-4">
+                  <label className={cn("flex items-center gap-2", formData.aiEmployee ? "cursor-not-allowed opacity-40" : "cursor-pointer")}>
+                    <input
+                      type="checkbox"
+                      checked={formData.autoReplyKeyword}
+                      disabled={formData.aiEmployee}
+                      onChange={(e) => setFormData({ ...formData, autoReplyKeyword: e.target.checked })}
+                      className="w-4 h-4 text-[#FF6B35] rounded"
+                    />
+                    <span className="text-sm text-gray-700">关键词回复</span>
+                  </label>
+                  <label className={cn("flex items-center gap-2", formData.aiEmployee ? "cursor-not-allowed opacity-40" : "cursor-pointer")}>
+                    <input
+                      type="checkbox"
+                      checked={formData.autoReplyWelcome}
+                      disabled={formData.aiEmployee}
+                      onChange={(e) => setFormData({ ...formData, autoReplyWelcome: e.target.checked })}
+                      className="w-4 h-4 text-[#FF6B35] rounded"
+                    />
+                    <span className="text-sm text-gray-700">欢迎语回复</span>
+                  </label>
+                </div>
               </div>
             </div>
 
@@ -346,6 +394,57 @@ export const CreateActivationCodeModal: React.FC<CreateActivationCodeModalProps>
                   />
                   <span className="text-sm text-gray-700">关闭</span>
                 </label>
+              </div>
+            </div>
+
+            {/* 数据权限 */}
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">数据权限</label>
+              <div className="relative w-64">
+                <button
+                  type="button"
+                  onClick={() => setDeptDropdownOpen(o => !o)}
+                  className="w-full flex items-center justify-between px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white hover:border-[#FF6B35]/50 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/30"
+                >
+                  <span className={cn("truncate", formData.dataPermissions.length === 0 ? "text-gray-400" : "text-gray-700")}>
+                    {formData.dataPermissions.length === 0
+                      ? "请选择部门"
+                      : flatDepts.filter(d => formData.dataPermissions.includes(d.id)).map(d => d.name).join("、")}
+                  </span>
+                  <ChevronDown className={cn("w-4 h-4 text-gray-400 flex-shrink-0 transition-transform", deptDropdownOpen && "rotate-180")} />
+                </button>
+                {deptDropdownOpen && (
+                  <div className="absolute right-0 top-full mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg z-20 max-h-48 overflow-y-auto flex flex-col">
+                    <div className="flex-1 overflow-y-auto py-1">
+                      {flatDepts.map(dept => (
+                        <button
+                          key={dept.id}
+                          type="button"
+                          onClick={() => toggleDeptPermission(dept.id)}
+                          className="w-full flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 transition-colors"
+                          style={{ paddingLeft: `${12 + dept.depth * 16}px` }}
+                        >
+                          <span className={cn(
+                            "w-4 h-4 rounded border flex-shrink-0 flex items-center justify-center",
+                            formData.dataPermissions.includes(dept.id) ? "bg-[#FF6B35] border-[#FF6B35]" : "border-gray-300"
+                          )}>
+                            {formData.dataPermissions.includes(dept.id) && <Check className="w-3 h-3 text-white" />}
+                          </span>
+                          <span className="text-gray-700 truncate">{dept.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                    <div className="border-t border-gray-100 px-3 py-2 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => setDeptDropdownOpen(false)}
+                        className="px-3 py-1 text-xs font-medium text-white bg-[#FF6B35] rounded-md hover:bg-[#e55a25] transition-colors"
+                      >
+                        确定
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

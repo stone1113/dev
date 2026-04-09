@@ -1377,6 +1377,50 @@ export const mockAIEmployeeConfig: AIEmployeeConfig = {
   ],
 };
 
+export const mockAIEmployees: AIEmployeeConfig[] = [
+  {
+    id: 'ai_emp_001',
+    name: '国内销售助手',
+    language: 'zh-CN',
+    personaTemplate: 'sales',
+    status: 'online',
+    timezone: 'Asia/Shanghai',
+    workStartTime: '09:00',
+    workEndTime: '18:00',
+    workDays: [1, 2, 3, 4, 5],
+    activePlatforms: ['whatsapp', 'telegram'],
+    platformCapabilities: [
+      { platformId: 'whatsapp', aiSalesChat: true, aiProactiveMarketing: true, aiRecall: false, aiQualityCheck: true },
+      { platformId: 'telegram', aiSalesChat: true, aiProactiveMarketing: false, aiRecall: true, aiQualityCheck: false },
+    ],
+    activationCodeScope: 'custom',
+    activationCodeIds: ['ac_001', 'ac_002', 'ac_003'],
+    createdAt: '2026-03-01 09:00:00',
+    updatedAt: '2026-04-08 14:30:00',
+  },
+  {
+    id: 'ai_emp_002',
+    name: '海外客服专员',
+    language: 'en-US',
+    personaTemplate: 'support',
+    status: 'online',
+    timezone: 'Asia/Shanghai',
+    workStartTime: '10:00',
+    workEndTime: '19:00',
+    workDays: [1, 2, 3, 4, 5],
+    activePlatforms: ['whatsapp', 'facebook', 'instagram'],
+    platformCapabilities: [
+      { platformId: 'whatsapp', aiSalesChat: true, aiProactiveMarketing: false, aiRecall: true, aiQualityCheck: true },
+      { platformId: 'facebook', aiSalesChat: true, aiProactiveMarketing: false, aiRecall: false, aiQualityCheck: false },
+      { platformId: 'instagram', aiSalesChat: false, aiProactiveMarketing: true, aiRecall: false, aiQualityCheck: false },
+    ],
+    activationCodeScope: 'custom',
+    activationCodeIds: ['ac_004', 'ac_005'],
+    createdAt: '2026-03-15 11:20:00',
+    updatedAt: '2026-04-09 10:15:00',
+  },
+];
+
 // AI标签分组 —— 一级：行业
 export const mockAILabelGroups: AILabelGroup[] = [
   { id: 'grp_mfg', name: '制造业', color: '#A855F7', order: 1 },

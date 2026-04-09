@@ -39,6 +39,15 @@ import {
   Download,
   AlertCircle,
   Globe,
+  FileText,
+  Lightbulb,
+  Tag,
+  Trash2,
+  Pencil,
+  Upload,
+  GitBranch,
+  Lock,
+  Unlock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStore } from '@/store/useStore';
@@ -70,7 +79,7 @@ const adminCheckboxStyle = `
   }
 `;
 
-type AdminSection = 'dashboard' | 'activation-codes' | 'org-settings' | 'members' | 'security' | 'statistics' | 'settings' | 'audit' | 'audit-report' | 'ai-settings' | 'ai-config' | 'ai-config-detail' | 'ai-knowledge' | 'ai-scripts' | 'ai-labels' | 'customer-list' | 'customer-detail' | 'ticket-list' | 'proxy-management';
+type AdminSection = 'dashboard' | 'activation-codes' | 'org-settings' | 'members' | 'security' | 'statistics' | 'settings' | 'audit' | 'audit-report' | 'ai-settings' | 'ai-config' | 'ai-config-detail' | 'ai-persona-config' | 'ai-knowledge' | 'ai-scripts' | 'ai-labels' | 'ai-templates' | 'customer-list' | 'customer-detail' | 'ticket-list' | 'proxy-management';
 
 interface AdminLayoutProps {
   onBack?: () => void;
@@ -113,8 +122,8 @@ const aiSubMenuItems: { id: AdminSection; name: string; icon: React.ComponentTyp
   { id: 'ai-config', name: 'AI员工设置', icon: Sparkles },
   { id: 'ai-settings', name: 'AI功能使用情况', icon: Bot },
   { id: 'ai-knowledge', name: '知识库配置', icon: BookOpen },
-  { id: 'ai-scripts', name: '话术库配置', icon: MessageSquare },
   { id: 'ai-labels', name: 'AI标签配置', icon: Tags },
+  { id: 'ai-templates', name: '个性化配置', icon: FileText },
 ];
 
 export const AdminLayout: React.FC<AdminLayoutProps> = ({ onBack }) => {
@@ -125,7 +134,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onBack }) => {
   const [customerMenuExpanded, setCustomerMenuExpanded] = useState(false);
   const [ticketMenuExpanded, setTicketMenuExpanded] = useState(false);
   const [orgMenuExpanded, setOrgMenuExpanded] = useState(false);
-  const isAiSection = activeSection === 'ai-config' || activeSection === 'ai-config-detail' || activeSection === 'ai-settings' || activeSection === 'ai-knowledge' || activeSection === 'ai-scripts' || activeSection === 'ai-labels';
+  const isAiSection = activeSection === 'ai-config' || activeSection === 'ai-config-detail' || activeSection === 'ai-settings' || activeSection === 'ai-knowledge' || activeSection === 'ai-labels' || activeSection === 'ai-templates';
   const isAuditSection = activeSection === 'audit' || activeSection === 'audit-report';
   const isCustomerSection = activeSection === 'customer-list' || activeSection === 'customer-detail';
   const isTicketSection = activeSection === 'ticket-list';
@@ -160,6 +169,14 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onBack }) => {
 
   const handleBackToAIList = () => {
     setActiveSection('ai-config');
+  };
+
+  const handleGoToPersonaConfig = () => {
+    setActiveSection('ai-persona-config');
+  };
+
+  const handleBackToAIDetail = () => {
+    setActiveSection('ai-config-detail');
   };
 
   // 从组织设置跳转到账号管理查看角色账号
@@ -571,9 +588,868 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onBack }) => {
         {/* 页面内容 */}
         <div className="flex-1 min-h-0 relative">
           <div className="absolute inset-0">
-            <AdminContent section={activeSection} onViewChat={handleViewChat} auditCode={auditCode} onClearAuditCode={() => setAuditCode(null)} detailCustomerId={detailCustomerId} onViewCustomerDetail={handleViewCustomerDetail} onBackToCustomerList={handleBackToCustomerList} onViewAIEmployee={handleViewAIEmployee} onBackToAIList={handleBackToAIList} filterRoleId={filterRoleId} onClearFilterRole={() => setFilterRoleId(null)} onViewRoleAccounts={handleViewRoleAccounts} />
+            <AdminContent section={activeSection} onViewChat={handleViewChat} auditCode={auditCode} onClearAuditCode={() => setAuditCode(null)} detailCustomerId={detailCustomerId} onViewCustomerDetail={handleViewCustomerDetail} onBackToCustomerList={handleBackToCustomerList} onViewAIEmployee={handleViewAIEmployee} onBackToAIList={handleBackToAIList} onGoToPersonaConfig={handleGoToPersonaConfig} onBackToAIDetail={handleBackToAIDetail} filterRoleId={filterRoleId} onClearFilterRole={() => setFilterRoleId(null)} onViewRoleAccounts={handleViewRoleAccounts} />
           </div>
         </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── 管理端内容模板管理 ────────────────────────────────────────────────────────
+
+type AdminTemplateSubPage =
+  | 'intent-single'
+  | 'intent-group'
+  | 'strategy-single'
+  | 'strategy-group'
+  | 'script-welcome'
+  | 'keyword-single'
+  | 'keyword-group';
+
+interface AdminTemplateSceneItem { id: AdminTemplateSubPage; label: string; }
+interface AdminTemplateScene {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ size?: number; className?: string }>;
+  items: AdminTemplateSceneItem[];
+}
+
+const adminTemplateScenes: AdminTemplateScene[] = [
+  {
+    id: 'persona', label: '角色人设', icon: Users,
+    items: [
+      { id: 'persona-styles', label: '角色人设' },
+    ],
+  },
+  {
+    id: 'intent', label: '意图库', icon: Lightbulb,
+    items: [
+      { id: 'intent-single', label: '单聊意图' },
+      { id: 'intent-group', label: '群聊意图' },
+    ],
+  },
+  {
+    id: 'strategy', label: '策略库', icon: GitBranch,
+    items: [
+      { id: 'strategy-single', label: '单聊策略' },
+      { id: 'strategy-group', label: '群聊策略' },
+    ],
+  },
+  {
+    id: 'script', label: '话术库', icon: MessageSquare,
+    items: [
+      { id: 'script-welcome', label: '欢迎语话术' },
+    ],
+  },
+  {
+    id: 'keyword', label: '关键词回复', icon: Tag,
+    items: [
+      { id: 'keyword-single', label: '单聊关键词' },
+      { id: 'keyword-group', label: '群聊关键词' },
+    ],
+  },
+];
+
+// ─── 角色人设 ──────────────────────────────────────────────────────────────────
+
+interface AdminPersonaStyle {
+  id: number;
+  styleName: string;
+  desc: string;
+  tags: string[];
+  scripts: string[];
+  scope: string;
+  avatarBg: string;
+  avatarText: string;
+  source: '平台下发' | '企业自建';
+  enabled: boolean;
+}
+
+const adminMockPersonaStyles: AdminPersonaStyle[] = [
+  {
+    id: 1,
+    styleName: '热情店长',
+    desc: '以店长身份与客户沟通，态度热情诚恳，对品牌和产品很自信，有一定的品牌宣导性，适合30-45岁形象定位。',
+    tags: ['热情', '自信', '品牌感'],
+    scripts: [
+      '亲，您眼光真好！这款是我们今年最热卖的，现在下单还有专属折扣哦～',
+      '作为店长，我可以负责任地说，这绝对是目前性价比最高的选择！',
+    ],
+    scope: '电商售前',
+    avatarBg: 'from-orange-100 to-amber-100',
+    avatarText: '店',
+    source: '平台下发', enabled: true,
+  },
+  {
+    id: 2,
+    styleName: '客户经理',
+    desc: '一位门店客户经理，在25-35岁之间，话术感受留意适中，存在适当的语气词柔和话术，专业又不失亲和。',
+    tags: ['专业', '亲和', '留意适中'],
+    scripts: [
+      '您好，感谢您的咨询。根据您的需求，我为您推荐以下几款方案，请参考。',
+      '我完全理解您的顾虑，这边帮您详细说明一下各项差异，方便您做判断。',
+    ],
+    scope: '门店服务',
+    avatarBg: 'from-blue-100 to-indigo-100',
+    avatarText: '经',
+    source: '平台下发', enabled: true,
+  },
+  {
+    id: 3,
+    styleName: '专业极简',
+    desc: '一位简洁高效的销售，简洁明了地解答客户疑问，用最少的话传递最有效的信息，与客户高效沟通。',
+    tags: ['简洁', '高效', '直接'],
+    scripts: [
+      '收到。订单号多少？',
+      '已处理，3个工作日到账。如有问题请联系。',
+    ],
+    scope: '通用客服',
+    avatarBg: 'from-gray-100 to-slate-100',
+    avatarText: '简',
+    source: '平台下发', enabled: false,
+  },
+  {
+    id: 4,
+    styleName: '甜美主播',
+    desc: '一位美女主播，年龄在24-28岁之间，语气温柔可爱，温和地解答客户疑问，让客户体验良好，适合直播电商场景。',
+    tags: ['温柔', '可爱', '互动感强'],
+    scripts: [
+      '哇～宝宝们这款真的超级好用！我自己用了一个月啦，皮肤状态杠杠的～🌟',
+      '姐妹不用担心，这个我们支持7天无理由的，放心入手吧！比心心～💕',
+    ],
+    scope: '直播电商',
+    avatarBg: 'from-pink-100 to-rose-100',
+    avatarText: '播',
+    source: '平台下发', enabled: false,
+  },
+  {
+    id: 5,
+    styleName: '品牌专属助手',
+    desc: '完全按照我们品牌调性定制，语气亲切有温度，突出品牌特色和服务优势，传递专属感。',
+    tags: ['品牌感', '专属', '温度'],
+    scripts: [
+      '您好！欢迎来到{品牌名}，我是您的专属服务顾问，随时为您效劳～',
+      '感谢您一直支持{品牌名}！您是我们最重要的客户，有任何需求都可以告诉我。',
+    ],
+    scope: '品牌客服',
+    avatarBg: 'from-violet-100 to-purple-100',
+    avatarText: '专',
+    source: '企业自建', enabled: false,
+  },
+];
+
+function AdminPersonaTable() {
+  const [styles, setStyles] = useState(adminMockPersonaStyles);
+  const [selected, setSelected] = useState<number | null>(1);
+
+  const toggleEnabled = (id: number) => {
+    setStyles(prev => prev.map(p => p.id === id ? { ...p, enabled: !p.enabled } : p));
+  };
+
+  const activeStyle = styles.find(p => p.id === selected);
+  const unlockedCount = 14;
+  const lockedCount = 6;
+
+  return (
+    <div className="p-6 space-y-5">
+      {/* 当前人设影响提示 */}
+      {activeStyle && (
+        <div className="flex items-center gap-3 bg-orange-50 border border-orange-100 rounded-xl px-4 py-3">
+          <div className={cn('w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center flex-shrink-0 text-sm font-bold text-gray-500', activeStyle.avatarBg)}>
+            {activeStyle.avatarText}
+          </div>
+          <div className="flex-1">
+            <span className="text-xs font-semibold text-gray-700">默认风格：{activeStyle.styleName}</span>
+            <span className="text-xs text-gray-400 ml-2">将影响 <span className="text-[#FF6B35] font-medium">{unlockedCount} 条未锁定话术</span>的输出风格</span>
+          </div>
+          <div className="flex items-center gap-3 text-xs text-gray-400">
+            <span className="flex items-center gap-1"><Unlock size={11} className="text-[#FF6B35]" />{unlockedCount} 条随人设调整</span>
+            <span className="flex items-center gap-1"><Lock size={11} className="text-gray-400" />{lockedCount} 条精准锁定</span>
+          </div>
+        </div>
+      )}
+
+      <div className="flex items-center gap-3">
+        <p className="text-xs text-gray-400">选择一种话术风格作为 AI 员工的默认沟通方式，影响所有未锁定话术的输出</p>
+        <div className="ml-auto">
+          <button className="flex items-center gap-1.5 text-xs border border-gray-200 text-gray-500 rounded-lg px-3 py-1.5 hover:bg-gray-50 transition-all">
+            <Plus size={12} />自定义风格
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4">
+        {styles.map(p => (
+          <div
+            key={p.id}
+            onClick={() => setSelected(p.id === selected ? null : p.id)}
+            className={cn(
+              'relative rounded-xl border bg-white cursor-pointer transition-all overflow-hidden',
+              selected === p.id
+                ? 'border-[#FF6B35] shadow-md shadow-orange-100 ring-1 ring-[#FF6B35]/20'
+                : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
+            )}
+          >
+            {/* 来源标签 */}
+            <div className="absolute top-3 left-3">
+              <span className={cn(
+                'text-[10px] px-1.5 py-0.5 rounded-md border',
+                p.source === '平台下发'
+                  ? 'bg-purple-50 text-purple-400 border-purple-200'
+                  : 'bg-gray-50 text-gray-400 border-gray-200'
+              )}>{p.source}</span>
+            </div>
+
+            {/* 激活标记 */}
+            {selected === p.id ? (
+              <div className="absolute top-3 right-3 flex items-center gap-1 bg-[#FF6B35] text-white text-[10px] font-medium px-2 py-0.5 rounded-full">
+                <svg width="8" height="6" viewBox="0 0 10 8" fill="none"><path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                默认风格
+              </div>
+            ) : (
+              <div className="absolute top-3 right-3 text-[10px] text-gray-300 border border-gray-200 px-2 py-0.5 rounded-full">
+                点击激活
+              </div>
+            )}
+
+            {/* 头部：头像 + 标题 */}
+            <div className="px-5 pt-9 pb-3">
+              <div className="flex items-start gap-3 mb-3">
+                <div className={cn('w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center flex-shrink-0 text-base font-bold text-gray-500', p.avatarBg)}>
+                  {p.avatarText}
+                </div>
+                <div className="flex-1 min-w-0 pt-0.5">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm font-semibold text-gray-800">{p.styleName}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {p.tags.map(tag => (
+                      <span key={tag} className="text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-md">{tag}</span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-gray-400 leading-relaxed">{p.desc}</p>
+            </div>
+
+            {/* 话术示例 */}
+            <div className="px-5 pb-4 space-y-1.5">
+              <p className="text-[10px] text-gray-300 font-medium uppercase tracking-wide mb-2">话术示例</p>
+              {p.scripts.map((s, si) => (
+                <div key={si} className={cn(
+                  'text-xs text-gray-500 rounded-lg px-3 py-2 leading-relaxed border',
+                  selected === p.id ? 'bg-orange-50/60 border-orange-100' : 'bg-gray-50 border-gray-100'
+                )}>{s}</div>
+              ))}
+            </div>
+
+            {/* 底部：场景 + 开关 */}
+            <div className="px-5 py-3 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+              <span className="text-[11px] text-gray-400">{p.scope}</span>
+              <button
+                onClick={e => { e.stopPropagation(); toggleEnabled(p.id); }}
+                className={cn('relative inline-flex h-5 w-9 items-center rounded-full transition-colors', p.enabled ? 'bg-[#FF6B35]' : 'bg-gray-200')}
+              >
+                <span className={cn('inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform', p.enabled ? 'translate-x-4' : 'translate-x-0.5')} />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── 策略库 ────────────────────────────────────────────────────────────────────
+
+type StrategyCategory = '运营类' | '销售类' | '售后类';
+type StrategyTrigger = '用户行为' | '时间条件' | '订单状态';
+
+const strategyCategoryColors: Record<StrategyCategory, string> = {
+  '运营类': 'bg-emerald-50 text-emerald-600 border-emerald-200',
+  '销售类': 'bg-orange-50 text-[#FF6B35] border-orange-200',
+  '售后类': 'bg-blue-50 text-blue-500 border-blue-200',
+};
+
+const strategyTriggerColors: Record<StrategyTrigger, string> = {
+  '用户行为': 'bg-violet-50 text-violet-500 border-violet-200',
+  '时间条件': 'bg-amber-50 text-amber-600 border-amber-200',
+  '订单状态': 'bg-sky-50 text-sky-500 border-sky-200',
+};
+
+interface AdminStrategy {
+  id: number;
+  name: string;
+  category: StrategyCategory;
+  triggerType: StrategyTrigger;
+  triggerDesc: string;
+  action: string;
+  scripts: string[];
+  source: '平台下发' | '企业自建';
+  chatType: '单聊' | '群聊';
+  enabled: boolean;
+}
+
+const adminMockStrategies: AdminStrategy[] = [
+  { id: 1, name: '24小时未回消息召回', category: '运营类', triggerType: '时间条件', triggerDesc: '用户超过24小时未回复消息', action: '自动发送召回话术，提醒用户继续对话', scripts: ['嗨～好久不见！有什么我可以帮您的吗？😊', '您上次咨询的问题还没解决？随时欢迎回来聊聊～'], source: '平台下发', chatType: '单聊', enabled: true },
+  { id: 2, name: '新用户激活策略', category: '运营类', triggerType: '用户行为', triggerDesc: '新用户首次发起会话后未完成购买', action: '24小时后推送新人专属优惠券并引导下单', scripts: ['欢迎新朋友！专属新人优惠已为您准备好，点击领取立享9折优惠 🎁', '第一次来？这里有份新手礼包送给您，限时24小时哦～'], source: '平台下发', chatType: '单聊', enabled: true },
+  { id: 3, name: '下单未付款催付', category: '销售类', triggerType: '订单状态', triggerDesc: '用户创建订单后30分钟内未完成支付', action: '发送催付提醒，附带限时优惠截止倒计时', scripts: ['您的订单还在等待付款中，库存有限，赶快完成支付吧！⏰', '温馨提示：您的订单将在30分钟后自动取消，点击这里立即支付'], source: '平台下发', chatType: '单聊', enabled: true },
+  { id: 4, name: '老客户复购激活', category: '销售类', triggerType: '时间条件', triggerDesc: '上次购买距今超过60天且无新订单', action: '发送专属回购优惠，关联上次购买品类推荐', scripts: ['好久不见～根据您的喜好，这些新品您可能会喜欢 👀', '老朋友回来啦！专属85折优惠码：BACK85，有效期3天'], source: '企业自建', chatType: '单聊', enabled: false },
+  { id: 5, name: '售后超时跟进', category: '售后类', triggerType: '时间条件', triggerDesc: '售后工单超过48小时未处理', action: '自动提醒客服跟进，并向用户发送安抚话术', scripts: ['非常抱歉让您久等了！您的问题我们正在优先处理，预计今天内给您答复 🙏', '感谢您的耐心等待，售后团队将在2小时内联系您'], source: '平台下发', chatType: '单聊', enabled: true },
+  { id: 6, name: '加购未下单提醒', category: '销售类', triggerType: '用户行为', triggerDesc: '用户将商品加入购物车后超过2小时未下单', action: '发送购物车提醒，附带库存紧张提示', scripts: ['您购物车里的商品还在等您～库存仅剩最后几件了 🛒', '提醒您：购物车商品库存紧张，赶快下单锁定吧！'], source: '企业自建', chatType: '单聊', enabled: true },
+  { id: 7, name: '群内新成员欢迎', category: '运营类', triggerType: '用户行为', triggerDesc: '新用户加入群聊后30秒内未有人欢迎', action: '自动发送欢迎话术，介绍群内福利及规则', scripts: ['欢迎新朋友加入！群内每周三有专属福利派送，记得关注哦 🎉', '你好！这里是[品牌名]官方交流群，有任何问题随时@客服～'], source: '平台下发', chatType: '群聊', enabled: true },
+  { id: 8, name: '群内活动预热推送', category: '运营类', triggerType: '时间条件', triggerDesc: '活动开始前24小时', action: '向群内所有成员发送活动预热内容', scripts: ['【活动预告】明天10点大促开启，提前锁定购物车！🔥', '倒计时24小时！明日限时折扣，手慢无～记得准时来'], source: '企业自建', chatType: '群聊', enabled: true },
+  { id: 9, name: '群内沉默成员激活', category: '运营类', triggerType: '时间条件', triggerDesc: '群成员超过7天未在群内发言', action: '私信沉默成员，发送专属福利引导互动', scripts: ['好久没见你在群里啦～特意给你准备了一份专属优惠，点击查看 👀', '群里最近热闹，你有没有看到昨天的福利贴？别错过哦～'], source: '平台下发', chatType: '群聊', enabled: false },
+  { id: 10, name: '群内问题智能答复', category: '售后类', triggerType: '用户行为', triggerDesc: '群内出现产品问题关键词（如退款/坏了/发货慢）', action: '自动@提问用户并发送对应解决话术', scripts: ['您好！关于您提到的问题，请私信我们客服处理，会优先为您解决 🙏', '看到您的留言啦！遇到这种情况请不用担心，我们来帮您'], source: '平台下发', chatType: '群聊', enabled: true },
+];
+
+function AdminStrategyTable({ chatType }: { chatType: '单聊' | '群聊' }) {
+  const [activeCategory, setActiveCategory] = useState<StrategyCategory | '全部'>('全部');
+  const [strategies, setStrategies] = useState(adminMockStrategies);
+
+  const filtered = strategies.filter(s =>
+    s.chatType === chatType &&
+    (activeCategory === '全部' || s.category === activeCategory)
+  );
+
+  const toggleEnabled = (id: number) => {
+    setStrategies(prev => prev.map(s => s.id === id ? { ...s, enabled: !s.enabled } : s));
+  };
+
+  return (
+    <div className="p-6 space-y-4">
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+          {(['全部', '运营类', '销售类', '售后类'] as const).map(cat => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={cn(
+                'px-3 py-1 rounded-md text-xs font-medium transition-all',
+                activeCategory === cat ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              )}
+            >{cat}</button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-1.5 w-44">
+          <Search size={13} className="text-gray-400" />
+          <input className="bg-transparent text-xs text-gray-600 placeholder:text-gray-300 outline-none w-full" placeholder="搜索策略名称..." />
+        </div>
+        <div className="ml-auto">
+          <button className="flex items-center gap-1.5 text-xs bg-[#FF6B35] text-white rounded-lg px-3 py-1.5 hover:bg-[#E85A2A] transition-all">
+            <Plus size={12} />新增策略
+          </button>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-gray-50/60 border-b border-gray-100">
+              {['策略名称', '类别', '触发类型', '触发条件', '执行动作', '策略话术', '状态', '操作'].map((h, i) => (
+                <th key={h} className={cn(
+                  'px-5 py-2.5 text-left text-xs text-gray-400 font-medium',
+                  i === 3 && 'w-44',
+                  i === 4 && 'w-44',
+                  i === 5 && 'w-56',
+                )}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((s, i) => (
+              <tr key={s.id} className={cn('hover:bg-gray-50 transition-colors group align-top', i < filtered.length - 1 && 'border-b border-gray-100')}>
+                <td className="px-5 py-3 text-xs text-gray-800 font-medium whitespace-nowrap">{s.name}</td>
+                <td className="px-5 py-3">
+                  <span className={cn('text-xs px-2 py-0.5 rounded-full border font-medium whitespace-nowrap', strategyCategoryColors[s.category])}>
+                    {s.category}
+                  </span>
+                </td>
+                <td className="px-5 py-3">
+                  <span className={cn('text-xs px-2 py-0.5 rounded-full border whitespace-nowrap', strategyTriggerColors[s.triggerType])}>
+                    {s.triggerType}
+                  </span>
+                </td>
+                <td className="px-5 py-3 text-xs text-gray-500 leading-relaxed">{s.triggerDesc}</td>
+                <td className="px-5 py-3 text-xs text-gray-500 leading-relaxed">{s.action}</td>
+                <td className="px-5 py-3">
+                  <div className="space-y-1.5">
+                    {s.scripts.map((script, si) => (
+                      <div key={si} className="text-xs text-gray-500 bg-gray-50 rounded-lg px-2.5 py-1.5 leading-relaxed border border-gray-100">{script}</div>
+                    ))}
+                  </div>
+                </td>
+                <td className="px-5 py-3">
+                  <button
+                    onClick={() => toggleEnabled(s.id)}
+                    className={cn(
+                      'relative inline-flex h-5 w-9 items-center rounded-full transition-colors',
+                      s.enabled ? 'bg-[#FF6B35]' : 'bg-gray-200'
+                    )}
+                  >
+                    <span className={cn(
+                      'inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform',
+                      s.enabled ? 'translate-x-4' : 'translate-x-0.5'
+                    )} />
+                  </button>
+                </td>
+                <td className="px-5 py-3 whitespace-nowrap">
+                  <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1"><Pencil size={11} />编辑</button>
+                    <button className="text-xs text-red-400 hover:text-red-500 flex items-center gap-1"><Trash2 size={11} />删除</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+const intentCategoriesAdmin = ['销售类', '售后类', '运营类'] as const;
+type IntentCategoryAdmin = typeof intentCategoriesAdmin[number];
+
+const adminCategoryColors: Record<IntentCategoryAdmin, string> = {
+  '销售类': 'bg-orange-50 text-[#FF6B35] border-orange-200',
+  '售后类': 'bg-blue-50 text-blue-500 border-blue-200',
+  '运营类': 'bg-emerald-50 text-emerald-600 border-emerald-200',
+};
+
+interface AdminIntent {
+  id: number;
+  name: string;
+  category: IntentCategoryAdmin;
+  source: '平台下发' | '企业自建';
+  scenes: { scene: string; script: string }[];
+}
+
+const adminMockIntents: AdminIntent[] = [
+  {
+    id: 1, name: '询价意图', category: '销售类', source: '平台下发',
+    scenes: [
+      { scene: '含商品实体', script: '您问的{商品名}目前售价 $XX，现在购买还有折扣哦～' },
+      { scene: '无实体', script: '请问您想了解哪款产品的价格？我来为您详细介绍' },
+    ],
+  },
+  {
+    id: 2, name: '退款意图', category: '售后类', source: '平台下发',
+    scenes: [
+      { scene: '含订单实体', script: '您的订单 {订单号} 退款申请已收到，1-3个工作日内处理完毕' },
+      { scene: '无实体', script: '非常抱歉！请提供您的订单号，我来为您优先处理退款' },
+    ],
+  },
+  {
+    id: 3, name: '品牌故事咨询', category: '销售类', source: '企业自建',
+    scenes: [
+      { scene: '无实体', script: '我们品牌创立于2018年，专注于{行业}领域，累计服务超过10万客户～' },
+    ],
+  },
+  {
+    id: 4, name: '加群意图', category: '运营类', source: '平台下发',
+    scenes: [
+      { scene: '含平台实体', script: '欢迎加入{平台}VIP群！群内专属优惠第一时间通知：{群链接}' },
+      { scene: '无实体', script: '欢迎加入我们的VIP社群，点击链接即可：{群链接}' },
+    ],
+  },
+  {
+    id: 5, name: '售后评价引导', category: '售后类', source: '企业自建',
+    scenes: [
+      { scene: '含订单实体', script: '感谢您购买{商品名}！如果满意的话，欢迎给我们留下好评～' },
+      { scene: '无实体', script: '感谢您的支持！期待您的宝贵评价，这对我们非常重要！' },
+    ],
+  },
+];
+
+function AdminIntentTable() {
+  const [activeCategory, setActiveCategory] = useState<IntentCategoryAdmin | '全部'>('全部');
+
+  const filtered = adminMockIntents.filter(i =>
+    (activeCategory === '全部' || i.category === activeCategory)
+  );
+
+  return (
+    <div className="p-6 space-y-4">
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+          {(['全部', ...intentCategoriesAdmin] as const).map(cat => (
+            <button
+              key={cat}
+              onClick={() => setActiveCategory(cat)}
+              className={cn(
+                'px-3 py-1 rounded-md text-xs font-medium transition-all',
+                activeCategory === cat ? 'bg-white text-gray-800 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+              )}
+            >{cat}</button>
+          ))}
+        </div>
+        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-1.5 w-44">
+          <Search size={13} className="text-gray-400" />
+          <input className="bg-transparent text-xs text-gray-600 placeholder:text-gray-300 outline-none w-full" placeholder="搜索意图名称..." />
+        </div>
+        <div className="ml-auto">
+          <button className="flex items-center gap-1.5 text-xs bg-[#FF6B35] text-white rounded-lg px-3 py-1.5 hover:bg-[#E85A2A] transition-all">
+            <Plus size={12} />新增意图
+          </button>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-gray-50/60 border-b border-gray-100">
+              {['意图名称', '类别', '场景', '话术', '操作'].map((h, i) => (
+                <th key={h} className={cn('px-5 py-2.5 text-left text-xs text-gray-400 font-medium', i === 2 && 'w-32', i === 3 && 'w-80')}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((intent, i) => (
+              <tr key={intent.id} className={cn('hover:bg-gray-50 transition-colors group align-top', i < filtered.length - 1 && 'border-b border-gray-100')}>
+                <td className="px-5 py-3 text-xs text-gray-800 font-medium whitespace-nowrap">{intent.name}</td>
+                <td className="px-5 py-3">
+                  <span className={cn('text-xs px-2 py-0.5 rounded-full border font-medium whitespace-nowrap', adminCategoryColors[intent.category])}>
+                    {intent.category}
+                  </span>
+                </td>
+                <td className="px-5 py-3">
+                  <div className="space-y-2.5">
+                    {intent.scenes.map((s, si) => (
+                      <div key={si}>
+                        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-md whitespace-nowrap">{s.scene}</span>
+                      </div>
+                    ))}
+                  </div>
+                </td>
+                <td className="px-5 py-3">
+                  <div className="space-y-2.5">
+                    {intent.scenes.map((s, si) => (
+                      <div key={si} className="text-xs text-gray-500 leading-relaxed line-clamp-1">{s.script}</div>
+                    ))}
+                  </div>
+                </td>
+                <td className="px-5 py-3 whitespace-nowrap">
+                  <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button className="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1"><Pencil size={11} />编辑</button>
+                    <button className="text-xs text-red-400 hover:text-red-500 flex items-center gap-1"><Trash2 size={11} />删除</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function AdminTemplateSubPageContent({ page, selectedEmployee, activationCodes }: {
+  page: AdminTemplateSubPage;
+  selectedEmployee: import('@/types').AIEmployeeConfig | null;
+  activationCodes: import('@/types').ActivationCode[];
+}) {
+  if (page === 'persona-styles') {
+    // 激活码范围 banner（仅 AI员工模式）
+    const empCodes = selectedEmployee
+      ? (selectedEmployee.activationCodeScope === 'custom'
+          ? activationCodes.filter(c => (selectedEmployee.activationCodeIds ?? []).includes(c.id))
+          : activationCodes)
+      : [];
+    return (
+      <div className="flex flex-col h-full">
+        {selectedEmployee && (
+          <div className="flex-shrink-0 mx-6 mt-4 mb-0 px-4 py-2.5 bg-blue-50 border border-blue-100 rounded-xl flex items-center gap-3">
+            <Key className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
+            <span className="text-xs text-blue-600 font-medium">应用激活码范围：</span>
+            {selectedEmployee.activationCodeScope === 'custom' ? (
+              empCodes.length === 0
+                ? <span className="text-xs text-gray-400">未绑定激活码</span>
+                : <div className="flex flex-wrap gap-1.5">
+                    {empCodes.map(c => (
+                      <span key={c.id} className="text-xs bg-white border border-blue-200 text-blue-500 px-2 py-0.5 rounded-full font-mono">{c.code}</span>
+                    ))}
+                  </div>
+            ) : (
+              <span className="text-xs text-blue-500">全部激活码</span>
+            )}
+          </div>
+        )}
+        <div className="flex-1 overflow-auto">
+          <AdminPersonaTable />
+        </div>
+      </div>
+    );
+  }
+
+  if (page === 'intent-single' || page === 'intent-group') {
+    return <AdminIntentTable />;
+  }
+
+  if (page === 'strategy-single') {
+    return <AdminStrategyTable chatType="单聊" />;
+  }
+  if (page === 'strategy-group') {
+    return <AdminStrategyTable chatType="群聊" />;
+  }
+
+  const isWelcome = page === 'script-welcome';
+  const rows = isWelcome
+    ? [
+        { name: '新用户欢迎语', content: '您好，欢迎来到 {店铺名}！有什么可以帮助您的吗？', scripts: ['您好，欢迎来到 {店铺名}！有什么可以帮助您的吗？', '嗨！很高兴认识您，我是您的专属客服，有任何问题都可以告诉我～'], enabled: true, codeScope: '全部激活码', delay: '0s', replyMode: '回复全部', sendMode: '原文发送', createdAt: '2026-04-09 13:50:35' },
+        { name: '节假日欢迎语', content: '节日快乐！我们正在开展限时优惠活动，欢迎了解～', scripts: ['节日快乐！我们正在开展限时优惠活动，欢迎了解～', '🎉 节日好！专属节日福利已为您准备好，点击查看详情'], enabled: false, codeScope: '部分激活码', delay: '2s - 5s', replyMode: '随机回复', sendMode: '原文发送', createdAt: '2026-04-08 10:20:11' },
+        { name: '品牌专属欢迎语', content: '欢迎光临{品牌名}！我是您的专属顾问，随时为您服务！', scripts: ['欢迎光临{品牌名}！我是您的专属顾问，随时为您服务！'], enabled: true, codeScope: '全部激活码', delay: '1s - 3s', replyMode: '回复全部', sendMode: '原文发送', createdAt: '2026-04-07 09:15:00' },
+      ]
+    : [
+        { name: '价格咨询', keyword: '多少钱, 价格, 报价, how much', matchRule: '半匹配', scripts: ['您问的{商品名}目前售价 $XX，现在购买还有折扣哦～', '具体价格因规格不同有所差异，请问您需要哪款呢？'], enabled: true, codeScope: '部分激活码', delay: '2s - 5s', replyMode: '回复全部', sendMode: '原文发送', createdAt: '2026-04-09 13:50:35' },
+        { name: '退款申请', keyword: '退款, 退货, refund', matchRule: '精确匹配', scripts: ['非常抱歉！请提供您的订单号，我来为您优先处理退款', '您好，退款申请已收到，1-3个工作日内处理完毕'], enabled: true, codeScope: '全部激活码', delay: '1s - 3s', replyMode: '随机回复', sendMode: '原文发送', createdAt: '2026-04-08 11:30:22' },
+        { name: '品牌活动', keyword: '活动, 优惠, 折扣, {品牌词}', matchRule: '半匹配', scripts: ['我们目前正在进行{活动名}，全场{折扣}优惠，快来参与吧！'], enabled: false, codeScope: '部分激活码', delay: '3s - 6s', replyMode: '回复全部', sendMode: '原文发送', createdAt: '2026-04-07 16:45:00' },
+      ];
+
+  return (
+    <div className="p-6 space-y-4">
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-1.5 w-44">
+          <Search size={13} className="text-gray-400" />
+          <input className="bg-transparent text-xs text-gray-600 placeholder:text-gray-300 outline-none w-full" placeholder="搜索..." />
+        </div>
+        <div className="ml-auto">
+          <button className="flex items-center gap-1.5 text-xs bg-[#FF6B35] text-white rounded-lg px-3 py-1.5 hover:bg-[#E85A2A] transition-all">
+            <Plus size={12} />{isWelcome ? '新增话术' : '新增关键词'}
+          </button>
+        </div>
+      </div>
+      <div className="rounded-xl border border-gray-200 bg-white overflow-hidden">
+        <table className="w-full">
+          <thead>
+            <tr className="bg-gray-50/60 border-b border-gray-100">
+              <th className="px-4 py-2.5 text-left text-xs text-gray-400 font-medium w-8">
+                <input type="checkbox" className="w-3.5 h-3.5 rounded" />
+              </th>
+              <th className="px-4 py-2.5 text-left text-xs text-gray-400 font-medium">{isWelcome ? '话术名称' : '关键词'}</th>
+              <th className="px-4 py-2.5 text-left text-xs text-gray-400 font-medium">状态</th>
+              {!isWelcome && <th className="px-4 py-2.5 text-left text-xs text-gray-400 font-medium">匹配规则</th>}
+              <th className="px-4 py-2.5 text-left text-xs text-gray-400 font-medium">回复内容</th>
+              <th className="px-4 py-2.5 text-left text-xs text-gray-400 font-medium">应用激活码</th>
+              <th className="px-4 py-2.5 text-left text-xs text-gray-400 font-medium">延时间隔</th>
+              <th className="px-4 py-2.5 text-left text-xs text-gray-400 font-medium">回复方式</th>
+              <th className="px-4 py-2.5 text-left text-xs text-gray-400 font-medium">发送设置</th>
+              <th className="px-4 py-2.5 text-left text-xs text-gray-400 font-medium">添加时间</th>
+              <th className="px-4 py-2.5 text-left text-xs text-gray-400 font-medium">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={i} className={cn('border-b border-gray-50 hover:bg-gray-50/60 transition-colors group align-middle', i === rows.length - 1 && 'border-b-0')}>
+                <td className="px-4 py-3">
+                  <input type="checkbox" className="w-3.5 h-3.5 rounded" />
+                </td>
+                <td className="px-4 py-3 text-xs text-gray-800 font-medium whitespace-nowrap">
+                  {isWelcome ? r.name : (r as any).keyword}
+                </td>
+                <td className="px-4 py-3">
+                  <button
+                    className={cn(
+                      "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
+                      r.enabled ? "bg-green-500" : "bg-gray-200"
+                    )}
+                  >
+                    <span className={cn(
+                      "inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform",
+                      r.enabled ? "translate-x-4" : "translate-x-0.5"
+                    )} />
+                  </button>
+                </td>
+                {!isWelcome && (
+                  <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">{(r as any).matchRule}</td>
+                )}
+                <td className="px-4 py-3 text-xs text-gray-500 max-w-[200px] truncate">
+                  {isWelcome ? r.content : r.scripts[0]}
+                </td>
+                <td className="px-4 py-3">
+                  <span className={cn(
+                    "text-xs px-2 py-0.5 rounded-full",
+                    r.codeScope === '全部激活码' ? "bg-blue-50 text-blue-500" : "bg-orange-50 text-orange-500"
+                  )}>{r.codeScope}</span>
+                </td>
+                <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">{(r as any).delay}</td>
+                <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">{(r as any).replyMode}</td>
+                <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">{(r as any).sendMode}</td>
+                <td className="px-4 py-3 text-xs text-gray-400 whitespace-nowrap">{r.createdAt}</td>
+                <td className="px-4 py-3 whitespace-nowrap">
+                  <div className="flex items-center gap-3">
+                    <button className="text-xs text-[#1677ff] hover:text-blue-600">编辑</button>
+                    <button className="text-xs text-red-400 hover:text-red-500">删除</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+const AdminTemplatesPage: React.FC = () => {
+  const aiEmployees = useStore((s) => s.aiEmployees);
+  const activationCodes = useStore((s) => s.activationCodes);
+
+  // 选中的 AI员工 id，null = 通用
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
+  const [showScopeDropdown, setShowScopeDropdown] = useState(false);
+  const scopeDropdownRef = React.useRef<HTMLDivElement>(null);
+
+  const isGeneral = selectedEmployeeId === null;
+  const selectedEmployee = aiEmployees.find(e => e.id === selectedEmployeeId) ?? null;
+
+  // 通用模式只显示话术库和关键词回复
+  const visibleScenes = isGeneral
+    ? adminTemplateScenes.filter(s => s.id === 'script' || s.id === 'keyword')
+    : adminTemplateScenes;
+
+  const [activePage, setActivePage] = useState<AdminTemplateSubPage>('script-welcome');
+  const [expandedScenes, setExpandedScenes] = useState<Set<string>>(new Set(adminTemplateScenes.map(s => s.id)));
+
+  const handleSetEmployee = (id: string | null) => {
+    setSelectedEmployeeId(id);
+    if (id === null) {
+      const aiOnlyPages: AdminTemplateSubPage[] = ['persona-styles', 'intent-single', 'intent-group', 'strategy-single', 'strategy-group'];
+      if (aiOnlyPages.includes(activePage)) setActivePage('script-welcome');
+    } else {
+      // 切换到 AI员工时默认跳到角色人设
+      setActivePage('persona-styles');
+    }
+    setShowScopeDropdown(false);
+  };
+
+  React.useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (scopeDropdownRef.current && !scopeDropdownRef.current.contains(e.target as Node)) {
+        setShowScopeDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  const scopeLabel = isGeneral ? '通用' : (selectedEmployee?.name ?? 'AI员工');
+
+  const toggleScene = (id: string) => {
+    setExpandedScenes(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const currentScene = adminTemplateScenes.find(s => s.items.some(i => i.id === activePage));
+  const currentItem = currentScene?.items.find(i => i.id === activePage);
+
+  return (
+    <div className="flex h-full overflow-hidden">
+      {/* Scene sidebar */}
+      <div className="w-44 flex-shrink-0 border-r border-gray-200 bg-white overflow-y-auto">
+        <div className="py-3">
+          {visibleScenes.map(scene => {
+            const Icon = scene.icon;
+            const isExpanded = expandedScenes.has(scene.id);
+            const isSceneActive = scene.items.some(i => i.id === activePage);
+            return (
+              <div key={scene.id}>
+                <button
+                  onClick={() => toggleScene(scene.id)}
+                  className={cn(
+                    'w-full flex items-center gap-2 px-4 py-2.5 text-xs font-medium transition-colors',
+                    isSceneActive ? 'text-gray-800' : 'text-gray-500 hover:text-gray-700'
+                  )}
+                >
+                  <Icon size={13} className={cn(isSceneActive ? 'text-[#FF6B35]' : 'text-gray-400')} />
+                  <span className="flex-1 text-left">{scene.label}</span>
+                  <ChevronDown size={12} className={cn('text-gray-300 transition-transform duration-200', isExpanded && 'rotate-180')} />
+                </button>
+                {isExpanded && (
+                  <div className="mb-1">
+                    {scene.items.map(item => (
+                      <button
+                        key={item.id}
+                        onClick={() => setActivePage(item.id)}
+                        className={cn(
+                          'w-full flex items-center text-left px-4 py-2 text-xs transition-all relative',
+                          activePage === item.id
+                            ? 'text-[#1677ff] bg-blue-50 font-medium'
+                            : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+                        )}
+                      >
+                        {activePage === item.id && (
+                          <span className="absolute right-0 top-0 bottom-0 w-0.5 bg-blue-500 rounded-l-full" />
+                        )}
+                        <span className="pl-5">{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto bg-gray-50">
+        <div className="flex items-center gap-2 px-6 py-3 bg-white border-b border-gray-100">
+          <span className="text-xs text-gray-400">{currentScene?.label}</span>
+          <ChevronRight className="w-3 h-3 text-gray-300" />
+          <span className="text-xs font-medium text-gray-700">{currentItem?.label}</span>
+          <span className="ml-2 text-[10px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+            平台下发模板可查看，企业可自建覆盖
+          </span>
+
+          {/* 维度筛选器 */}
+          <div className="ml-auto relative" ref={scopeDropdownRef}>
+            <button
+              onClick={() => setShowScopeDropdown(v => !v)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs border border-gray-200 rounded-lg bg-white hover:border-gray-300 transition-colors"
+            >
+              <Filter className="w-3 h-3 text-gray-400" />
+              <span className="text-gray-600 max-w-[120px] truncate">{scopeLabel}</span>
+              <ChevronDown className="w-3 h-3 text-gray-400" />
+            </button>
+            {showScopeDropdown && (
+              <div className="absolute right-0 top-full mt-1 w-56 bg-white border border-gray-200 rounded-xl shadow-lg z-20 py-1 overflow-hidden max-h-80 overflow-y-auto">
+                {/* 通用 */}
+                <button
+                  onClick={() => handleSetEmployee(null)}
+                  className={cn("w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-gray-50 transition-colors", isGeneral && "text-[#FF6B35] bg-orange-50/50")}
+                >
+                  <Globe className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                  <span>通用</span>
+                  {isGeneral && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#FF6B35]" />}
+                </button>
+
+                {/* AI员工列表 */}
+                {aiEmployees.length > 0 && (
+                  <>
+                    <div className="px-3 py-1.5 text-[10px] text-gray-400 font-medium border-t border-gray-100 mt-0.5">AI员工</div>
+                    {aiEmployees.map(e => (
+                      <button
+                        key={e.id}
+                        onClick={() => handleSetEmployee(e.id)}
+                        className={cn("w-full flex items-center gap-2 px-3 py-2 text-xs hover:bg-gray-50 transition-colors", selectedEmployeeId === e.id && "text-[#FF6B35] bg-orange-50/50")}
+                      >
+                        <Bot className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                        <span className="truncate font-medium">{e.name}</span>
+                        {selectedEmployeeId === e.id && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#FF6B35] flex-shrink-0" />}
+                      </button>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+        <AdminTemplateSubPageContent page={activePage} selectedEmployee={selectedEmployee} activationCodes={activationCodes} />
       </div>
     </div>
   );
@@ -590,10 +1466,12 @@ const AdminContent: React.FC<{
   onBackToCustomerList: () => void;
   onViewAIEmployee: (employeeId: string) => void;
   onBackToAIList: () => void;
+  onGoToPersonaConfig: () => void;
+  onBackToAIDetail: () => void;
   filterRoleId: string | null;
   onClearFilterRole: () => void;
   onViewRoleAccounts: (roleId: string) => void;
-}> = ({ section, onViewChat, auditCode, onClearAuditCode, detailCustomerId, onViewCustomerDetail, onBackToCustomerList, onViewAIEmployee, onBackToAIList, filterRoleId, onClearFilterRole, onViewRoleAccounts }) => {
+}> = ({ section, onViewChat, auditCode, onClearAuditCode, detailCustomerId, onViewCustomerDetail, onBackToCustomerList, onViewAIEmployee, onBackToAIList, onGoToPersonaConfig, onBackToAIDetail, filterRoleId, onClearFilterRole, onViewRoleAccounts }) => {
   switch (section) {
     case 'dashboard':
       return <DashboardPage />;
@@ -638,7 +1516,9 @@ const AdminContent: React.FC<{
     case 'ai-config':
       return <AIConfigListPage onViewEmployee={onViewAIEmployee} />;
     case 'ai-config-detail':
-      return <AIConfigDetailPage onBack={onBackToAIList} />;
+      return <AIConfigDetailPage onBack={onBackToAIList} onGoToPersonaConfig={onGoToPersonaConfig} />;
+    case 'ai-persona-config':
+      return <AIPersonaConfigPage onBack={onBackToAIDetail} />;
     case 'ai-knowledge':
       return <KnowledgeBasePage />;
     case 'ai-scripts':
@@ -659,6 +1539,8 @@ const AdminContent: React.FC<{
       );
     case 'ai-labels':
       return <AILabelsPage />;
+    case 'ai-templates':
+      return <AdminTemplatesPage />;
     case 'customer-list':
       return <AdminCustomerListPage onViewDetail={onViewCustomerDetail} />;
     case 'customer-detail':
@@ -1078,37 +1960,73 @@ const AISettingsPage: React.FC = () => {
   );
 };
 
-// AI配置页面 - AI员工配置（人设模板数据）
+// AI配置页面 - AI员工配置（人设模板数据，与内容模板管理保持一致）
 const personaTemplates = [
   {
-    id: 'sales' as const,
-    icon: '🦁',
-    name: '金牌销售型',
-    description: '主动、热情，擅长挖掘需求与促单，使用更有感染力的语言。',
-    tags: ['高转化', '主动引导'],
+    id: 'shop-owner',
+    avatarBg: 'from-orange-100 to-amber-100',
+    avatarText: '店',
+    name: '热情店长',
+    description: '以店长身份与客户沟通，态度热情诚恳，对品牌和产品很自信，有一定的品牌宣导性，适合30-45岁形象定位。',
+    tags: ['热情', '自信', '品牌感'],
+    scope: '电商售前',
   },
   {
-    id: 'support' as const,
-    icon: '🐬',
-    name: '贴心客服型',
-    description: '温和、耐心，注重解决用户疑惑与情绪安抚，回复速度快。',
-    tags: ['高满意度', '情绪识别'],
+    id: 'account-manager',
+    avatarBg: 'from-blue-100 to-indigo-100',
+    avatarText: '经',
+    name: '客户经理',
+    description: '一位门店客户经理，在25-35岁之间，话术感受留意适中，存在适当的语气词柔和话术，专业又不失亲和。',
+    tags: ['专业', '亲和', '留意适中'],
+    scope: '门店服务',
   },
   {
-    id: 'brand' as const,
-    icon: '🦊',
-    name: '品牌专家型',
-    description: '严谨、高端，主要用于品牌形象塑造与专业问题解答。',
-    tags: ['专业知识', '品牌调性'],
+    id: 'minimal',
+    avatarBg: 'from-gray-100 to-slate-100',
+    avatarText: '简',
+    name: '专业极简',
+    description: '一位简洁高效的销售，简洁明了地解答客户疑问，用最少的话传递最有效的信息，与客户高效沟通。',
+    tags: ['简洁', '高效', '直接'],
+    scope: '通用客服',
+  },
+  {
+    id: 'streamer',
+    avatarBg: 'from-pink-100 to-rose-100',
+    avatarText: '播',
+    name: '甜美主播',
+    description: '一位美女主播，年龄在24-28岁之间，语气温柔可爱，温和地解答客户疑问，让客户体验良好，适合直播电商场景。',
+    tags: ['温柔', '可爱', '互动感强'],
+    scope: '直播电商',
+  },
+  {
+    id: 'after-sales',
+    avatarBg: 'from-emerald-100 to-teal-100',
+    avatarText: '后',
+    name: '售后专家',
+    description: '专注售后问题处理，语气沉稳有耐心，善于安抚情绪、推动问题解决，具备强烈的责任感和服务意识。',
+    tags: ['耐心', '共情', '解决导向'],
+    scope: '售后服务',
+  },
+  {
+    id: 'grass',
+    avatarBg: 'from-violet-100 to-purple-100',
+    avatarText: '草',
+    name: '种草姐妹',
+    description: '以闺蜜口吻分享好物体验，擅长用真实感受种草，语气活泼有感染力，善用生活场景引发共鸣。',
+    tags: ['种草', '真实感', '感染力'],
+    scope: '社交电商',
   },
 ];
 
-// 各人设模板对应的语气预览对话（同一个客户问题，不同风格的AI回复）
+// 各人设模板对应的语气预览对话
 const personaPreviewQuestion = '这款产品可以发货到巴西吗？';
 const personaPreviewAnswers: Record<string, string> = {
-  sales: '当然可以！我们每天通过DHL快递发往巴西。2小时内下单可免费升级物流追踪，需要帮您安排吗？',
-  support: '可以的，请放心。我们支持巴西地区配送，通常7-10个工作日到达，如有任何问题我随时为您跟进。',
-  brand: '支持。我们与DHL国际物流深度合作，巴西全境可达，提供端到端物流追踪与签收确认服务。',
+  'shop-owner': '当然可以！我们每天通过DHL快递发往巴西。2小时内下单可免费升级物流追踪，需要帮您安排吗？',
+  'account-manager': '您好，我们支持巴西地区配送，通常7-10个工作日到达。如有任何问题我随时为您跟进处理。',
+  'minimal': '支持。7-10个工作日到达。',
+  'streamer': '宝宝放心！巴西也可以发哦～DHL快递，快递单号实时追踪，姐妹入手超放心💕',
+  'after-sales': '非常感谢您的咨询。我们支持巴西地区配送，全程提供物流追踪，如有任何问题请随时联系。',
+  'grass': '姐妹！巴西也发的！我上次帮朋友买就是发过去的，DHL超快，一周多就到了，放心买！✨',
 };
 
 // ========== AI 员工列表页 ==========
@@ -1232,20 +2150,24 @@ const AIConfigListPage: React.FC<{ onViewEmployee: (id: string) => void }> = ({ 
         {/* 表格 */}
         <div className="flex-1 min-h-0 bg-white rounded-xl border border-gray-200 overflow-hidden flex flex-col">
           {/* 表头 */}
-          <div className="grid grid-cols-[2fr_1fr_1.5fr_1fr_1fr_120px] gap-4 px-5 py-3 bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-500 flex-shrink-0">
+          <div className="grid grid-cols-[2fr_1fr_1.5fr_1.2fr_1fr_1fr_1fr] gap-4 px-5 py-3 bg-gray-50 border-b border-gray-200 text-xs font-medium text-gray-500 flex-shrink-0">
             <span>员工名称</span>
             <span>人设模板</span>
             <span>绑定平台</span>
-            <span>工作时间</span>
-            <span>启用</span>
+            <span>应用激活码范围</span>
+            <span>创建时间</span>
+            <span>修改时间</span>
             <span className="text-right">操作</span>
           </div>
           {/* 表体 */}
           <div className="flex-1 overflow-y-auto divide-y divide-gray-100">
             {aiEmployees.map((emp) => {
               const tpl = personaTemplates.find(p => p.id === emp.personaTemplate);
+              const codeCount = emp.activationCodeScope === 'custom'
+                ? (emp.activationCodeIds?.length ?? 0)
+                : null; // null = 全部
               return (
-                <div key={emp.id} className="grid grid-cols-[2fr_1fr_1.5fr_1fr_1fr_120px] gap-4 px-5 py-3.5 items-center hover:bg-gray-50/60 transition-colors">
+                <div key={emp.id} className="grid grid-cols-[2fr_1fr_1.5fr_1.2fr_1fr_1fr_1fr] gap-4 px-5 py-3.5 items-center hover:bg-gray-50/60 transition-colors">
                   {/* 员工名称 */}
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="relative flex-shrink-0">
@@ -1278,39 +2200,34 @@ const AIConfigListPage: React.FC<{ onViewEmployee: (id: string) => void }> = ({ 
                       ) : null;
                     })}
                   </div>
-                  {/* 工作时间 */}
-                  <div className="text-xs text-gray-500">
-                    {emp.workStartTime}-{emp.workEndTime}
+                  {/* 应用激活码范围 */}
+                  <div>
+                    {codeCount === null
+                      ? <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-500">全部激活码</span>
+                      : <span className="text-xs px-2 py-0.5 rounded-full bg-orange-50 text-orange-500">{codeCount} 个激活码</span>
+                    }
                   </div>
-                  {/* 启用开关 */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => updateAIEmployeeById(emp.id, { status: emp.status === 'online' ? 'offline' : 'online' })}
-                      className={cn(
-                        "w-9 h-5 rounded-full transition-colors relative flex-shrink-0",
-                        emp.status === 'online' ? "bg-[#FF6B35]" : "bg-gray-200"
-                      )}
-                    >
-                      <span className={cn(
-                        "absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform",
-                        emp.status === 'online' ? "left-[18px]" : "left-0.5"
-                      )} />
-                    </button>
-                    <span className={cn("text-[11px]", emp.status === 'online' ? "text-[#FF6B35]" : "text-gray-400")}>
-                      {emp.status === 'online' ? '已启用' : '未启用'}
-                    </span>
-                  </div>
+                  {/* 创建时间 */}
+                  <div className="text-xs text-gray-400">{emp.createdAt ?? '-'}</div>
+                  {/* 修改时间 */}
+                  <div className="text-xs text-gray-400">{emp.updatedAt ?? '-'}</div>
                   {/* 操作 */}
-                  <div className="flex items-center justify-end gap-2">
+                  <div className="flex items-center justify-end gap-1.5 flex-nowrap">
                     <button
                       onClick={() => onViewEmployee(emp.id)}
-                      className="px-3 py-1.5 text-xs font-medium text-[#FF6B35] bg-[#FF6B35]/5 rounded-lg hover:bg-[#FF6B35]/10 transition-colors"
+                      className="px-2.5 py-1.5 text-xs font-medium text-[#FF6B35] bg-[#FF6B35]/5 rounded-lg hover:bg-[#FF6B35]/10 transition-colors whitespace-nowrap"
                     >
                       配置
                     </button>
+                    <button className="px-2.5 py-1.5 text-xs text-gray-500 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors whitespace-nowrap">
+                      日志
+                    </button>
+                    <button className="px-2.5 py-1.5 text-xs text-gray-500 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors whitespace-nowrap">
+                      应用激活码
+                    </button>
                     <button
                       onClick={() => setShowDeleteConfirm(emp.id)}
-                      className="px-2.5 py-1.5 text-xs text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      className="px-2.5 py-1.5 text-xs text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors whitespace-nowrap"
                     >
                       删除
                     </button>
@@ -1346,15 +2263,24 @@ const AIConfigListPage: React.FC<{ onViewEmployee: (id: string) => void }> = ({ 
 // ========== AI 员工详情页 ==========
 const AIConfigDetailPage: React.FC<{
   onBack: () => void;
-}> = ({ onBack }) => {
+  onGoToPersonaConfig: () => void;
+}> = ({ onBack, onGoToPersonaConfig }) => {
   const selectedAIEmployeeId = useStore((s) => s.selectedAIEmployeeId);
   const aiEmployees = useStore((s) => s.aiEmployees);
   const updateAIEmployeeConfig = useStore((s) => s.updateAIEmployeeConfig);
+  const activationCodes = useStore((s) => s.activationCodes);
   const aiConfig = aiEmployees.find((e) => e.id === selectedAIEmployeeId);
 
   const [selectedPlatform, setSelectedPlatform] = useState<string>(aiConfig?.activePlatforms[0] || 'whatsapp');
   const [nicknameInput, setNicknameInput] = useState(aiConfig?.name || '');
   const [nicknameSaved, setNicknameSaved] = useState(false);
+  const [debugMessages, setDebugMessages] = useState<{ role: 'user' | 'ai'; text: string }[]>([
+    { role: 'user', text: personaPreviewQuestion },
+    { role: 'ai', text: personaPreviewAnswers['shop-owner'] },
+  ]);
+  const [debugInput, setDebugInput] = useState('');
+  const debugEndRef = React.useRef<HTMLDivElement>(null);
+  const [showDebugDrawer, setShowDebugDrawer] = useState(false);
 
   useEffect(() => {
     if (aiConfig) {
@@ -1393,8 +2319,27 @@ const AIConfigDetailPage: React.FC<{
     updateAIEmployeeConfig({ platformCapabilities: caps });
   };
 
-  const handleSelectPersona = (id: 'sales' | 'support' | 'brand') => {
+  const handleSelectPersona = (id: string) => {
     updateAIEmployeeConfig({ personaTemplate: id });
+  };
+
+  const handleDebugSend = () => {
+    if (!debugInput.trim()) return;
+    const userMsg = debugInput.trim();
+    setDebugInput('');
+    const newMessages = [...debugMessages, { role: 'user' as const, text: userMsg }];
+    setDebugMessages(newMessages);
+    // 模拟 AI 回复（基于当前人设的预设回复或通用答复）
+    setTimeout(() => {
+      const tplId = aiConfig.personaTemplate || 'shop-owner';
+      const presetAnswer = personaPreviewAnswers[tplId];
+      const tpl = personaTemplates.find(t => t.id === tplId);
+      const fallback = tpl
+        ? `[${tpl.name}风格] 感谢您的咨询！我已收到您的问题，稍后为您详细解答。`
+        : '感谢您的咨询，我会尽快为您解答。';
+      setDebugMessages(prev => [...prev, { role: 'ai' as const, text: presetAnswer || fallback }]);
+      debugEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 600);
   };
 
   return (
@@ -1540,6 +2485,26 @@ const AIConfigDetailPage: React.FC<{
             })}
           </div>
 
+          {/* AI 对话测试入口 */}
+          <div className="flex items-center justify-between bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl border border-indigo-100 px-5 py-4">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-sm shadow-indigo-200/50">
+                <Bot className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-800">AI 对话测试</p>
+                <p className="text-xs text-gray-400 mt-0.5">模拟真实会话，验证 AI 表现与人设效果</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setShowDebugDrawer(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-indigo-500 text-white text-xs font-medium rounded-xl hover:bg-indigo-600 transition-colors shadow-sm shadow-indigo-200/50"
+            >
+              <MessageCircle className="w-3.5 h-3.5" />
+              开始测试
+            </button>
+          </div>
+
           {/* AI 身份与人设 */}
           <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-4">
             <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
@@ -1573,10 +2538,11 @@ const AIConfigDetailPage: React.FC<{
               <div>
                 <label className="text-xs text-gray-500 mb-1.5 block">首选回复语言</label>
                 <select
-                  value={aiConfig.language || 'zh'}
+                  value={aiConfig.language || 'auto'}
                   onChange={(e) => updateAIEmployeeConfig({ language: e.target.value })}
                   className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35]"
                 >
+                  <option value="auto">🌐 根据对方语言（自动）</option>
                   <option value="en">English (US)</option>
                   <option value="zh">中文（简体）</option>
                   <option value="zh-TW">中文（繁体）</option>
@@ -1606,10 +2572,17 @@ const AIConfigDetailPage: React.FC<{
                         : 'border-gray-200 hover:border-gray-300'
                     )}
                   >
-                    <div className="text-xl mb-1">{tpl.icon}</div>
-                    <h4 className="text-xs font-semibold text-gray-900">{tpl.name}</h4>
-                    <p className="text-[10px] text-gray-500 mt-0.5 line-clamp-2">{tpl.description}</p>
-                    <div className="flex gap-1 mt-2">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className={cn('w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center text-xs font-bold text-gray-500 flex-shrink-0', tpl.avatarBg)}>
+                        {tpl.avatarText}
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-semibold text-gray-900">{tpl.name}</h4>
+                        <span className="text-[9px] text-gray-400">{tpl.scope}</span>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-gray-500 line-clamp-2 mb-2">{tpl.description}</p>
+                    <div className="flex gap-1 flex-wrap">
                       {tpl.tags.map((tag) => (
                         <span key={tag} className="px-1.5 py-0.5 text-[9px] bg-gray-100 text-gray-500 rounded">{tag}</span>
                       ))}
@@ -1752,13 +2725,365 @@ const AIConfigDetailPage: React.FC<{
             </div>
           </div>
 
-          {/* 配置知识库与话术库 */}
-          <div className="text-center py-2">
-            <button className="text-sm text-[#FF6B35] hover:text-[#E85A2A] font-medium hover:underline transition-colors">
-              配置知识库与话术库
+          {/* 激活码范围 */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-3">
+            <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <Key className="w-4 h-4 text-gray-500" />
+              激活码范围
+            </h3>
+            <div className="flex items-center gap-6">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name={`codeScope-${aiConfig.id}`}
+                  checked={(aiConfig.activationCodeScope ?? 'all') === 'all'}
+                  onChange={() => updateAIEmployeeConfig({ activationCodeScope: 'all', activationCodeIds: [] })}
+                  className="w-4 h-4 text-[#FF6B35]"
+                />
+                <span className="text-sm text-gray-700">全部激活码</span>
+              </label>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="radio"
+                  name={`codeScope-${aiConfig.id}`}
+                  checked={aiConfig.activationCodeScope === 'custom'}
+                  onChange={() => updateAIEmployeeConfig({ activationCodeScope: 'custom' })}
+                  className="w-4 h-4 text-[#FF6B35]"
+                />
+                <span className="text-sm text-gray-700">自定义范围</span>
+              </label>
+            </div>
+            {aiConfig.activationCodeScope === 'custom' && (
+              <div className="mt-2 max-h-48 overflow-y-auto space-y-1.5 border border-gray-100 rounded-xl p-3 bg-gray-50/50">
+                {activationCodes.length === 0 ? (
+                  <p className="text-xs text-gray-400 text-center py-2">暂无激活码</p>
+                ) : (
+                  activationCodes.map((code) => (
+                    <label key={code.id} className="flex items-center gap-2.5 cursor-pointer hover:bg-white rounded-lg px-2 py-1.5 transition-colors">
+                      <input
+                        type="checkbox"
+                        checked={(aiConfig.activationCodeIds ?? []).includes(code.id)}
+                        onChange={(e) => {
+                          const ids = aiConfig.activationCodeIds ?? [];
+                          updateAIEmployeeConfig({
+                            activationCodeIds: e.target.checked
+                              ? [...ids, code.id]
+                              : ids.filter((id) => id !== code.id)
+                          });
+                        }}
+                        className="w-3.5 h-3.5 text-[#FF6B35] rounded"
+                      />
+                      <span className="text-xs font-mono text-gray-700">{code.code}</span>
+                      {code.departmentName && (
+                        <span className="text-xs text-gray-400">{code.departmentName}</span>
+                      )}
+                    </label>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* 个性化配置 Banner */}
+          <div className="mx-1 mb-1">
+            <button
+              onClick={onGoToPersonaConfig}
+              className="w-full relative overflow-hidden rounded-xl bg-gradient-to-r from-[#FF6B35] to-orange-400 px-5 py-4 flex items-center justify-between group hover:from-[#E85A2A] hover:to-orange-500 transition-all shadow-sm shadow-orange-200">
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-lg bg-white/20 flex items-center justify-center flex-shrink-0">
+                  <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+                  </svg>
+                </div>
+                <div className="text-left">
+                  <p className="text-sm font-semibold text-white leading-tight">个性化配置</p>
+                  <p className="text-xs text-white/70 mt-0.5">知识库 · 话术库 · 回复风格</p>
+                </div>
+              </div>
+              <svg className="w-4 h-4 text-white/80 group-hover:translate-x-0.5 transition-transform flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+              {/* 装饰圆 */}
+              <div className="absolute -right-4 -top-4 w-16 h-16 rounded-full bg-white/10 pointer-events-none" />
+              <div className="absolute -right-1 -bottom-5 w-10 h-10 rounded-full bg-white/10 pointer-events-none" />
             </button>
           </div>
         </div>
+      </div>
+
+      {/* AI 对话测试抽屉 */}
+      {showDebugDrawer && (
+        <div className="fixed inset-0 z-50 flex">
+          {/* 背景遮罩 */}
+          <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowDebugDrawer(false)} />
+
+          {/* 抽屉主体 */}
+          <div className="relative ml-auto w-[900px] max-w-[95vw] h-full bg-white shadow-2xl flex flex-col animate-in slide-in-from-right duration-300">
+            {/* 抽屉顶栏 */}
+            <div className="flex-shrink-0 flex items-center justify-between px-5 py-3.5 border-b border-gray-100 bg-white">
+              <div className="flex items-center gap-3">
+                <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                  <Bot className="w-3.5 h-3.5 text-white" />
+                </div>
+                <div>
+                  <span className="text-sm font-semibold text-gray-900">AI 对话测试</span>
+                  <span className="ml-2 text-[11px] text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">
+                    {personaTemplates.find(t => t.id === aiConfig.personaTemplate)?.name || '未选人设'} · 模拟环境
+                  </span>
+                </div>
+              </div>
+              <button onClick={() => setShowDebugDrawer(false)} className="w-7 h-7 rounded-lg hover:bg-gray-100 flex items-center justify-center transition-colors">
+                <span className="text-gray-400 text-lg leading-none">×</span>
+              </button>
+            </div>
+
+            {/* 抽屉内容区 */}
+            <div className="flex-1 min-h-0 flex overflow-hidden">
+              {/* 左侧：聊天区 */}
+              <div className="flex-1 flex flex-col border-r border-gray-100">
+                {/* 消息列表 */}
+                <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4 bg-gray-50/40">
+                  {debugMessages.map((msg, i) => (
+                    <div key={i} className={cn('flex items-end gap-2.5', msg.role === 'ai' && 'flex-row-reverse')}>
+                      {/* 头像 */}
+                      {msg.role === 'user' ? (
+                        <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+                          <User className="w-3.5 h-3.5 text-gray-500" />
+                        </div>
+                      ) : (
+                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                          <span className="text-[8px] font-bold text-white">AI</span>
+                        </div>
+                      )}
+                      {/* 气泡 */}
+                      <div className={cn(
+                        'max-w-[68%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed',
+                        msg.role === 'user'
+                          ? 'bg-white border border-gray-100 shadow-sm text-gray-700 rounded-bl-sm'
+                          : 'bg-gradient-to-br from-indigo-500 to-purple-600 text-white rounded-br-sm shadow-sm shadow-indigo-200/50'
+                      )}>
+                        {msg.text}
+                      </div>
+                    </div>
+                  ))}
+                  <div ref={debugEndRef} />
+                </div>
+
+                {/* 输入区 */}
+                <div className="flex-shrink-0 px-5 py-3.5 border-t border-gray-100 bg-white flex items-center gap-3">
+                  <input
+                    value={debugInput}
+                    onChange={e => setDebugInput(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleDebugSend()}
+                    placeholder="输入测试消息，按 Enter 发送..."
+                    className="flex-1 px-4 py-2.5 text-sm border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-300 focus:bg-white placeholder:text-gray-300 transition-all"
+                  />
+                  <button
+                    onClick={handleDebugSend}
+                    disabled={!debugInput.trim()}
+                    className="w-9 h-9 rounded-xl bg-indigo-500 text-white flex items-center justify-center hover:bg-indigo-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+                  >
+                    <Send className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* 右侧：AI 功能面板 */}
+              <div className="w-72 flex-shrink-0 flex flex-col bg-white overflow-y-auto">
+                <CustomerAIProfile />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ========== AI 个性化配置页 ==========
+const AIPersonaConfigPage: React.FC<{
+  onBack: () => void;
+}> = ({ onBack }) => {
+  const selectedAIEmployeeId = useStore((s) => s.selectedAIEmployeeId);
+  const aiEmployees = useStore((s) => s.aiEmployees);
+  const updateAIEmployeeConfig = useStore((s) => s.updateAIEmployeeConfig);
+  const activationCodes = useStore((s) => s.activationCodes);
+  const aiConfig = aiEmployees.find((e) => e.id === selectedAIEmployeeId);
+
+  const personaConfig = aiConfig?.personaConfig ?? {};
+  const updatePersonaConfig = (updates: Partial<NonNullable<typeof personaConfig>>) => {
+    updateAIEmployeeConfig({ personaConfig: { ...personaConfig, ...updates } });
+  };
+
+  const replyStyles = [
+    { id: 'formal', label: '正式', desc: '专业严谨，适合企业客服' },
+    { id: 'friendly', label: '亲切', desc: '温暖自然，拉近客户距离' },
+    { id: 'concise', label: '简洁', desc: '直接高效，减少冗余表达' },
+  ] as const;
+
+  return (
+    <div className="h-full flex flex-col bg-gray-50/50">
+      {/* 顶部面包屑 */}
+      <div className="flex-shrink-0 flex items-center gap-2 px-6 py-4 bg-white border-b border-gray-100">
+        <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+          <ChevronLeft className="w-4 h-4" />
+          <span>{aiConfig?.name ?? 'AI员工'}</span>
+        </button>
+        <span className="text-gray-300">/</span>
+        <span className="text-sm font-medium text-gray-900">个性化配置</span>
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 max-w-2xl">
+
+        {/* 激活码范围 */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-3">
+          <h3 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+            <Key className="w-4 h-4 text-gray-500" />
+            激活码范围
+          </h3>
+          <p className="text-xs text-gray-400">选择此个性化配置应用的激活码范围</p>
+          <div className="flex items-center gap-6">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="persona-codeScope"
+                checked={(aiConfig?.activationCodeScope ?? 'all') === 'all'}
+                onChange={() => updateAIEmployeeConfig({ activationCodeScope: 'all', activationCodeIds: [] })}
+                className="w-4 h-4 text-[#FF6B35]"
+              />
+              <span className="text-sm text-gray-700">全部激活码</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="persona-codeScope"
+                checked={aiConfig?.activationCodeScope === 'custom'}
+                onChange={() => updateAIEmployeeConfig({ activationCodeScope: 'custom' })}
+                className="w-4 h-4 text-[#FF6B35]"
+              />
+              <span className="text-sm text-gray-700">自定义范围</span>
+            </label>
+          </div>
+          {aiConfig?.activationCodeScope === 'custom' && (
+            <div className="max-h-48 overflow-y-auto space-y-1.5 border border-gray-100 rounded-xl p-3 bg-gray-50/50">
+              {activationCodes.length === 0 ? (
+                <p className="text-xs text-gray-400 text-center py-2">暂无激活码</p>
+              ) : (
+                activationCodes.map((code) => (
+                  <label key={code.id} className="flex items-center gap-2.5 cursor-pointer hover:bg-white rounded-lg px-2 py-1.5 transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={(aiConfig.activationCodeIds ?? []).includes(code.id)}
+                      onChange={(e) => {
+                        const ids = aiConfig.activationCodeIds ?? [];
+                        updateAIEmployeeConfig({
+                          activationCodeIds: e.target.checked
+                            ? [...ids, code.id]
+                            : ids.filter((id) => id !== code.id)
+                        });
+                      }}
+                      className="w-3.5 h-3.5 text-[#FF6B35] rounded"
+                    />
+                    <span className="text-xs font-mono text-gray-700">{code.code}</span>
+                    {code.departmentName && (
+                      <span className="text-xs text-gray-400">{code.departmentName}</span>
+                    )}
+                  </label>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* 知识库 */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
+                <BookOpen className="w-4 h-4 text-blue-500" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-900">知识库</p>
+                <p className="text-xs text-gray-400 mt-0.5">AI 回复时优先引用知识库内容</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => updatePersonaConfig({ knowledgeBaseEnabled: !personaConfig.knowledgeBaseEnabled })}
+              className={cn(
+                "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
+                personaConfig.knowledgeBaseEnabled ? "bg-[#FF6B35]" : "bg-gray-200"
+              )}
+            >
+              <span className={cn(
+                "inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform",
+                personaConfig.knowledgeBaseEnabled ? "translate-x-4" : "translate-x-0.5"
+              )} />
+            </button>
+          </div>
+        </div>
+
+        {/* 话术库 */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center">
+                <MessageSquare className="w-4 h-4 text-purple-500" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-gray-900">话术库</p>
+                <p className="text-xs text-gray-400 mt-0.5">启用预设话术，提升回复一致性</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => updatePersonaConfig({ scriptLibraryEnabled: !personaConfig.scriptLibraryEnabled })}
+              className={cn(
+                "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
+                personaConfig.scriptLibraryEnabled ? "bg-[#FF6B35]" : "bg-gray-200"
+              )}
+            >
+              <span className={cn(
+                "inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform",
+                personaConfig.scriptLibraryEnabled ? "translate-x-4" : "translate-x-0.5"
+              )} />
+            </button>
+          </div>
+        </div>
+
+        {/* 回复风格 */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-3">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center">
+              <Sparkles className="w-4 h-4 text-amber-500" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-gray-900">回复风格</p>
+              <p className="text-xs text-gray-400 mt-0.5">影响 AI 的语气和表达方式</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-2.5">
+            {replyStyles.map((style) => (
+              <button
+                key={style.id}
+                onClick={() => updatePersonaConfig({ replyStyle: style.id })}
+                className={cn(
+                  "p-3 rounded-xl border-2 text-left transition-all",
+                  (personaConfig.replyStyle ?? 'friendly') === style.id
+                    ? "border-[#FF6B35] bg-[#FF6B35]/5"
+                    : "border-gray-200 hover:border-gray-300"
+                )}
+              >
+                <p className={cn(
+                  "text-sm font-semibold",
+                  (personaConfig.replyStyle ?? 'friendly') === style.id ? "text-[#FF6B35]" : "text-gray-700"
+                )}>{style.label}</p>
+                <p className="text-[11px] text-gray-400 mt-0.5 leading-relaxed">{style.desc}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+
       </div>
     </div>
   );

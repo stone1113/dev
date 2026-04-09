@@ -16,12 +16,15 @@ import {
   Bot,
   Settings2,
   X,
-  Zap,
   Lock,
   UserPlus,
   Edit3,
   Unlink,
   AlertCircle,
+  Share2,
+  Copy,
+  Minus,
+  Inbox,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStore } from '@/store/useStore';
@@ -163,17 +166,13 @@ const RoleBadge: React.FC<{ role: ActivationCode['role'] }> = ({ role }) => {
 };
 
 // AI分配模式徽章
-const AllocationModeBadge: React.FC<{ mode?: 'fixed' | 'auto'; limit?: number; used?: number }> = ({ mode, limit, used }) => {
-  if (!mode || !limit) return <span className="text-xs text-gray-300">-</span>;
-  const isFixed = mode === 'fixed';
+const AllocationModeBadge: React.FC<{ mode?: 'fixed' | 'auto'; limit?: number; used?: number }> = ({ limit, used }) => {
+  if (!limit) return <span className="text-xs text-gray-300">-</span>;
   return (
     <div className="flex items-center gap-1.5 whitespace-nowrap">
-      <span className={cn(
-        "inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium rounded",
-        isFixed ? "bg-blue-50 text-blue-600" : "bg-emerald-50 text-emerald-600"
-      )}>
-        {isFixed ? <Lock className="w-2.5 h-2.5" /> : <Zap className="w-2.5 h-2.5" />}
-        {isFixed ? '固定' : '动态'}
+      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium rounded bg-blue-50 text-blue-600">
+        <Lock className="w-2.5 h-2.5" />
+        固定
       </span>
       <span className="text-xs text-gray-500">{used ?? 0}/{limit}</span>
     </div>
@@ -620,6 +619,220 @@ const DepartmentConflictModal: React.FC<{
   );
 };
 
+// 分享工单弹框
+interface ShareRecord {
+  id: string;
+  title: string;
+  access: string;
+  sharedAt: string;
+  link: string;
+}
+
+const ShareWorkOrderModal: React.FC<{
+  code: ActivationCode;
+  onClose: () => void;
+}> = ({ code, onClose }) => {
+  const [title, setTitle] = useState('');
+  const [validDays, setValidDays] = useState<number | 'unlimited'>(1);
+  const [validHours, setValidHours] = useState(24);
+  const [access, setAccess] = useState<'public' | 'password'>('public');
+  const [canViewLeads, setCanViewLeads] = useState(true);
+  const [leadsDesensitize, setLeadsDesensitize] = useState<'public' | 'hidden'>('public');
+  const [canEditNote, setCanEditNote] = useState(true);
+  const [remark, setRemark] = useState('');
+  const [history] = useState<ShareRecord[]>([]);
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="w-[560px] max-h-[90vh] overflow-y-auto bg-white rounded-2xl shadow-2xl flex flex-col">
+        {/* 顶部绿色 banner */}
+        <div className="relative bg-gradient-to-r from-green-500 to-green-400 rounded-t-2xl px-8 pt-7 pb-10 overflow-hidden">
+          <button onClick={onClose} className="absolute top-4 right-4 text-white/80 hover:text-white">
+            <X className="w-5 h-5" />
+          </button>
+          <div className="relative z-10">
+            <h2 className="text-xl font-bold text-white text-center">分享工单详情</h2>
+            <p className="text-green-100 text-xs text-center mt-1">配置以下参数，可对分享页面的权限进行控制</p>
+          </div>
+          {/* 装饰图 */}
+          <div className="absolute right-6 bottom-0 opacity-30 text-white text-5xl select-none">🔍</div>
+        </div>
+
+        {/* 表单区 */}
+        <div className="px-8 py-6 space-y-4 -mt-4 bg-white rounded-t-2xl relative z-10">
+          {/* 标题 */}
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-600 w-24 text-right flex-shrink-0 whitespace-nowrap">标题</span>
+            <input
+              value={title}
+              onChange={e => setTitle(e.target.value)}
+              placeholder="请填写标题"
+              className="flex-1 border border-green-400 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-300"
+            />
+          </div>
+
+          {/* 有效天数 */}
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-600 w-24 text-right flex-shrink-0 whitespace-nowrap">有效天数</span>
+            <div className="flex items-center gap-3 flex-nowrap">
+              {([1, 3, 7, 30, 'unlimited'] as const).map(d => (
+                <label key={String(d)} className="flex items-center gap-1 cursor-pointer">
+                  <input
+                    type="radio"
+                    checked={validDays === d}
+                    onChange={() => setValidDays(d)}
+                    className="accent-green-500"
+                  />
+                  <span className="text-sm text-gray-700">{d === 'unlimited' ? '无限制' : `${d}天`}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* 有效小时数 */}
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-600 w-24 text-right flex-shrink-0 whitespace-nowrap">有效小时数</span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setValidHours(h => Math.max(1, h - 1))}
+                className="w-7 h-7 rounded border border-gray-200 flex items-center justify-center hover:bg-gray-50"
+              >
+                <Minus className="w-3.5 h-3.5 text-gray-500" />
+              </button>
+              <span className="w-12 text-center text-sm font-medium">{validHours}</span>
+              <button
+                onClick={() => setValidHours(h => h + 1)}
+                className="w-7 h-7 rounded border border-gray-200 flex items-center justify-center hover:bg-gray-50"
+              >
+                <Plus className="w-3.5 h-3.5 text-gray-500" />
+              </button>
+            </div>
+          </div>
+
+          {/* 访问权限 */}
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-600 w-24 text-right flex-shrink-0 whitespace-nowrap">访问权限</span>
+            <div className="flex items-center gap-4">
+              {(['public', 'password'] as const).map(v => (
+                <label key={v} className="flex items-center gap-1 cursor-pointer">
+                  <input type="radio" checked={access === v} onChange={() => setAccess(v)} className="accent-green-500" />
+                  <span className="text-sm text-gray-700">{v === 'public' ? '公开访问' : '密码访问'}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* 能否查看线索 */}
+          <div className="flex items-start gap-4">
+            <span className="text-sm text-gray-600 w-24 text-right flex-shrink-0 whitespace-nowrap pt-0.5">能否查看线索</span>
+            <div>
+              <div className="flex items-center gap-4">
+                {([true, false] as const).map(v => (
+                  <label key={String(v)} className="flex items-center gap-1 cursor-pointer">
+                    <input type="radio" checked={canViewLeads === v} onChange={() => setCanViewLeads(v)} className="accent-green-500" />
+                    <span className="text-sm text-gray-700">{v ? '是' : '否'}</span>
+                  </label>
+                ))}
+              </div>
+              <p className="text-xs text-gray-400 mt-1">是否可以查看线索列表</p>
+            </div>
+          </div>
+
+          {/* 线索脱敏 */}
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-600 w-24 text-right flex-shrink-0 whitespace-nowrap">线索脱敏</span>
+            <div className="flex items-center gap-4">
+              {(['public', 'hidden'] as const).map(v => (
+                <label key={v} className="flex items-center gap-1 cursor-pointer">
+                  <input type="radio" checked={leadsDesensitize === v} onChange={() => setLeadsDesensitize(v)} className="accent-green-500" />
+                  <span className="text-sm text-gray-700">{v === 'public' ? '公开' : '隐藏'}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* 是否编辑注释 */}
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-gray-600 w-24 text-right flex-shrink-0 whitespace-nowrap">是否编辑注释</span>
+            <div className="flex items-center gap-4">
+              {([true, false] as const).map(v => (
+                <label key={String(v)} className="flex items-center gap-1 cursor-pointer">
+                  <input type="radio" checked={canEditNote === v} onChange={() => setCanEditNote(v)} className="accent-green-500" />
+                  <span className="text-sm text-gray-700">{v ? '是' : '否'}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* 备注 */}
+          <div className="flex items-start gap-4">
+            <span className="text-sm text-gray-600 w-24 text-right flex-shrink-0 whitespace-nowrap pt-1">备注</span>
+            <div className="flex-1 relative">
+              <textarea
+                value={remark}
+                onChange={e => setRemark(e.target.value.slice(0, 50))}
+                placeholder="请输入备注"
+                rows={3}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-green-300 resize-none bg-gray-50"
+              />
+              <span className="absolute bottom-2 right-2 text-[10px] text-gray-400">{remark.length}/50</span>
+            </div>
+          </div>
+
+          {/* 分享历史 */}
+          <div>
+            <p className="text-xs text-gray-500 mb-2">分享历史（仅展示最近分享的3条信息、更多信息请查看所有分享历史）</p>
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <div className="grid grid-cols-[1fr_80px_120px_1fr_60px] bg-gray-50 px-3 py-2 text-xs font-medium text-gray-500 border-b border-gray-100">
+                <span>工单标题</span>
+                <span>访问权限</span>
+                <span>分享时间</span>
+                <span>分享链接</span>
+                <span>操作</span>
+              </div>
+              {history.length === 0 ? (
+                <div className="py-8 flex flex-col items-center gap-2 text-gray-400">
+                  <Inbox className="w-8 h-8 text-gray-300" />
+                  <span className="text-xs">暂无数据</span>
+                </div>
+              ) : (
+                history.map(h => (
+                  <div key={h.id} className="grid grid-cols-[1fr_80px_120px_1fr_60px] px-3 py-2 text-xs text-gray-600 border-b border-gray-50 last:border-0">
+                    <span className="truncate">{h.title}</span>
+                    <span>{h.access}</span>
+                    <span>{h.sharedAt}</span>
+                    <button
+                      onClick={() => navigator.clipboard.writeText(h.link)}
+                      className="flex items-center gap-1 text-green-500 hover:text-green-600 truncate"
+                    >
+                      <Copy className="w-3 h-3 flex-shrink-0" />
+                      <span className="truncate">{h.link}</span>
+                    </button>
+                    <button className="text-red-400 hover:text-red-500">删除</button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* 底部按钮 */}
+          <div className="flex justify-end pt-2">
+            <button
+              onClick={() => {
+                // TODO: 生成分享链接
+                onClose();
+              }}
+              className="px-6 py-2 bg-green-500 hover:bg-green-600 text-white text-sm font-medium rounded-lg transition-colors"
+            >
+              生成分享链接
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // 激活码行内联操作按钮
 const CodeActionButtons: React.FC<{
   code: ActivationCode;
@@ -630,12 +843,21 @@ const CodeActionButtons: React.FC<{
   onUnbind: (code: ActivationCode) => void;
   onDisableConfirm: (code: ActivationCode) => void;
   onCopy: (code: ActivationCode) => void;
-}> = ({ code, onToggle, onEdit, onAssignDept, onAssignAccount, onUnbind, onDisableConfirm, onCopy }) => {
+  onShare: (code: ActivationCode) => void;
+}> = ({ code, onToggle, onEdit, onAssignDept, onAssignAccount, onUnbind, onDisableConfirm, onCopy, onShare }) => {
   const hasDepartment = !!code.departmentId;
   const hasAssignedAccounts = !!code.assignedTo;
 
   return (
     <div className="flex items-center gap-1">
+      <button
+        onClick={() => onShare(code)}
+        className="inline-flex items-center gap-1 px-2 py-1 text-xs text-green-600 hover:bg-green-50 rounded-md transition-colors whitespace-nowrap"
+        title="分享工单"
+      >
+        <Share2 className="w-3.5 h-3.5" />
+        分享
+      </button>
       <button
         onClick={() => onCopy(code)}
         className="inline-flex items-center gap-1 px-2 py-1 text-xs text-[#FF6B35] hover:bg-[#FF6B35]/10 rounded-md transition-colors whitespace-nowrap"
@@ -717,11 +939,10 @@ const AIQuotaModal: React.FC<{
   onClose: () => void;
   onSave: (updates: Partial<ActivationCode>) => void;
 }> = ({ code, onClose, onSave }) => {
-  const [mode, setMode] = useState<'fixed' | 'auto'>(code.aiAllocationMode || 'auto');
   const [seatLimit, setSeatLimit] = useState(code.aiSeatLimit ?? 0);
   const handleSave = () => {
     onSave({
-      aiAllocationMode: mode,
+      aiAllocationMode: 'fixed',
       aiSeatLimit: seatLimit,
     });
   };
@@ -766,55 +987,6 @@ const AIQuotaModal: React.FC<{
             </div>
           </div>
 
-          {/* 分配模式 */}
-          <div>
-            <label className="block text-xs font-medium text-gray-700 mb-2">分配模式</label>
-            <div className="grid grid-cols-2 gap-3">
-
-              {/* 固定分配 */}
-              <button
-                onClick={() => setMode('fixed')}
-                className={cn(
-                  "p-3 rounded-xl border text-left transition-all",
-                  mode === 'fixed'
-                    ? "border-[#FF6B35] bg-[#FF6B35]/5 ring-1 ring-[#FF6B35]/20"
-                    : "border-gray-200 hover:border-gray-300"
-                )}
-              >
-                <div className="flex items-center gap-2 mb-1.5">
-                  <Lock className={cn("w-4 h-4", mode === 'fixed' ? "text-[#FF6B35]" : "text-gray-400")} />
-                  <span className={cn("text-sm font-medium", mode === 'fixed' ? "text-[#FF6B35]" : "text-gray-700")}>
-                    固定分配
-                  </span>
-                </div>
-                <p className="text-[11px] text-gray-500 leading-relaxed">
-                  按固定数量分配AI端口给激活码，分配即占用端口
-                </p>
-              </button>
-
-              {/* 自动分配 */}
-              <button
-                onClick={() => setMode('auto')}
-                className={cn(
-                  "p-3 rounded-xl border text-left transition-all",
-                  mode === 'auto'
-                    ? "border-[#FF6B35] bg-[#FF6B35]/5 ring-1 ring-[#FF6B35]/20"
-                    : "border-gray-200 hover:border-gray-300"
-                )}
-              >
-                <div className="flex items-center gap-2 mb-1.5">
-                  <Zap className={cn("w-4 h-4", mode === 'auto' ? "text-[#FF6B35]" : "text-gray-400")} />
-                  <span className={cn("text-sm font-medium", mode === 'auto' ? "text-[#FF6B35]" : "text-gray-700")}>
-                    动态分配
-                  </span>
-                </div>
-                <p className="text-[11px] text-gray-500 leading-relaxed">
-                  从共享端口池按需分配，会话结束后释放，先到先得
-                </p>
-              </button>
-            </div>
-          </div>
-
         </div>
 
         {/* 弹窗底部 */}
@@ -853,6 +1025,8 @@ export const AdminCenter: React.FC<{ onViewChat?: (code: ActivationCode) => void
   const [unbindingCode, setUnbindingCode] = useState<ActivationCode | null>(null);
   const [showDisableConfirm, setShowDisableConfirm] = useState(false);
   const [disablingCode, setDisablingCode] = useState<ActivationCode | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [sharingCode, setSharingCode] = useState<ActivationCode | null>(null);
   const [showDeptConflict, setShowDeptConflict] = useState(false);
   const [conflictDeptInfo, setConflictDeptInfo] = useState<{ code: ActivationCode; deptId: string; deptName: string } | null>(null);
 
@@ -1278,6 +1452,10 @@ export const AdminCenter: React.FC<{ onViewChat?: (code: ActivationCode) => void
                               setDisablingCode(code);
                               setShowDisableConfirm(true);
                             }}
+                            onShare={(code) => {
+                              setSharingCode(code);
+                              setShowShareModal(true);
+                            }}
                           />
                         </td>
                       </tr>
@@ -1458,6 +1636,17 @@ export const AdminCenter: React.FC<{ onViewChat?: (code: ActivationCode) => void
             setShowDeptConflict(false);
             setConflictDeptInfo(null);
             setAssigningCode(null);
+          }}
+        />
+      )}
+
+      {/* 分享工单弹框 */}
+      {showShareModal && sharingCode && (
+        <ShareWorkOrderModal
+          code={sharingCode}
+          onClose={() => {
+            setShowShareModal(false);
+            setSharingCode(null);
           }}
         />
       )}

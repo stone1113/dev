@@ -365,6 +365,20 @@ export interface AIEmployeeConfig {
   platformCapabilities: AIPlatformCapability[];
   // 激活的平台列表
   activePlatforms: string[];
+  // 激活码范围
+  activationCodeScope?: 'all' | 'custom';
+  activationCodeIds?: string[];
+  // 个性化配置
+  personaConfig?: AIPersonaConfig;
+  // 时间戳
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface AIPersonaConfig {
+  replyStyle?: 'formal' | 'friendly' | 'concise';
+  knowledgeBaseEnabled?: boolean;
+  scriptLibraryEnabled?: boolean;
 }
 
 export interface AIPlatformCapability {
