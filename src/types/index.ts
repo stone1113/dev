@@ -346,7 +346,7 @@ export interface KnowledgeDocument {
 }
 
 // AI员工人设模板
-export type AIPersonaTemplate = 'sales' | 'support' | 'brand';
+export type AIPersonaTemplate = string;
 
 // AI员工配置
 export interface AIEmployeeConfig {

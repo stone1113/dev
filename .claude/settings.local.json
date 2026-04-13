@@ -27,10 +27,16 @@
       "WebFetch(domain:github.com)",
       "Bash(git -C d:/dev log --oneline -10)",
       "mcp__figma__generate_figma_design",
-      "Bash(start:*)"
+      "Bash(start:*)",
+      "Bash(powershell -Command \"Get-Content ''docs/语料_part1_zh.csv'' | Select-Object -Skip 3500 -First 50\")",
+      "Bash(powershell -Command \"Get-Content ''docs/语料_part2_zh.csv'' | Select-Object -Skip 4000 -First 50\")",
+      "Bash(powershell -Command \"Get-Content ''docs/语料_part3_zh.csv'' | Select-Object -Skip 3500 -First 50\")",
+      "Bash(powershell -Command \"Get-Content ''docs/语料_part5_zh.csv'' | Select-Object -Skip 2500 -First 50\")",
+      "Bash(ipconfig)"
     ],
     "additionalDirectories": [
-      "C:\\Users\\11935\\.claude\\skills\\superpowers"
+      "C:\\Users\\11935\\.claude\\skills\\superpowers",
+      "d:\\dev"
     ]
   }
 }

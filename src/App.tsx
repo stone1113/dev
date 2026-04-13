@@ -12,6 +12,7 @@ import { ContactList } from '@/components/ContactList';
 import { LoginPage } from '@/components/LoginPage';
 import { AdminLayout } from '@/components/AdminLayout';
 import { AdminLoginPage } from '@/components/AdminLoginPage';
+import { SaasAdminLayout } from '@/components/SaasAdminLayout';
 import { SettingsPage } from '@/components/SettingsPage';
 import { AccessGate } from '@/components/AccessGate';
 import { platformConfigs } from '@/data/mockData';
@@ -82,6 +83,10 @@ function App() {
     return params.get('admin') === 'true';
   });
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [showSaas, setShowSaas] = useState(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('saas') === 'true';
+  });
 
   const [activeSection, setActiveSection] = useState('dashboard');
   const [showFilterPanel, setShowFilterPanel] = useState(false);
@@ -117,12 +122,17 @@ function App() {
 
   // 如果显示管理中心
   if (showAdminCenter) {
+    // 总控端
+    if (showSaas) {
+      return <SaasAdminLayout />;
+    }
     // 如果管理端未登录，显示管理端登录页面
     if (!isAdminLoggedIn) {
       return (
         <AdminLoginPage
           onLoginSuccess={() => setIsAdminLoggedIn(true)}
           onGoToClient={() => setShowAdminCenter(false)}
+          onGoToSaas={() => setShowSaas(true)}
         />
       );
     }

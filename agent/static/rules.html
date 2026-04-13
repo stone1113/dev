@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChatBiz Agent - 规则与逻辑</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: #f5f7fa; color: #333; }
+
+  /* 顶部导航 */
+  .topbar { background: #fff; border-bottom: 1px solid #e2e8f0; padding: 0 24px; display: flex; align-items: center; height: 56px; position: sticky; top: 0; z-index: 100; }
+  .topbar h1 { font-size: 18px; margin-right: 32px; }
+  .topbar a { color: #666; text-decoration: none; padding: 16px 12px; font-size: 14px; border-bottom: 2px solid transparent; transition: all 0.2s; }
+  .topbar a:hover { color: #3b82f6; }
+  .topbar a.active { color: #3b82f6; border-bottom-color: #3b82f6; font-weight: 600; }
+  .topbar .back { margin-left: auto; color: #3b82f6; font-size: 13px; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 24px; }
+
+  /* Tab内容 */
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* 阶段选择 */
+  .phase-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+  .phase-tab { padding: 8px 20px; border: 1px solid #e2e8f0; border-radius: 20px; background: #fff; cursor: pointer; font-size: 14px; transition: all 0.15s; }
+  .phase-tab:hover { border-color: #3b82f6; }
+  .phase-tab.active { background: #3b82f6; color: #fff; border-color: #3b82f6; }
+
+  /* 卡片 */
+  .card { background: #fff; border-radius: 12px; padding: 20px; margin-bottom: 16px; box-shadow: 0 1px 8px rgba(0,0,0,0.05); }
+  .card h3 { font-size: 15px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .card-desc { font-size: 13px; color: #888; margin-bottom: 16px; line-height: 1.6; }
+
+  /* 意图树 */
+  .intent-tree { }
+  .intent-group { margin-bottom: 12px; border: 1px solid #f0f0f0; border-radius: 8px; overflow: hidden; }
+  .intent-group-header { padding: 12px 16px; background: #f8fafc; cursor: pointer; display: flex; align-items: center; justify-content: space-between; font-weight: 600; font-size: 14px; }
+  .intent-group-header:hover { background: #f0f4ff; }
+  .intent-group-header .arrow { transition: transform 0.2s; font-size: 12px; color: #999; }
+  .intent-group-header.open .arrow { transform: rotate(90deg); }
+  .intent-group-body { display: none; padding: 0 16px 12px; }
+  .intent-group-body.open { display: block; }
+  .intent-item { padding: 10px 0; border-bottom: 1px solid #f5f5f5; }
+  .intent-item:last-child { border-bottom: none; }
+  .intent-name { font-size: 13px; font-weight: 600; color: #1a1a1a; }
+  .intent-id { font-size: 11px; color: #aaa; margin-left: 8px; font-family: monospace; }
+  .intent-keywords { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .kw { font-size: 11px; padding: 2px 8px; background: #eff6ff; color: #3b82f6; border-radius: 8px; }
+
+  /* 策略规则 */
+  .strategy-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .strategy-table th { text-align: left; padding: 10px 12px; background: #f8fafc; border-bottom: 2px solid #e2e8f0; font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 0.5px; }
+  .strategy-table td { padding: 10px 12px; border-bottom: 1px solid #f5f5f5; vertical-align: top; }
+  .strategy-table tr:hover td { background: #fafbff; }
+  .badge-sm { font-size: 10px; padding: 2px 6px; border-radius: 6px; color: #fff; font-weight: 500; }
+  .badge-transfer { background: #ef4444; }
+  .badge-block { background: #f59e0b; }
+  .badge-marketing { background: #22c55e; }
+  .badge-urgent { background: #dc2626; }
+  .badge-high { background: #f97316; }
+  .badge-medium { background: #3b82f6; }
+  .badge-low { background: #9ca3af; }
+  .cond-list { list-style: none; font-size: 12px; color: #666; }
+  .cond-list li { margin-bottom: 2px; }
+  .cond-list li::before { content: "IF "; color: #7c3aed; font-weight: 600; font-size: 10px; }
+
+  /* 改写规则 */
+  .rewrite-card { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 10px; border: 1px solid #f0f0f0; }
+  .rewrite-label { font-size: 11px; color: #999; margin-bottom: 4px; }
+  .rewrite-val { font-size: 13px; }
+
+  /* 回复模板 */
+  .reply-group { margin-bottom: 16px; }
+  .reply-group-title { font-size: 13px; font-weight: 600; color: #1a1a1a; padding: 8px 0; border-bottom: 1px solid #f0f0f0; margin-bottom: 8px; }
+  .reply-item { display: flex; gap: 12px; padding: 8px 0; border-bottom: 1px solid #f8f8f8; }
+  .reply-item:last-child { border-bottom: none; }
+  .reply-intent { font-size: 12px; color: #7c3aed; background: #f5f3ff; padding: 2px 8px; border-radius: 6px; white-space: nowrap; min-width: 120px; text-align: center; height: fit-content; margin-top: 2px; }
+  .reply-msg { font-size: 13px; line-height: 1.6; color: #444; }
+
+  /* 提示词 */
+  .prompt-box { background: #1e293b; color: #e2e8f0; border-radius: 8px; padding: 16px; font-family: "Cascadia Code", "Fira Code", monospace; font-size: 13px; line-height: 1.8; white-space: pre-wrap; word-break: break-all; margin-bottom: 16px; }
+  .prompt-label { font-size: 12px; color: #fff; background: #7c3aed; display: inline-block; padding: 2px 10px; border-radius: 6px 6px 0 0; margin-bottom: -1px; position: relative; z-index: 1; }
+
+  /* 实体词典 */
+  .dict-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+  .dict-item { font-size: 12px; padding: 6px 10px; background: #f8fafc; border-radius: 6px; border: 1px solid #f0f0f0; }
+  .dict-item .from { color: #999; }
+  .dict-item .to { color: #1a1a1a; font-weight: 500; }
+
+  /* 统计 */
+  .stats { display: flex; gap: 16px; margin-bottom: 20px; }
+  .stat-item { background: #fff; border-radius: 10px; padding: 16px 20px; flex: 1; text-align: center; box-shadow: 0 1px 6px rgba(0,0,0,0.04); }
+  .stat-num { font-size: 28px; font-weight: 700; color: #3b82f6; }
+  .stat-label { font-size: 12px; color: #999; margin-top: 4px; }
+
+  /* 流程图 */
+  .flow { display: flex; align-items: center; gap: 8px; padding: 20px 0; overflow-x: auto; }
+  .flow-step { background: #fff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 14px 18px; text-align: center; min-width: 120px; transition: all 0.2s; }
+  .flow-step:hover { border-color: #3b82f6; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(59,130,246,0.15); }
+  .flow-step .step-num { font-size: 11px; color: #3b82f6; font-weight: 700; }
+  .flow-step .step-name { font-size: 14px; font-weight: 600; margin-top: 4px; }
+  .flow-step .step-desc { font-size: 11px; color: #888; margin-top: 4px; }
+  .flow-arrow { font-size: 18px; color: #ccc; flex-shrink: 0; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>ChatBiz Agent</h1>
+  <a href="/" id="navTest">测试面板</a>
+  <a href="/static/rules.html" id="navRules" class="active">规则与逻辑</a>
+  <a href="/docs" id="navDocs">API 文档</a>
+  <a class="back" href="/">返回测试</a>
+</div>
+
+<div class="container">
+
+  <!-- 处理流程图 -->
+  <div class="card" style="margin-bottom: 24px;">
+    <h3>Agent 处理流程</h3>
+    <p class="card-desc">每条客户消息经过以下 8 步处理，生成完整分析结果和建议回复。</p>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="step-num">STEP 1</div>
+        <div class="step-name">阶段路由</div>
+        <div class="step-desc">根据订单状态<br>分配售前/售中/售后</div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step">
+        <div class="step-num">STEP 2</div>
+        <div class="step-name">意图识别</div>
+        <div class="step-desc">关键词匹配<br>18大类 60+子意图</div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step">
+        <div class="step-num">STEP 3</div>
+        <div class="step-name">LLM 兜底</div>
+        <div class="step-desc">置信度低时<br>调用 DeepSeek</div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step">
+        <div class="step-num">STEP 4</div>
+        <div class="step-name">Query 改写</div>
+        <div class="step-desc">规范化表达<br>指代消解+实体提取</div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step" style="border-color: #10b981; background: #f0fdf4;">
+        <div class="step-num" style="color: #10b981;">STEP 5</div>
+        <div class="step-name" style="color: #10b981;">知识库查询</div>
+        <div class="step-desc">产品/物流/政策<br>5产品+4快递+10政策</div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step">
+        <div class="step-num">STEP 6</div>
+        <div class="step-name">策略评估</div>
+        <div class="step-desc">转人工/拦截/营销<br>62条策略规则</div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step">
+        <div class="step-num">STEP 7</div>
+        <div class="step-name">会话打标</div>
+        <div class="step-desc">自动标签<br>AI画像</div>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step">
+        <div class="step-num">STEP 8</div>
+        <div class="step-name">生成回复</div>
+        <div class="step-desc">模板优先<br>LLM兜底</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 统计概览 -->
+  <div class="stats" id="statsBar">
+    <div class="stat-item"><div class="stat-num" id="statIntents">-</div><div class="stat-label">意图分类</div></div>
+    <div class="stat-item"><div class="stat-num" id="statStrategies">-</div><div class="stat-label">策略规则</div></div>
+    <div class="stat-item"><div class="stat-num" id="statRewrites">-</div><div class="stat-label">改写规则</div></div>
+    <div class="stat-item"><div class="stat-num" id="statReplies">-</div><div class="stat-label">回复模板</div></div>
+    <div class="stat-item"><div class="stat-num" style="color: #10b981;">19</div><div class="stat-label">知识库条目</div></div>
+  </div>
+
+  <!-- Tab 导航 -->
+  <div class="phase-tabs" style="margin-bottom: 0;">
+    <div class="phase-tab active" onclick="switchTab('intents')">意图分类树</div>
+    <div class="phase-tab" onclick="switchTab('strategies')">策略规则</div>
+    <div class="phase-tab" onclick="switchTab('rewrites')">改写规则</div>
+    <div class="phase-tab" onclick="switchTab('replies')">回复模板</div>
+    <div class="phase-tab" onclick="switchTab('prompts')">LLM 提示词</div>
+    <div class="phase-tab" onclick="switchTab('entities')">实体词典</div>
+    <div class="phase-tab" onclick="switchTab('knowledge')" style="color: #10b981; border-color: #10b981;">知识库</div>
+  </div>
+
+  <!-- 阶段筛选 -->
+  <div style="margin: 16px 0; display: flex; gap: 8px;">
+    <button class="phase-tab active" onclick="switchPhase('all')" data-phase="all">全部</button>
+    <button class="phase-tab" onclick="switchPhase('pre_sales')" data-phase="pre_sales">售前</button>
+    <button class="phase-tab" onclick="switchPhase('in_sales')" data-phase="in_sales">售中</button>
+    <button class="phase-tab" onclick="switchPhase('after_sales')" data-phase="after_sales">售后</button>
+  </div>
+
+  <!-- 意图分类树 -->
+  <div class="tab-content active" id="tab-intents"></div>
+
+  <!-- 策略规则 -->
+  <div class="tab-content" id="tab-strategies"></div>
+
+  <!-- 改写规则 -->
+  <div class="tab-content" id="tab-rewrites"></div>
+
+  <!-- 回复模板 -->
+  <div class="tab-content" id="tab-replies"></div>
+
+  <!-- LLM 提示词 -->
+  <div class="tab-content" id="tab-prompts"></div>
+
+  <!-- 实体词典 -->
+  <div class="tab-content" id="tab-entities"></div>
+
+  <!-- 知识库 -->
+  <div class="tab-content" id="tab-knowledge"></div>
+
+</div>
+
+<script>
+const API = 'http://localhost:8000';
+const PHASE_ZH = { pre_sales: '售前', in_sales: '售中', after_sales: '售后' };
+const TYPE_ZH = { transfer_human: '转人工', block_spam: '拦截广告', marketing_conversion: '营销转化' };
+
+let allData = {};
+let currentTab = 'intents';
+let currentPhase = 'all';
+
+// ─── 数据加载 ───
+async function loadAll() {
+  const [intents, strategies, rewrites, replies, prompts] = await Promise.all([
+    fetch(API + '/api/rules/intents').then(r => r.json()),
+    fetch(API + '/api/rules/strategies').then(r => r.json()),
+    fetch(API + '/api/rules/rewrites').then(r => r.json()),
+    fetch(API + '/api/rules/replies').then(r => r.json()),
+    Promise.all(['pre_sales','in_sales','after_sales'].map(p =>
+      fetch(API + '/api/rules/prompts?phase=' + p).then(r => r.json())
+    )),
+  ]);
+  allData = { intents, strategies, rewrites, replies, prompts };
+
+  // 统计
+  let intentCount = 0;
+  for (const phase of Object.values(intents)) {
+    for (const p of (phase.children || [])) {
+      intentCount += (p.children || []).length;
+    }
+  }
+  document.getElementById('statIntents').textContent = intentCount;
+  document.getElementById('statStrategies').textContent = strategies.total;
+  document.getElementById('statRewrites').textContent = rewrites.total;
+
+  let replyCount = 0;
+  for (const phase of Object.values(replies.templates)) {
+    for (const group of Object.values(phase)) {
+      replyCount += Object.keys(group).length;
+    }
+  }
+  document.getElementById('statReplies').textContent = replyCount;
+
+  renderAll();
+}
+
+// ─── Tab 切换 ───
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  // 更新Tab样式
+  const tabs = document.querySelectorAll('.phase-tabs:first-of-type .phase-tab');
+  tabs.forEach(el => el.classList.remove('active'));
+  tabs.forEach(el => { if (el.textContent.includes(getTabLabel(tab))) el.classList.add('active'); });
+  renderAll();
+}
+
+function getTabLabel(tab) {
+  const map = { intents: '意图', strategies: '策略', rewrites: '改写', replies: '回复', prompts: 'LLM', entities: '实体', knowledge: '知识库' };
+  return map[tab] || '';
+}
+
+function switchPhase(phase) {
+  currentPhase = phase;
+  document.querySelectorAll('[data-phase]').forEach(el => {
+    el.classList.toggle('active', el.dataset.phase === phase);
+  });
+  renderAll();
+}
+
+// ─── 渲染 ───
+function renderAll() {
+  renderIntents();
+  renderStrategies();
+  renderRewrites();
+  renderReplies();
+  renderPrompts();
+  renderEntities();
+  renderKnowledge();
+}
+
+function filterPhases() {
+  if (currentPhase === 'all') return ['pre_sales', 'in_sales', 'after_sales'];
+  return [currentPhase];
+}
+
+// 意图树
+function renderIntents() {
+  const el = document.getElementById('tab-intents');
+  const data = allData.intents || {};
+  let html = '';
+  for (const phase of filterPhases()) {
+    const tree = data[phase];
+    if (!tree) continue;
+    html += `<div class="card"><h3>${PHASE_ZH[phase]}阶段 - 意图分类树</h3><div class="intent-tree">`;
+    for (const primary of (tree.children || [])) {
+      const childCount = (primary.children || []).length;
+      html += `<div class="intent-group">
+        <div class="intent-group-header" onclick="toggleGroup(this)">
+          <span>${primary.name_zh} <span class="intent-id">${primary.id}</span> <span style="color:#aaa; font-size:12px;">(${childCount}个子意图)</span></span>
+          <span class="arrow">&#9654;</span>
+        </div>
+        <div class="intent-group-body">`;
+      for (const sec of (primary.children || [])) {
+        html += `<div class="intent-item">
+          <span class="intent-name">${sec.name_zh}</span><span class="intent-id">${sec.id}</span>
+          <div class="intent-keywords">${(sec.keywords || []).map(k => `<span class="kw">${k}</span>`).join('')}</div>
+        </div>`;
+      }
+      html += `</div></div>`;
+    }
+    html += `</div></div>`;
+  }
+  el.innerHTML = html;
+}
+
+// 策略规则
+function renderStrategies() {
+  const el = document.getElementById('tab-strategies');
+  const rules = (allData.strategies || {}).rules || [];
+  const phases = filterPhases();
+  const filtered = rules.filter(r => phases.includes(r.agent_phase));
+
+  // 按类型分组
+  const groups = {};
+  for (const r of filtered) {
+    const t = r.strategy_type;
+    if (!groups[t]) groups[t] = [];
+    groups[t].push(r);
+  }
+
+  let html = '';
+  for (const [type, items] of Object.entries(groups)) {
+    const badgeClass = type === 'transfer_human' ? 'badge-transfer' : type === 'block_spam' ? 'badge-block' : 'badge-marketing';
+    html += `<div class="card"><h3>${TYPE_ZH[type] || type} <span class="badge-sm ${badgeClass}">${items.length}条</span></h3>
+    <table class="strategy-table"><thead><tr>
+      <th style="width:60px">ID</th><th style="width:60px">阶段</th><th>触发条件</th><th>执行动作</th><th style="width:60px">优先级</th>
+    </tr></thead><tbody>`;
+    for (const r of items.sort((a,b) => b.priority - a.priority)) {
+      const priClass = r.action.priority === 'urgent' ? 'badge-urgent' : r.action.priority === 'high' ? 'badge-high' : r.action.priority === 'medium' ? 'badge-medium' : 'badge-low';
+      html += `<tr>
+        <td style="font-family:monospace; font-size:11px;">${r.id}</td>
+        <td><span style="font-size:12px;">${PHASE_ZH[r.agent_phase]}</span></td>
+        <td><ul class="cond-list">${r.conditions.map(c =>
+          `<li>${c.field} ${c.operator} "${c.value}"</li>`
+        ).join('')}</ul></td>
+        <td><span class="badge-sm ${priClass}">${r.action.priority}</span> ${r.action.reason}</td>
+        <td style="text-align:center; font-weight:600;">${r.priority}</td>
+      </tr>`;
+    }
+    html += `</tbody></table></div>`;
+  }
+  el.innerHTML = html || '<div class="card">无匹配规则</div>';
+}
+
+// 改写规则
+function renderRewrites() {
+  const el = document.getElementById('tab-rewrites');
+  const rules = (allData.rewrites || {}).rules || [];
+  const phases = filterPhases();
+  const filtered = rules.filter(r => phases.includes(r.phase));
+
+  let html = `<div class="card"><h3>Query 改写规则 <span style="color:#aaa; font-size:13px;">(${filtered.length}条)</span></h3>
+  <p class="card-desc">当客户消息匹配关键词时，将查询改写为标准化格式，便于后续处理。</p>`;
+  for (const r of filtered) {
+    html += `<div class="rewrite-card">
+      <div><div class="rewrite-label">阶段 / ID</div><div class="rewrite-val">${PHASE_ZH[r.phase]} / <code>${r.id}</code></div></div>
+      <div><div class="rewrite-label">匹配关键词</div><div class="rewrite-val">${(r.keywords || []).map(k => `<span class="kw">${k}</span>`).join(' ')}</div></div>
+      <div><div class="rewrite-label">改写模板</div><div class="rewrite-val" style="color:#7c3aed;">${r.rewrite_template}</div></div>
+      <div><div class="rewrite-label">提取实体</div><div class="rewrite-val">${Object.entries(r.extract_entities || {}).map(([k,v]) => `${k}=${v}`).join(', ') || '无'}</div></div>
+    </div>`;
+  }
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+// 回复模板
+function renderReplies() {
+  const el = document.getElementById('tab-replies');
+  const templates = (allData.replies || {}).templates || {};
+  const phases = filterPhases();
+
+  let html = '';
+  for (const phase of phases) {
+    const phaseData = templates[phase] || {};
+    html += `<div class="card"><h3>${PHASE_ZH[phase]}阶段 - 回复模板</h3>`;
+    for (const [primary, items] of Object.entries(phaseData)) {
+      html += `<div class="reply-group"><div class="reply-group-title">${primary}</div>`;
+      for (const [intent, msg] of Object.entries(items)) {
+        html += `<div class="reply-item">
+          <span class="reply-intent">${intent}</span>
+          <span class="reply-msg">${msg}</span>
+        </div>`;
+      }
+      html += `</div>`;
+    }
+    html += `</div>`;
+  }
+  el.innerHTML = html;
+}
+
+// LLM 提示词
+function renderPrompts() {
+  const el = document.getElementById('tab-prompts');
+  const prompts = allData.prompts || [];
+  const phases = filterPhases();
+
+  let html = `<div class="card">
+    <h3>LLM 提示词模板</h3>
+    <p class="card-desc">当规则引擎置信度低于阈值(30%)时，使用以下提示词调用 DeepSeek API 进行 LLM 兜底。包含意图分类和回复生成两种提示词。</p>`;
+
+  for (const p of prompts) {
+    if (!phases.includes(p.phase)) continue;
+    html += `<div style="margin-bottom: 24px;">
+      <h3 style="margin-bottom:12px;">${PHASE_ZH[p.phase]}阶段</h3>
+      <div><span class="prompt-label">意图分类提示词</span><div class="prompt-box">${escapeHtml(p.classify_prompt)}</div></div>
+      <div><span class="prompt-label">回复生成提示词</span><div class="prompt-box">${escapeHtml(p.reply_prompt)}</div></div>
+    </div>`;
+  }
+  html += `</div>`;
+  el.innerHTML = html;
+}
+
+// 实体词典
+function renderEntities() {
+  const el = document.getElementById('tab-entities');
+  const norm = (allData.rewrites || {}).entity_normalization || {};
+
+  let html = '';
+  const catZh = { brand: '品牌', material: '材质', product_type: '产品类型', size: '尺寸' };
+  for (const [cat, items] of Object.entries(norm)) {
+    html += `<div class="card"><h3>${catZh[cat] || cat} 归一化词典 <span style="color:#aaa; font-size:13px;">(${Object.keys(items).length}个)</span></h3>
+    <p class="card-desc">将客户使用的口语化表达归一化为标准名称，用于实体提取。</p>
+    <div class="dict-grid">`;
+    for (const [from, to] of Object.entries(items)) {
+      html += `<div class="dict-item"><span class="from">${from}</span> &rarr; <span class="to">${to}</span></div>`;
+    }
+    html += `</div></div>`;
+  }
+  el.innerHTML = html;
+}
+
+// 知识库
+function renderKnowledge() {
+  const el = document.getElementById('tab-knowledge');
+
+  let html = `<div class="card">
+    <h3>📦 产品知识库 <span style="color:#aaa; font-size:13px;">(5个产品)</span></h3>
+    <p class="card-desc">跨境珠宝电商产品信息，包含品牌、材质、尺寸、价格等详细信息。</p>
+    <div style="display: grid; gap: 12px;">
+      <div style="padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <div style="font-weight: 600; margin-bottom: 8px;">🔗 Love Bracelet (Love手镯) - Cartier</div>
+        <div style="font-size: 13px; color: #666; line-height: 1.6;">
+          材质: 14K_Gold, 18K_Gold, Sterling_Silver<br>
+          尺寸: 15cm, 16cm, 17cm, 18cm, 19cm<br>
+          价格: 14K金 $35-60, 18K金 $65-120<br>
+          尺寸建议: 手镯建议选比手腕围度大1cm的
+        </div>
+      </div>
+      <div style="padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <div style="font-weight: 600; margin-bottom: 8px;">🍀 Alhambra Bracelet (四叶草手链) - Van Cleef & Arpels</div>
+        <div style="font-size: 13px; color: #666; line-height: 1.6;">
+          材质: 14K_Gold, 18K_Gold, Sterling_Silver<br>
+          尺寸: 16cm, 17cm, 18cm, 19cm<br>
+          价格: 14K金 $30-55, 18K金 $60-110
+        </div>
+      </div>
+      <div style="padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <div style="font-weight: 600; margin-bottom: 8px;">🍀 Alhambra Necklace (四叶草项链) - Van Cleef & Arpels</div>
+        <div style="font-size: 13px; color: #666; line-height: 1.6;">
+          材质: 14K_Gold, 18K_Gold, Sterling_Silver<br>
+          尺寸: 40cm, 42cm, 45cm, 50cm<br>
+          价格: 14K金 $35-65, 18K金 $70-140
+        </div>
+      </div>
+      <div style="padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <div style="font-weight: 600; margin-bottom: 8px;">💅 Juste un Clou (钉子手镯) - Cartier</div>
+        <div style="font-size: 13px; color: #666; line-height: 1.6;">
+          材质: 14K_Gold, 18K_Gold, Sterling_Silver<br>
+          尺寸: 15cm, 16cm, 17cm, 18cm, 19cm<br>
+          价格: 14K金 $40-65, 18K金 $75-130
+        </div>
+      </div>
+      <div style="padding: 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+        <div style="font-weight: 600; margin-bottom: 8px;">🐍 Serpenti Necklace (蛇骨项链) - Bulgari</div>
+        <div style="font-size: 13px; color: #666; line-height: 1.6;">
+          材质: 14K_Gold, 18K_Gold, Sterling_Silver<br>
+          尺寸: 40cm, 42cm, 45cm<br>
+          价格: 14K金 $50-90, 18K金 $80-160
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🚚 物流知识库 <span style="color:#aaa; font-size:13px;">(4个快递)</span></h3>
+    <p class="card-desc">跨境物流信息，包含发货地、快递公司、时效、区域等。</p>
+    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px;">
+      <div style="padding: 12px; background: #fef3c7; border-radius: 8px;">
+        <div style="font-weight: 600; margin-bottom: 4px;">FedEx 联邦快递</div>
+        <div style="font-size: 12px; color: #666;">时效: 7-12个工作日</div>
+      </div>
+      <div style="padding: 12px; background: #fef3c7; border-radius: 8px;">
+        <div style="font-weight: 600; margin-bottom: 4px;">UPS</div>
+        <div style="font-size: 12px; color: #666;">时效: 7-15个工作日</div>
+      </div>
+      <div style="padding: 12px; background: #fef3c7; border-radius: 8px;">
+        <div style="font-weight: 600; margin-bottom: 4px;">EMS</div>
+        <div style="font-size: 12px; color: #666;">时效: 10-20个工作日</div>
+      </div>
+      <div style="padding: 12px; background: #fef3c7; border-radius: 8px;">
+        <div style="font-weight: 600; margin-bottom: 4px;">DHL</div>
+        <div style="font-size: 12px; color: #666;">时效: 5-10个工作日</div>
+      </div>
+    </div>
+    <div style="margin-top: 12px; padding: 12px; background: #f0fdf4; border-radius: 8px; font-size: 13px;">
+      <strong>发货地:</strong> 中国（广州/深圳）<br>
+      <strong>包邮门槛:</strong> $200<br>
+      <strong>区域时效:</strong> 美国7-12天 | 欧洲10-15天 | 中东10-15天 | 亚洲5-10天
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📋 政策知识库 <span style="color:#aaa; font-size:13px;">(10条政策)</span></h3>
+    <p class="card-desc">跨境电商售后政策，基于真实数据集提炼。</p>
+    <div style="display: grid; gap: 8px;">
+      <div style="padding: 10px; background: #fef2f2; border-left: 3px solid #ef4444; font-size: 13px;">
+        <strong>退货政策:</strong> 跨境退货运费高昂，一般不支持退货退款
+      </div>
+      <div style="padding: 10px; background: #f0fdf4; border-left: 3px solid #22c55e; font-size: 13px;">
+        <strong>质量问题:</strong> 提供照片/视频证明后，重新免费发货或赠送等值优惠券
+      </div>
+      <div style="padding: 10px; background: #f0fdf4; border-left: 3px solid #22c55e; font-size: 13px;">
+        <strong>尺寸问题:</strong> 首次可补偿$10-20优惠券用于下次购买正确尺寸
+      </div>
+      <div style="padding: 10px; background: #eff6ff; border-left: 3px solid #3b82f6; font-size: 13px;">
+        <strong>取消政策:</strong> 未发货前取消免费，已发货无法取消
+      </div>
+      <div style="padding: 10px; background: #eff6ff; border-left: 3px solid #3b82f6; font-size: 13px;">
+        <strong>补偿方案:</strong> 一般问题补偿$10-30优惠券（根据订单金额）
+      </div>
+      <div style="padding: 10px; background: #f0fdf4; border-left: 3px solid #10b981; font-size: 13px;">
+        <strong>重新发货:</strong> 严重质量问题免费重新发货
+      </div>
+      <div style="padding: 10px; background: #fef3c7; border-left: 3px solid #f59e0b; font-size: 13px;">
+        <strong>质保期:</strong> 产品享有6个月质保，质保期内质量问题免费补发
+      </div>
+      <div style="padding: 10px; background: #eff6ff; border-left: 3px solid #3b82f6; font-size: 13px;">
+        <strong>质检流程:</strong> 发货前提供质检照片/视频给客户确认
+      </div>
+      <div style="padding: 10px; background: #fef2f2; border-left: 3px solid #ef4444; font-size: 13px;">
+        <strong>退货运费:</strong> 客户承担退货运费和关税，收到后退70%
+      </div>
+      <div style="padding: 10px; background: #fef3c7; border-left: 3px solid #f59e0b; font-size: 13px;">
+        <strong>争议升级:</strong> 客户坚持退货转主管评估，特殊情况可协商部分退款
+      </div>
+    </div>
+  </div>`;
+
+  el.innerHTML = html;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function toggleGroup(header) {
+  header.classList.toggle('open');
+  header.nextElementSibling.classList.toggle('open');
+}
+
+loadAll();
+</script>
+</body>
+</html>

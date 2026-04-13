@@ -31,7 +31,8 @@ import {
   mockDepartments,
   mockActivationCodes,
   mockAILabelGroups,
-  mockAILabels
+  mockAILabels,
+  mockAIEmployees
 } from '@/data/mockData';
 
 // 应用状态接口
@@ -708,7 +709,7 @@ export const useStore = create<AppState>()(
       setCurrentLanguage: (lang) => set({ currentLanguage: lang }),
       
       // AI员工配置
-      aiEmployees: [],
+      aiEmployees: mockAIEmployees,
       selectedAIEmployeeId: null,
       addAIEmployee: (employee) =>
         set((state) => ({

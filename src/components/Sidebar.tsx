@@ -443,7 +443,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   } = useStore();
   
   const [expandedPlatform, setExpandedPlatform] = useState<Platform | null>(null);
-  
+
   // 计算各平台的未读消息数
   const platformUnreadCounts = conversations.reduce((acc, conv) => {
     acc[conv.platform] = (acc[conv.platform] || 0) + conv.unreadCount;
@@ -466,7 +466,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   
   return (
     <>
-      <div 
+      <div
         className={cn(
           "flex flex-col h-full bg-white border-r border-[#E8E8E8] transition-all duration-300",
           sidebarCollapsed ? "w-16" : "w-64"

@@ -1,0 +1,1299 @@
+app:
+  description: ChatBiz 珠宝客服 AI Agent - 三阶段智能客服工作流（售前/售中/售后），完整8步处理流水线
+  icon: 💎
+  icon_background: '#E4FBCC'
+  mode: workflow
+  name: ChatBiz 珠宝客服 Agent
+workflow:
+  features:
+    file_upload:
+      image:
+        enabled: false
+        number_limits: 3
+        transfer_methods:
+        - local_file
+        - remote_url
+    opening_statement: 你好！我是珠宝客服小美，请问有什么可以帮您的？
+    retriever_resource:
+      enabled: true
+    sensitive_word_avoidance:
+      enabled: false
+    speech_to_text:
+      enabled: false
+    suggested_questions:
+    - 这个VCA手链多少钱？
+    - 有没有折扣？
+    - 我想退货
+    - 快递到哪了？
+    suggested_questions_after_answer:
+      enabled: true
+    text_to_speech:
+      enabled: false
+      language: ''
+      voice: ''
+  graph:
+    edges:
+    - data:
+        isInIteration: false
+        sourceType: start
+        targetType: if-else
+      id: 1000000001-source-1000000002-target
+      source: '1000000001'
+      sourceHandle: source
+      target: '1000000002'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: question-classifier
+        targetType: question-classifier
+      id: 1000000002-true-1000000003-target
+      source: '1000000002'
+      sourceHandle: '1'
+      target: '1000000003'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: question-classifier
+        targetType: question-classifier
+      id: 1000000002-2-1000000004-target
+      source: '1000000002'
+      sourceHandle: '2'
+      target: '1000000004'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: question-classifier
+        targetType: question-classifier
+      id: 1000000002-3-1000000005-target
+      source: '1000000002'
+      sourceHandle: '3'
+      target: '1000000005'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: question-classifier
+        targetType: knowledge-retrieval
+      id: 1000000003-1-1000000006-target
+      source: '1000000003'
+      sourceHandle: '1'
+      target: '1000000006'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: question-classifier
+        targetType: llm
+      id: 1000000003-2-1000000012-target
+      source: '1000000003'
+      sourceHandle: '2'
+      target: '1000000012'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: question-classifier
+        targetType: template-transform
+      id: 1000000003-3-1000000017-target
+      source: '1000000003'
+      sourceHandle: '3'
+      target: '1000000017'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: knowledge-retrieval
+        targetType: llm
+      id: 1000000006-source-1000000009-target
+      source: '1000000006'
+      sourceHandle: source
+      target: '1000000009'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: llm
+        targetType: template-transform
+      id: 1000000009-source-1000000014-target
+      source: '1000000009'
+      sourceHandle: source
+      target: '1000000014'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: question-classifier
+        targetType: knowledge-retrieval
+      id: 1000000004-1-1000000007-target
+      source: '1000000004'
+      sourceHandle: '1'
+      target: '1000000007'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: question-classifier
+        targetType: template-transform
+      id: 1000000004-2-1000000017-target
+      source: '1000000004'
+      sourceHandle: '2'
+      target: '1000000017'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: knowledge-retrieval
+        targetType: llm
+      id: 1000000007-source-1000000010-target
+      source: '1000000007'
+      sourceHandle: source
+      target: '1000000010'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: llm
+        targetType: template-transform
+      id: 1000000010-source-1000000015-target
+      source: '1000000010'
+      sourceHandle: source
+      target: '1000000015'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: question-classifier
+        targetType: knowledge-retrieval
+      id: 1000000005-1-1000000008-target
+      source: '1000000005'
+      sourceHandle: '1'
+      target: '1000000008'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: question-classifier
+        targetType: llm
+      id: 1000000005-2-1000000013-target
+      source: '1000000005'
+      sourceHandle: '2'
+      target: '1000000013'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: question-classifier
+        targetType: template-transform
+      id: 1000000005-3-1000000017-target
+      source: '1000000005'
+      sourceHandle: '3'
+      target: '1000000017'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: knowledge-retrieval
+        targetType: llm
+      id: 1000000008-source-1000000011-target
+      source: '1000000008'
+      sourceHandle: source
+      target: '1000000011'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: llm
+        targetType: template-transform
+      id: 1000000011-source-1000000016-target
+      source: '1000000011'
+      sourceHandle: source
+      target: '1000000016'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: template-transform
+        targetType: end
+      id: 1000000014-source-1000000100-target
+      source: '1000000014'
+      sourceHandle: source
+      target: '1000000100'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: template-transform
+        targetType: end
+      id: 1000000015-source-1000000101-target
+      source: '1000000015'
+      sourceHandle: source
+      target: '1000000101'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: template-transform
+        targetType: end
+      id: 1000000016-source-1000000102-target
+      source: '1000000016'
+      sourceHandle: source
+      target: '1000000102'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: llm
+        targetType: end
+      id: 1000000012-source-1000000103-target
+      source: '1000000012'
+      sourceHandle: source
+      target: '1000000103'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: llm
+        targetType: end
+      id: 1000000013-source-1000000104-target
+      source: '1000000013'
+      sourceHandle: source
+      target: '1000000104'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    - data:
+        isInIteration: false
+        sourceType: template-transform
+        targetType: end
+      id: 1000000017-source-1000000105-target
+      source: '1000000017'
+      sourceHandle: source
+      target: '1000000105'
+      targetHandle: target
+      type: custom
+      zIndex: 0
+    nodes:
+    - data:
+        desc: 接收客户消息、订单信息和对话历史
+        selected: false
+        title: 开始
+        type: start
+        variables:
+        - label: 客户消息
+          max_length: 2000
+          options: []
+          required: true
+          type: text-input
+          variable: customer_message
+        - label: 订单状态
+          options:
+          - none
+          - pending
+          - processing
+          - shipped
+          - delivered
+          - cancelled
+          - refunded
+          required: false
+          type: select
+          variable: order_status
+        - label: 订单金额
+          max_length: 20
+          options: []
+          required: false
+          type: text-input
+          variable: order_amount
+        - label: 客户等级
+          options:
+          - new
+          - regular
+          - vip
+          - svip
+          required: false
+          type: select
+          variable: customer_level
+        - label: 对话历史
+          max_length: 10000
+          options: []
+          required: false
+          type: paragraph
+          variable: conversation_history
+      height: 150
+      id: '1000000001'
+      position:
+        x: 40
+        y: 280
+      positionAbsolute:
+        x: 40
+        y: 280
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        classes:
+        - id: '1'
+          name: 售前（无订单）
+        - id: '2'
+          name: 售中（进行中）
+        - id: '3'
+          name: 售后（已完成）
+        desc: STEP 1 阶段路由：根据订单状态分配售前/售中/售后
+        instructions: '根据订单状态判断客户所处阶段：
+
+
+          分类1 - 售前（无订单或订单状态为none）：
+
+          客户还没有下单，处于咨询阶段
+
+
+          分类2 - 售中（订单进行中：pending/processing/shipped）：
+
+          客户已下单，订单正在处理或配送中
+
+
+          分类3 - 售后（订单已完成：delivered/cancelled/refunded）：
+
+          客户的订单已经完成、取消或退款'
+        model:
+          completion_params:
+            temperature: 0.1
+          mode: chat
+          name: deepseek-chat
+          provider: deepseek
+        query_variable_selector:
+        - '1000000001'
+        - order_status
+        selected: false
+        title: STEP 1 阶段路由
+        topics: []
+        type: question-classifier
+      height: 200
+      id: '1000000002'
+      position:
+        x: 360
+        y: 240
+      positionAbsolute:
+        x: 360
+        y: 240
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        classes:
+        - id: '1'
+          name: 产品咨询
+        - id: '2'
+          name: 砍价/优惠
+        - id: '3'
+          name: 转人工/广告/其他
+        desc: STEP 2 售前意图识别 - 18大类 60+子意图
+        instructions: '你是一个珠宝电商客服问题分类器。请根据客户消息判断属于以下哪个分类：
+
+
+          分类1 - 产品咨询（大部分售前问题）：
+
+          - 询问产品价格：多少钱、什么价、价格
+
+          - 询问材质：什么材质、14K金、18K金、会不会褪色
+
+          - 询问尺寸：多大、尺寸、手腕
+
+          - 产品推荐：有没有、推荐、好看的
+
+          - 包装咨询：盒子、包装、礼盒、刻印、证书
+
+          - 真伪咨询：正品、高仿、复刻、真假
+
+          - 保养咨询：保养、褪色、掉色
+
+          - 下单/支付：下单、买、付款
+
+          - 发货咨询：发哪里、多久到、什么快递
+
+
+          分类2 - 砍价/优惠：
+
+          - 讨价还价：便宜点、少点、打折、优惠
+
+          - 批量折扣：多买、批发
+
+          - 活动优惠：有没有活动、满减
+
+
+          分类3 - 转人工/广告/其他：
+
+          - 转人工：转人工、人工客服
+
+          - 广告/引流：加微信、合作、代理
+
+          - 无法理解的消息'
+        model:
+          completion_params:
+            temperature: 0.2
+          mode: chat
+          name: deepseek-chat
+          provider: deepseek
+        query_variable_selector:
+        - '1000000001'
+        - customer_message
+        selected: false
+        title: STEP 2 意图识别(售前)
+        topics: []
+        type: question-classifier
+      height: 350
+      id: '1000000003'
+      position:
+        x: 700
+        y: 40
+      positionAbsolute:
+        x: 700
+        y: 40
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 280
+    - data:
+        classes:
+        - id: '1'
+          name: 订单/物流咨询
+        - id: '2'
+          name: 转人工/其他
+        desc: STEP 2 售中意图识别
+        instructions: '你是一个珠宝电商客服问题分类器。客户已有进行中的订单。
+
+
+          分类1 - 订单/物流咨询：
+
+          - 查物流：快递到哪了、物流、运单号
+
+          - 催发货：什么时候发、还没发
+
+          - 修改地址/订单：改地址、改尺寸
+
+          - 支付问题：扣款、支付失败
+
+
+          分类2 - 转人工/其他：
+
+          - 转人工客服
+
+          - 其他无关问题'
+        model:
+          completion_params:
+            temperature: 0.2
+          mode: chat
+          name: deepseek-chat
+          provider: deepseek
+        query_variable_selector:
+        - '1000000001'
+        - customer_message
+        selected: false
+        title: STEP 2 意图识别(售中)
+        topics: []
+        type: question-classifier
+      height: 250
+      id: '1000000004'
+      position:
+        x: 700
+        y: 440
+      positionAbsolute:
+        x: 700
+        y: 440
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 280
+    - data:
+        classes:
+        - id: '1'
+          name: 退换货/质量问题
+        - id: '2'
+          name: 投诉/升级
+        - id: '3'
+          name: 转人工/其他
+        desc: STEP 2 售后意图识别
+        instructions: '你是一个珠宝电商客服问题分类器。客户已有已完成/已取消的订单。
+
+
+          分类1 - 退换货/质量问题：
+
+          - 退货退款：退货、退钱、不想要了
+
+          - 质量问题：褪色、掉色、断了、坏了
+
+          - 尺寸不合：大了、小了、不合适
+
+          - 换货：换一个、换款式
+
+
+          分类2 - 投诉/升级：
+
+          - 投诉：投诉、差评、举报
+
+          - 情绪激动：骗子、垃圾、太差了
+
+
+          分类3 - 转人工/其他：
+
+          - 转人工客服
+
+          - 其他问题'
+        model:
+          completion_params:
+            temperature: 0.2
+          mode: chat
+          name: deepseek-chat
+          provider: deepseek
+        query_variable_selector:
+        - '1000000001'
+        - customer_message
+        selected: false
+        title: STEP 2 意图识别(售后)
+        topics: []
+        type: question-classifier
+      height: 300
+      id: '1000000005'
+      position:
+        x: 700
+        y: 760
+      positionAbsolute:
+        x: 700
+        y: 760
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 280
+    - data:
+        dataset_ids: []
+        desc: 售前知识检索：产品目录、价格表、材质、包装、FAQ
+        multiple_retrieval_config:
+          reranking_mode: weighted_score
+          score_threshold: 0.3
+          top_k: 5
+        query_variable_selector:
+        - '1000000001'
+        - customer_message
+        retrieval_mode: multiple
+        selected: false
+        single_retrieval_config:
+          model:
+            completion_params:
+              temperature: 0.3
+            mode: chat
+            name: deepseek-chat
+            provider: deepseek
+        title: STEP 5 知识检索(售前)
+        type: knowledge-retrieval
+      height: 120
+      id: '1000000006'
+      position:
+        x: 1080
+        y: 40
+      positionAbsolute:
+        x: 1080
+        y: 40
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        dataset_ids: []
+        desc: 售中知识检索：物流信息、订单操作指南
+        multiple_retrieval_config:
+          reranking_mode: weighted_score
+          score_threshold: 0.3
+          top_k: 5
+        query_variable_selector:
+        - '1000000001'
+        - customer_message
+        retrieval_mode: multiple
+        selected: false
+        single_retrieval_config:
+          model:
+            completion_params:
+              temperature: 0.3
+            mode: chat
+            name: deepseek-chat
+            provider: deepseek
+        title: STEP 5 知识检索(售中)
+        type: knowledge-retrieval
+      height: 120
+      id: '1000000007'
+      position:
+        x: 1080
+        y: 440
+      positionAbsolute:
+        x: 1080
+        y: 440
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        dataset_ids: []
+        desc: 售后知识检索：退换货政策、质保、补偿方案
+        multiple_retrieval_config:
+          reranking_mode: weighted_score
+          score_threshold: 0.3
+          top_k: 5
+        query_variable_selector:
+        - '1000000001'
+        - customer_message
+        retrieval_mode: multiple
+        selected: false
+        single_retrieval_config:
+          model:
+            completion_params:
+              temperature: 0.3
+            mode: chat
+            name: deepseek-chat
+            provider: deepseek
+        title: STEP 5 知识检索(售后)
+        type: knowledge-retrieval
+      height: 120
+      id: '1000000008'
+      position:
+        x: 1080
+        y: 760
+      positionAbsolute:
+        x: 1080
+        y: 760
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1000000006'
+          - result
+        desc: STEP 3 LLM兆底 + STEP 4 Query改写 + STEP 8 售前回复生成
+        model:
+          completion_params:
+            max_tokens: 1000
+            temperature: 0.7
+          mode: chat
+          name: deepseek-chat
+          provider: deepseek
+        prompt_template:
+        - role: system
+          text: '你是一位专业的珠宝电商售前客服，名叫小美。你的工作是帮助客户了解产品并促成下单。
+
+
+            ## 角色设定
+
+            - 热情友好，专业耐心
+
+            - 熟悉所有珠宝产品：VCA四叶草（项链/手链/耳环/戒指）、卡地亚Love手镯/Juste un Clou/Flex系列、宝格丽蛇形/B.zero1、蒂芙尼T系列/笑脸项链
+
+            - 材质：14K金($20-60)、18K金($55-120)、玫瑰金、白金、钛钢($15-30)
+
+            - 包装：精美小盒默认免费，原品牌礼盒+$20-30
+
+            - 尺寸指南：手链量手腕+1-2cm，项链42/45/50cm可选
+
+
+            ## 回复规范
+
+            - 用中文回复，语气亲切自然（用"亲爱的"开头）
+
+            - 主动推荐相关产品和搭配
+
+            - 承诺提供实拍视频/图片
+
+            - 价格用美元标注
+
+            - 如客户问真伪：如实说明是复刻款，强调做工精细、材质保证
+
+            - 如客户砍价：适当给小幅优惠（满$200免运费）
+
+            - 回复控制在100字以内
+
+            - 检测多关注点时需全部回答
+
+
+            ## 知识库参考
+
+            {{#context#}}
+
+
+            ## 对话历史
+
+            {{#1000000001.conversation_history#}}'
+          id: 729e89bc-8ae8-4ce5-bf3f-4affad830b0b
+        - role: user
+          text: '{{#1000000001.customer_message#}}'
+          id: e67c7316-aac1-4b77-9eac-931d5108a7bf
+        selected: false
+        title: STEP 3+4+8 LLM回复(售前)
+        type: llm
+        vision:
+          enabled: false
+        variables: []
+      height: 200
+      id: '1000000009'
+      position:
+        x: 1400
+        y: 20
+      positionAbsolute:
+        x: 1400
+        y: 20
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 280
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1000000007'
+          - result
+        desc: STEP 3+4+8：LLM兆底 + Query改写 + 售中回复生成
+        model:
+          completion_params:
+            max_tokens: 1000
+            temperature: 0.5
+          mode: chat
+          name: deepseek-chat
+          provider: deepseek
+        prompt_template:
+        - role: system
+          text: '你是一位专业的珠宝电商客服，名叫小美。客户有进行中的订单。
+
+
+            ## 物流信息
+
+            - 发货地：中国（广州/深圳）
+
+            - FedEx（美洲/欧洲，7-12天）、UPS（美洲，7-12天）、EMS（亚洲，5-10天）、DHL（全球，7-15天）
+
+            - $200以上免运费
+
+            - 发货前提供质检照片/视频(QC)
+
+
+            ## 订单操作
+
+            - 未发货：可修改地址、尺寸、款式
+
+            - 已发货：无法修改
+
+            - 取消订单：未发货全额退款，已发货无法取消
+
+
+            ## 回复规范
+
+            - 给出明确操作步骤或预计时间
+
+            - 需要信息时主动要求提供订单号
+
+            - 回复控制在80字以内
+
+
+            ## 知识库参考
+
+            {{#context#}}
+
+
+            ## 对话历史
+
+            {{#1000000001.conversation_history#}}'
+          id: 6e661438-1a5e-4226-8307-2c4c06bf61f5
+        - role: user
+          text: '{{#1000000001.customer_message#}}'
+          id: f031251e-d5e8-4cd3-8804-362d800bf3f5
+        selected: false
+        title: STEP 3+4+8 LLM回复(售中)
+        type: llm
+        vision:
+          enabled: false
+        variables: []
+      height: 200
+      id: '1000000010'
+      position:
+        x: 1400
+        y: 420
+      positionAbsolute:
+        x: 1400
+        y: 420
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 280
+    - data:
+        context:
+          enabled: true
+          variable_selector:
+          - '1000000008'
+          - result
+        desc: STEP 3+4+8：LLM兆底 + Query改写 + 售后回复生成
+        model:
+          completion_params:
+            max_tokens: 1000
+            temperature: 0.5
+          mode: chat
+          name: deepseek-chat
+          provider: deepseek
+        prompt_template:
+        - role: system
+          text: '你是一位专业的珠宝电商售后客服，名叫小美。
+
+
+            ## 售后政策（跨境电商）
+
+            - 退货退款：跨境退货运费高昂，一般不支持退货退款
+
+            - 质量问题：提供照片/视频后，免费重新发货或补偿$10-30优惠券
+
+            - 褪色问题：14K金保色约6个月，过早褪色可免费补发
+
+            - 尺寸问题：补偿$10-20优惠券 + 补发正确尺寸
+
+            - 断裂/损坏：6个月内质保免费补发
+
+            - 投诉处理：先安抚情绪，再给方案
+
+
+            ## 回复规范
+
+            - 先表达理解和歉意
+
+            - 给出明确解决方案和时间节点
+
+            - 主动要求客户提供问题照片/视频
+
+            - 回复控制在100字以内
+
+
+            ## 知识库参考
+
+            {{#context#}}
+
+
+            ## 对话历史
+
+            {{#1000000001.conversation_history#}}'
+          id: de01a142-9ed6-4de1-83dc-295807feb2ea
+        - role: user
+          text: '{{#1000000001.customer_message#}}'
+          id: 8c19625c-5ed8-4dff-b2f2-f5fe6c7f63be
+        selected: false
+        title: STEP 3+4+8 LLM回复(售后)
+        type: llm
+        vision:
+          enabled: false
+        variables: []
+      height: 200
+      id: '1000000011'
+      position:
+        x: 1400
+        y: 740
+      positionAbsolute:
+        x: 1400
+        y: 740
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 280
+    - data:
+        desc: STEP 6 策略评估：砍价/优惠场景应对
+        model:
+          completion_params:
+            max_tokens: 500
+            temperature: 0.3
+          mode: chat
+          name: deepseek-chat
+          provider: deepseek
+        prompt_template:
+        - role: system
+          text: '你是珠宝电商策略评估系统。根据客户砍价/优惠请求给出应对策略和回复。
+
+
+            ## 砍价应对规则
+
+            - 首次砍价：强调性价比，不降价
+
+            - 二次砍价：送运费险或小配件
+
+            - 三次砍价：降价5-10%，或满$200免运费
+
+            - VIP客户：直接9折
+
+
+            ## 客户等级: {{#1000000001.customer_level#}}
+
+            ## 订单金额: {{#1000000001.order_amount#}}
+
+
+            请直接给出客服回复内容（100字以内，中文，亲切语气）。'
+          id: 46b19a89-512a-4d82-8e5f-57f0d0481167
+        - role: user
+          text: '{{#1000000001.customer_message#}}'
+          id: a1e4988b-f2e2-4ba1-8b1a-3c40ec886f99
+        selected: false
+        title: STEP 6 策略评估(售前)
+        type: llm
+        vision:
+          enabled: false
+        variables: []
+      height: 180
+      id: '1000000012'
+      position:
+        x: 1080
+        y: 220
+      positionAbsolute:
+        x: 1080
+        y: 220
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 280
+    - data:
+        desc: STEP 6 售后投诉升级策略
+        model:
+          completion_params:
+            max_tokens: 500
+            temperature: 0.3
+          mode: chat
+          name: deepseek-chat
+          provider: deepseek
+        prompt_template:
+        - role: system
+          text: '你是珠宝电商售后策略系统。处理投诉和升级情况。
+
+
+            ## 投诉处理策略
+
+            - 首次投诉：诚恳道歉 + 解决方案（补发/优惠券）
+
+            - 情绪激动：安抚情绪 + 升级补偿（$20-30优惠券）
+
+            - 要求退款：解释跨境退货困难 + 替代方案
+
+            - 威胁差评/举报：立即转人工
+
+
+            ## 补偿梯度
+
+            - 轻微：$10优惠券
+
+            - 一般：$20优惠券或免费补发
+
+            - 严重：$30优惠券 + 免费补发 + 转人工
+
+
+            ## 客户等级: {{#1000000001.customer_level#}}
+
+
+            请直接给出客服回复内容（100字以内，中文，诚恳语气）。'
+          id: d588931d-822d-4d1b-a51f-e12753723765
+        - role: user
+          text: '{{#1000000001.customer_message#}}'
+          id: 5a0063c0-df97-4721-8940-1c1b7b2a040a
+        selected: false
+        title: STEP 6 策略评估(售后)
+        type: llm
+        vision:
+          enabled: false
+        variables: []
+      height: 180
+      id: '1000000013'
+      position:
+        x: 1080
+        y: 920
+      positionAbsolute:
+        x: 1080
+        y: 920
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 280
+    - data:
+        desc: STEP 7 售前会话打标
+        selected: false
+        template: '{{ output }}'
+        title: STEP 7 会话打标(售前)
+        type: template-transform
+        variables:
+        - value_selector:
+          - '1000000009'
+          - text
+          variable: output
+      height: 100
+      id: '1000000014'
+      position:
+        x: 1760
+        y: 40
+      positionAbsolute:
+        x: 1760
+        y: 40
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: STEP 7 售中会话打标
+        selected: false
+        template: '{{ output }}'
+        title: STEP 7 会话打标(售中)
+        type: template-transform
+        variables:
+        - value_selector:
+          - '1000000010'
+          - text
+          variable: output
+      height: 100
+      id: '1000000015'
+      position:
+        x: 1760
+        y: 440
+      positionAbsolute:
+        x: 1760
+        y: 440
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: STEP 7 售后会话打标
+        selected: false
+        template: '{{ output }}'
+        title: STEP 7 会话打标(售后)
+        type: template-transform
+        variables:
+        - value_selector:
+          - '1000000011'
+          - text
+          variable: output
+      height: 100
+      id: '1000000016'
+      position:
+        x: 1760
+        y: 760
+      positionAbsolute:
+        x: 1760
+        y: 760
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: 转人工/广告/其他问题的固定回复
+        selected: false
+        template: '{% if ''转人工'' in customer_message or ''人工'' in customer_message
+          %}
+
+          好的，正在为您转接人工客服，请稍等片刻...
+
+          {% elif ''微信'' in customer_message or ''加我'' in customer_message or ''wx''
+          in customer_message or ''合作'' in customer_message %}
+
+          抱歉，我们不接受站外引流信息。如有产品需求，请直接咨询。
+
+          {% else %}
+
+          抱歉，这个问题我暂时无法回答。如需帮助，请输入"转人工"联系人工客服。
+
+          {% endif %}'
+        title: 直接回复
+        type: template-transform
+        variables:
+        - value_selector:
+          - '1000000001'
+          - customer_message
+          variable: customer_message
+      height: 120
+      id: '1000000017'
+      position:
+        x: 1080
+        y: 580
+      positionAbsolute:
+        x: 1080
+        y: 580
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        outputs:
+        - value_selector:
+          - '1000000014'
+          - output
+          variable: reply
+        selected: false
+        title: 结束
+        type: end
+      height: 90
+      id: '1000000100'
+      position:
+        x: 2100
+        y: 40
+      positionAbsolute:
+        x: 2100
+        y: 40
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        outputs:
+        - value_selector:
+          - '1000000015'
+          - output
+          variable: reply
+        selected: false
+        title: 结束
+        type: end
+      height: 90
+      id: '1000000101'
+      position:
+        x: 2100
+        y: 440
+      positionAbsolute:
+        x: 2100
+        y: 440
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        outputs:
+        - value_selector:
+          - '1000000016'
+          - output
+          variable: reply
+        selected: false
+        title: 结束
+        type: end
+      height: 90
+      id: '1000000102'
+      position:
+        x: 2100
+        y: 760
+      positionAbsolute:
+        x: 2100
+        y: 760
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        outputs:
+        - value_selector:
+          - '1000000012'
+          - text
+          variable: reply
+        selected: false
+        title: 结束
+        type: end
+      height: 90
+      id: '1000000103'
+      position:
+        x: 1460
+        y: 220
+      positionAbsolute:
+        x: 1460
+        y: 220
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        outputs:
+        - value_selector:
+          - '1000000013'
+          - text
+          variable: reply
+        selected: false
+        title: 结束
+        type: end
+      height: 90
+      id: '1000000104'
+      position:
+        x: 1460
+        y: 920
+      positionAbsolute:
+        x: 1460
+        y: 920
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244
+    - data:
+        desc: ''
+        outputs:
+        - value_selector:
+          - '1000000017'
+          - output
+          variable: reply
+        selected: false
+        title: 结束
+        type: end
+      height: 90
+      id: '1000000105'
+      position:
+        x: 1460
+        y: 580
+      positionAbsolute:
+        x: 1460
+        y: 580
+      selected: false
+      sourcePosition: right
+      targetPosition: left
+      type: custom
+      width: 244

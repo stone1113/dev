@@ -25,6 +25,7 @@ import {
   Copy,
   Minus,
   Inbox,
+  MessageSquare,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStore } from '@/store/useStore';
@@ -844,12 +845,21 @@ const CodeActionButtons: React.FC<{
   onDisableConfirm: (code: ActivationCode) => void;
   onCopy: (code: ActivationCode) => void;
   onShare: (code: ActivationCode) => void;
-}> = ({ code, onToggle, onEdit, onAssignDept, onAssignAccount, onUnbind, onDisableConfirm, onCopy, onShare }) => {
+  onViewChat?: (code: ActivationCode) => void;
+}> = ({ code, onToggle, onEdit, onAssignDept, onAssignAccount, onUnbind, onDisableConfirm, onCopy, onShare, onViewChat }) => {
   const hasDepartment = !!code.departmentId;
   const hasAssignedAccounts = !!code.assignedTo;
 
   return (
     <div className="flex items-center gap-1">
+      <button
+        onClick={() => onViewChat?.(code)}
+        className="inline-flex items-center gap-1 px-2 py-1 text-xs text-blue-500 hover:bg-blue-50 rounded-md transition-colors whitespace-nowrap"
+        title="聊天记录"
+      >
+        <MessageSquare className="w-3.5 h-3.5" />
+        聊天记录
+      </button>
       <button
         onClick={() => onShare(code)}
         className="inline-flex items-center gap-1 px-2 py-1 text-xs text-green-600 hover:bg-green-50 rounded-md transition-colors whitespace-nowrap"
@@ -1456,6 +1466,7 @@ export const AdminCenter: React.FC<{ onViewChat?: (code: ActivationCode) => void
                               setSharingCode(code);
                               setShowShareModal(true);
                             }}
+                            onViewChat={onViewChat}
                           />
                         </td>
                       </tr>

@@ -48,9 +48,11 @@ import {
   GitBranch,
   Lock,
   Unlock,
+  FolderTree,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useStore } from '@/store/useStore';
+import type { Department } from '@/types';
 import { platformConfigs } from '@/data/mockData';
 import { AdminCenter } from './AdminCenter';
 import { AdminChatView } from './AdminChatView';
@@ -172,7 +174,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onBack }) => {
   };
 
   const handleGoToPersonaConfig = () => {
-    setActiveSection('ai-persona-config');
+    setActiveSection('ai-templates');
   };
 
   const handleBackToAIDetail = () => {
@@ -599,6 +601,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ onBack }) => {
 // ─── 管理端内容模板管理 ────────────────────────────────────────────────────────
 
 type AdminTemplateSubPage =
+  | 'persona-styles'
   | 'intent-single'
   | 'intent-group'
   | 'strategy-single'
@@ -743,10 +746,6 @@ function AdminPersonaTable() {
   const [styles, setStyles] = useState(adminMockPersonaStyles);
   const [selected, setSelected] = useState<number | null>(1);
 
-  const toggleEnabled = (id: number) => {
-    setStyles(prev => prev.map(p => p.id === id ? { ...p, enabled: !p.enabled } : p));
-  };
-
   const activeStyle = styles.find(p => p.id === selected);
   const unlockedCount = 14;
   const lockedCount = 6;
@@ -785,7 +784,7 @@ function AdminPersonaTable() {
             key={p.id}
             onClick={() => setSelected(p.id === selected ? null : p.id)}
             className={cn(
-              'relative rounded-xl border bg-white cursor-pointer transition-all overflow-hidden',
+              'relative rounded-xl border bg-white cursor-pointer transition-all overflow-hidden flex flex-col',
               selected === p.id
                 ? 'border-[#FF6B35] shadow-md shadow-orange-100 ring-1 ring-[#FF6B35]/20'
                 : 'border-gray-200 hover:border-gray-300 hover:shadow-sm'
@@ -844,15 +843,9 @@ function AdminPersonaTable() {
               ))}
             </div>
 
-            {/* 底部：场景 + 开关 */}
-            <div className="px-5 py-3 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
-              <span className="text-[11px] text-gray-400">{p.scope}</span>
-              <button
-                onClick={e => { e.stopPropagation(); toggleEnabled(p.id); }}
-                className={cn('relative inline-flex h-5 w-9 items-center rounded-full transition-colors', p.enabled ? 'bg-[#FF6B35]' : 'bg-gray-200')}
-              >
-                <span className={cn('inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform', p.enabled ? 'translate-x-4' : 'translate-x-0.5')} />
-              </button>
+            {/* 底部：场景 */}
+            <div className="mt-auto px-5 py-3 border-t border-gray-100 bg-gray-50/50">
+              <span className="text-xs text-gray-400">{p.scope}</span>
             </div>
           </div>
         ))}
@@ -1265,7 +1258,7 @@ function AdminTemplateSubPageContent({ page, selectedEmployee, activationCodes }
                   <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">{(r as any).matchRule}</td>
                 )}
                 <td className="px-4 py-3 text-xs text-gray-500 max-w-[200px] truncate">
-                  {isWelcome ? r.content : r.scripts[0]}
+                  {isWelcome ? (r as any).content : r.scripts[0]}
                 </td>
                 <td className="px-4 py-3">
                   <span className={cn(
@@ -1292,12 +1285,12 @@ function AdminTemplateSubPageContent({ page, selectedEmployee, activationCodes }
   );
 }
 
-const AdminTemplatesPage: React.FC = () => {
+const AdminTemplatesPage: React.FC<{ initialEmployeeId?: string | null }> = ({ initialEmployeeId }) => {
   const aiEmployees = useStore((s) => s.aiEmployees);
   const activationCodes = useStore((s) => s.activationCodes);
 
   // 选中的 AI员工 id，null = 通用
-  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(initialEmployeeId ?? null);
   const [showScopeDropdown, setShowScopeDropdown] = useState(false);
   const scopeDropdownRef = React.useRef<HTMLDivElement>(null);
 
@@ -1309,7 +1302,9 @@ const AdminTemplatesPage: React.FC = () => {
     ? adminTemplateScenes.filter(s => s.id === 'script' || s.id === 'keyword')
     : adminTemplateScenes;
 
-  const [activePage, setActivePage] = useState<AdminTemplateSubPage>('script-welcome');
+  const [activePage, setActivePage] = useState<AdminTemplateSubPage>(
+    initialEmployeeId ? 'persona-styles' : 'script-welcome'
+  );
   const [expandedScenes, setExpandedScenes] = useState<Set<string>>(new Set(adminTemplateScenes.map(s => s.id)));
 
   const handleSetEmployee = (id: string | null) => {
@@ -1472,6 +1467,7 @@ const AdminContent: React.FC<{
   onClearFilterRole: () => void;
   onViewRoleAccounts: (roleId: string) => void;
 }> = ({ section, onViewChat, auditCode, onClearAuditCode, detailCustomerId, onViewCustomerDetail, onBackToCustomerList, onViewAIEmployee, onBackToAIList, onGoToPersonaConfig, onBackToAIDetail, filterRoleId, onClearFilterRole, onViewRoleAccounts }) => {
+  const selectedAIEmployeeId = useStore((s) => s.selectedAIEmployeeId);
   switch (section) {
     case 'dashboard':
       return <DashboardPage />;
@@ -1540,7 +1536,7 @@ const AdminContent: React.FC<{
     case 'ai-labels':
       return <AILabelsPage />;
     case 'ai-templates':
-      return <AdminTemplatesPage />;
+      return <AdminTemplatesPage initialEmployeeId={selectedAIEmployeeId} />;
     case 'customer-list':
       return <AdminCustomerListPage onViewDetail={onViewCustomerDetail} />;
     case 'customer-detail':
@@ -2183,7 +2179,7 @@ const AIConfigListPage: React.FC<{ onViewEmployee: (id: string) => void }> = ({ 
                   </div>
                   {/* 人设模板 */}
                   <div className="text-sm text-gray-600 truncate">
-                    {tpl ? <span>{tpl.icon} {tpl.name}</span> : <span className="text-gray-400">未设置</span>}
+                    {tpl ? <span>{tpl.avatarText} {tpl.name}</span> : <span className="text-gray-400">未设置</span>}
                   </div>
                   {/* 绑定平台 */}
                   <div className="flex flex-wrap gap-1">
@@ -2374,7 +2370,7 @@ const AIConfigDetailPage: React.FC<{
             </div>
             {currentTpl && (
               <span className="mt-2 inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200/60 text-[11px] text-amber-700 font-medium">
-                {currentTpl.icon} {currentTpl.name}
+                {currentTpl.avatarText} {currentTpl.name}
               </span>
             )}
           </div>
@@ -3940,7 +3936,7 @@ const AdminCustomerDetailPage: React.FC<{
   );
 };
 
-type PlatformTicketStatus = 'normal' | 'abnormal' | 'offline';
+type PlatformTicketStatus = 'normal' | 'disabled';
 
 interface PlatformTicket {
   id: string;
@@ -3951,6 +3947,15 @@ interface PlatformTicket {
   status: PlatformTicketStatus;
   onlineConversations: number;
   totalConversations: number;
+  completedConversations: number;
+  totalTarget: number;
+  todayNewLeads: number;
+  todayRepeatLeads: number;
+  totalRepeatLeads: number;
+  todayRemovedLeads: number;
+  totalRemovedLeads: number;
+  dailyResetTime: string;
+  ticketResetTime: string;
   groupId: string;
   createdAt: Date;
 }
@@ -3958,8 +3963,7 @@ interface PlatformTicket {
 // 工单状态配置
 const ticketStatusConfig: Record<PlatformTicketStatus, { label: string; cls: string }> = {
   normal: { label: '正常', cls: 'bg-green-50 text-green-700 border-green-200' },
-  abnormal: { label: '异常', cls: 'bg-red-50 text-red-600 border-red-200' },
-  offline: { label: '离线', cls: 'bg-gray-50 text-gray-500 border-gray-200' },
+  disabled: { label: '禁用', cls: 'bg-red-50 text-red-600 border-red-200' },
 };
 
 // 工单分组
@@ -3969,27 +3973,328 @@ interface TicketGroup {
   count: number;
 }
 
-const mockTicketGroups: TicketGroup[] = [
-  { id: 'all', name: '全部', count: 5 },
-  { id: 'default', name: '默认分组', count: 2 },
-  { id: 'sales', name: '销售部', count: 2 },
-  { id: 'source', name: '源码组', count: 1 },
-  { id: 'cs', name: '客服部', count: 0 },
-];
-
 // Mock 平台工单数据
 const mockPlatformTickets: PlatformTicket[] = [
-  { id: 'pt_1', ticketNo: '20260203180448839688', platform: 'telegram', activationCode: 'QXMS-SA01-2024', activationRemark: '销售主力', status: 'normal', onlineConversations: 0, totalConversations: 1, groupId: 'default', createdAt: new Date('2026-02-03T18:04:00') },
-  { id: 'pt_2', ticketNo: '20260203105618183779', platform: 'telegram', activationCode: 'QXMS-SA02-2024', activationRemark: '李四', status: 'normal', onlineConversations: 1, totalConversations: 1, groupId: 'default', createdAt: new Date('2026-02-03T10:56:00') },
-  { id: 'pt_3', ticketNo: '20260204091532847261', platform: 'whatsapp', activationCode: 'QXMS-SO01-2024', activationRemark: 'David', status: 'normal', onlineConversations: 2, totalConversations: 3, groupId: 'sales', createdAt: new Date('2026-02-04T09:15:00') },
-  { id: 'pt_4', ticketNo: '20260204142817593042', platform: 'whatsapp', activationCode: 'QXMS-SO02-2024', activationRemark: 'Emily', status: 'abnormal', onlineConversations: 0, totalConversations: 2, groupId: 'sales', createdAt: new Date('2026-02-04T14:28:00') },
-  { id: 'pt_5', ticketNo: '20260205083921674518', platform: 'instagram', activationCode: 'QXMS-OP01-2024', activationRemark: '运营主管', status: 'normal', onlineConversations: 1, totalConversations: 1, groupId: 'source', createdAt: new Date('2026-02-05T08:39:00') },
+  { id: 'pt_1', ticketNo: '20260203180448839688', platform: 'telegram', activationCode: 'yFA1neN1BUrl', activationRemark: '', status: 'normal', onlineConversations: 0, totalConversations: 0, completedConversations: 0, totalTarget: 0, todayNewLeads: 0, todayRepeatLeads: 0, totalRepeatLeads: 0, todayRemovedLeads: 0, totalRemovedLeads: 0, dailyResetTime: '00:00', ticketResetTime: '', groupId: 'default', createdAt: new Date('2026-02-03T18:04:00') },
+  { id: 'pt_2', ticketNo: '20260203105618183779', platform: 'telegram', activationCode: 'E5Ap7n3P846l', activationRemark: '', status: 'disabled', onlineConversations: 0, totalConversations: 0, completedConversations: 0, totalTarget: 0, todayNewLeads: 0, todayRepeatLeads: 0, totalRepeatLeads: 0, todayRemovedLeads: 0, totalRemovedLeads: 0, dailyResetTime: '00:00', ticketResetTime: '', groupId: 'default', createdAt: new Date('2026-02-03T10:56:00') },
+  { id: 'pt_3', ticketNo: '20260204091532847261', platform: 'telegram', activationCode: '7xUG7y4kO4BS', activationRemark: '', status: 'normal', onlineConversations: 0, totalConversations: 0, completedConversations: 0, totalTarget: 0, todayNewLeads: 0, todayRepeatLeads: 0, totalRepeatLeads: 0, todayRemovedLeads: 0, totalRemovedLeads: 0, dailyResetTime: '00:00', ticketResetTime: '', groupId: 'sales', createdAt: new Date('2026-02-04T09:15:00') },
+  { id: 'pt_4', ticketNo: '20260204142817593042', platform: 'telegram', activationCode: 'pyWabKS233Yu', activationRemark: '', status: 'normal', onlineConversations: 0, totalConversations: 2, completedConversations: 0, totalTarget: 0, todayNewLeads: 0, todayRepeatLeads: 0, totalRepeatLeads: 0, todayRemovedLeads: 0, totalRemovedLeads: 0, dailyResetTime: '00:00', ticketResetTime: '', groupId: 'sales', createdAt: new Date('2026-02-04T14:28:00') },
+  { id: 'pt_5', ticketNo: '20260205083921674518', platform: 'telegram', activationCode: '0A6514e6oHg2', activationRemark: '', status: 'normal', onlineConversations: 0, totalConversations: 2, completedConversations: 0, totalTarget: 0, todayNewLeads: 0, todayRepeatLeads: 0, totalRepeatLeads: 0, todayRemovedLeads: 0, totalRemovedLeads: 0, dailyResetTime: '00:00', ticketResetTime: '', groupId: 'source', createdAt: new Date('2026-02-05T08:39:00') },
+  { id: 'pt_6', ticketNo: '20260205093921674519', platform: 'telegram', activationCode: '7DmmGnc5uD5v', activationRemark: '', status: 'normal', onlineConversations: 1, totalConversations: 2, completedConversations: 1, totalTarget: 0, todayNewLeads: 1, todayRepeatLeads: 0, totalRepeatLeads: 0, todayRemovedLeads: 0, totalRemovedLeads: 0, dailyResetTime: '00:00', ticketResetTime: '', groupId: 'default', createdAt: new Date('2026-02-05T09:39:00') },
+  { id: 'pt_7', ticketNo: '20260205103921674520', platform: 'telegram', activationCode: '07UX3yCL50W3', activationRemark: '门店在用', status: 'normal', onlineConversations: 0, totalConversations: 1, completedConversations: 7, totalTarget: 0, todayNewLeads: 0, todayRepeatLeads: 0, totalRepeatLeads: 0, todayRemovedLeads: 0, totalRemovedLeads: 0, dailyResetTime: '00:00', ticketResetTime: '', groupId: 'default', createdAt: new Date('2026-02-05T10:39:00') },
 ];
 
 // 工单列表页面
 const AdminTicketListPage: React.FC = () => {
+  const [detailTicket, setDetailTicket] = useState<PlatformTicket | null>(null);
+
+  if (detailTicket) {
+    return <TicketDetailPage ticket={detailTicket} onBack={() => setDetailTicket(null)} />;
+  }
+
+  return <TicketListView onViewDetail={setDetailTicket} />;
+};
+
+// 工单账号数据
+interface TicketAccount {
+  id: string;
+  name: string;
+  avatar?: string;
+  phone: string;
+  remark: string;
+  completedToday: number;
+  targetToday: number;
+  completedTotal: number;
+  targetTotal: number;
+  todayRepeat: number;
+  totalRepeat: number;
+  aiEnabled: boolean;
+  onlineEnabled: boolean;
+  onlineStatus: 'online' | 'offline';
+  note: string;
+  addLink: string;
+  qrCode: string;
+  lastActiveAt: string;
+  currentLoginAt: string;
+  clientVersion: string;
+  platform: string;
+}
+
+const mockTicketAccounts: TicketAccount[] = [
+  {
+    id: 'ta_1', name: 'Adele 多', phone: '+8613720371545', remark: '',
+    completedToday: 0, targetToday: 0, completedTotal: 0, targetTotal: 0,
+    todayRepeat: 0, totalRepeat: 0, aiEnabled: true, onlineEnabled: true,
+    onlineStatus: 'online', note: '', addLink: 'https://t.me/+8613720371545',
+    qrCode: 'qr_1', lastActiveAt: '2026-04-09 18:31:42', currentLoginAt: '2026-04-09 18:31:42',
+    clientVersion: '2.0.0', platform: 'telegram',
+  },
+];
+
+// 工单详情页
+const TicketDetailPage: React.FC<{ ticket: PlatformTicket; onBack: () => void }> = ({ ticket, onBack }) => {
+  const [platformFilter, setPlatformFilter] = useState('all');
+  const [searchText, setSearchText] = useState('');
+  const [onlineFilter, setOnlineFilter] = useState('all');
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [autoRefresh, setAutoRefresh] = useState(false);
+  const [refreshInterval, setRefreshInterval] = useState('每1分钟');
+
+  const pc = platformConfigs.find(p => p.id === ticket.platform);
+  const PIcon = pc ? platformIconMap[pc.icon] : null;
+
+  const filtered = useMemo(() => {
+    return mockTicketAccounts.filter(a => {
+      if (platformFilter !== 'all' && a.platform !== platformFilter) return false;
+      if (searchText && !a.name.includes(searchText) && !a.phone.includes(searchText)) return false;
+      if (onlineFilter !== 'all' && a.onlineStatus !== onlineFilter) return false;
+      return true;
+    });
+  }, [platformFilter, searchText, onlineFilter]);
+
+  const toggleSelect = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelectedIds(next);
+  };
+
+  return (
+    <div className="h-full flex flex-col bg-gray-50">
+      {/* 顶部标题栏 */}
+      <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between flex-shrink-0">
+        <div className="flex items-center gap-3">
+          <button onClick={onBack} className="flex items-center gap-1 text-xs text-gray-500 hover:text-[#FF6B35] transition-colors">
+            <ChevronLeft className="w-4 h-4" />
+            全部工单
+          </button>
+          <span className="text-gray-300">|</span>
+          <h2 className="text-sm font-semibold text-gray-900">
+            工单详情-{ticket.activationCode}
+            {ticket.activationRemark && <span className="text-gray-500 font-normal ml-1">({ticket.activationRemark})</span>}
+          </h2>
+        </div>
+        <div className="flex items-center gap-3">
+          <select
+            value={refreshInterval}
+            onChange={e => setRefreshInterval(e.target.value)}
+            className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-white text-gray-600 focus:outline-none"
+          >
+            {['每1分钟','每5分钟','每10分钟'].map(v => <option key={v}>{v}</option>)}
+          </select>
+          <span className="text-xs text-gray-500">自动刷新数据</span>
+          <button
+            onClick={() => setAutoRefresh(!autoRefresh)}
+            className={cn("relative inline-flex h-5 w-9 items-center rounded-full transition-colors", autoRefresh ? "bg-[#FF6B35]" : "bg-gray-200")}
+          >
+            <span className={cn("inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform", autoRefresh ? "translate-x-4.5" : "translate-x-0.5")} />
+          </button>
+        </div>
+      </div>
+
+      {/* 筛选栏 */}
+      <div className="bg-white border-b border-gray-100 px-6 py-3 flex items-center gap-3 flex-shrink-0">
+        <span className="text-xs text-gray-500">上单平台</span>
+        <div className="flex items-center gap-1 border border-gray-200 rounded-lg px-2 py-1 bg-white">
+          {pc && PIcon && (
+            <div className="w-4 h-4 rounded flex items-center justify-center flex-shrink-0" style={{ backgroundColor: pc.color }}>
+              <PIcon className="w-2.5 h-2.5 text-white" />
+            </div>
+          )}
+          <span className="text-xs text-gray-700 ml-1">{pc?.name || ticket.platform}</span>
+          <ChevronDown className="w-3 h-3 text-gray-400 ml-1" />
+        </div>
+        <span className="text-xs text-gray-500">昵称</span>
+        <select className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white text-gray-600 focus:outline-none">
+          <option>昵称</option>
+        </select>
+        <input
+          value={searchText}
+          onChange={e => setSearchText(e.target.value)}
+          placeholder="请输入"
+          className="text-xs border border-gray-200 rounded-lg px-3 py-1.5 w-32 focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/30"
+        />
+        <span className="text-xs text-gray-500">在线状态</span>
+        <select
+          value={onlineFilter}
+          onChange={e => setOnlineFilter(e.target.value)}
+          className="text-xs border border-gray-200 rounded-lg px-2 py-1 bg-white text-gray-600 focus:outline-none"
+        >
+          <option value="all">全部</option>
+          <option value="online">在线</option>
+          <option value="offline">离线</option>
+        </select>
+        <button className="px-4 py-1.5 text-xs bg-[#FF6B35] text-white rounded-lg hover:bg-[#ff5722] transition-colors">查询</button>
+        <button onClick={() => { setPlatformFilter('all'); setSearchText(''); setOnlineFilter('all'); }} className="px-4 py-1.5 text-xs border border-gray-200 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors">重置</button>
+      </div>
+
+      {/* 操作栏 */}
+      <div className="bg-white border-b border-gray-100 px-6 py-2.5 flex items-center gap-2 flex-shrink-0">
+        <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
+          <Settings className="w-3.5 h-3.5" />智能排序
+          <ChevronDown className="w-3 h-3" />
+        </button>
+        <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
+          <ClipboardList className="w-3.5 h-3.5" />工单操作日志
+        </button>
+        <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
+          <Download className="w-3.5 h-3.5" />导出线索
+          <ChevronDown className="w-3 h-3" />
+        </button>
+        <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-[#FF6B35] border border-[#FF6B35]/30 bg-[#FFF0E8] rounded-lg hover:bg-[#FFE0D0]">
+          <Search className="w-3.5 h-3.5" />查看全部线索
+        </button>
+        <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white bg-[#FF6B35] rounded-lg hover:bg-[#ff5722]">
+          <GitBranch className="w-3.5 h-3.5" />分享工单
+          <ChevronDown className="w-3 h-3" />
+        </button>
+        <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-white bg-green-500 rounded-lg hover:bg-green-600">
+          <Plus className="w-3.5 h-3.5" />新建分流链接
+        </button>
+      </div>
+
+      {/* 统计提示栏 */}
+      <div className="bg-[#fffbe6] border-b border-yellow-100 px-6 py-2 flex items-center gap-6 flex-shrink-0 text-xs text-gray-600">
+        <span>A 工单重置后新增线索总数(已去重): <span className="font-medium">0</span></span>
+        <span>B 当日置零后新增线索总数(已去重): <span className="font-medium">0</span></span>
+        <span>C 当日置零后被移除主号线索总数(已去重): <span className="font-medium">0</span></span>
+        <span>D 置零后清零手工的有效线索(已去重): <span className="font-medium">0</span></span>
+        <span>E 工单重置后被移除主号线索总数(已去重): <span className="font-medium">0</span></span>
+        <span className="ml-auto text-gray-400">注: 本工单建议在置零时间 (00:00) 前导出清单，双方确认售后数量，按 B+C 进行日结，如果超过了当天置零时间，则需要导出清单进行统计。</span>
+      </div>
+
+      {/* 表格 */}
+      <div className="flex-1 overflow-auto bg-white">
+        <table className="w-full text-xs">
+          <thead className="sticky top-0 z-10 bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className="py-3 px-3 w-8">
+                <input type="checkbox" checked={filtered.length > 0 && selectedIds.size === filtered.length}
+                  onChange={() => setSelectedIds(selectedIds.size === filtered.length ? new Set() : new Set(filtered.map(a => a.id)))}
+                  className="w-3.5 h-3.5 rounded border-gray-300 accent-[#FF6B35]" />
+              </th>
+              <th className="py-3 px-3 w-6"></th>
+              <th className="text-left py-3 px-3 font-medium text-gray-500 whitespace-nowrap">账号信息</th>
+              <th className="text-left py-3 px-3 font-medium text-gray-500 whitespace-nowrap">账号备注</th>
+              <th className="text-left py-3 px-3 font-medium text-gray-500 whitespace-nowrap">在线状态 ↕</th>
+              <th className="text-left py-3 px-3 font-medium text-gray-500 whitespace-nowrap">注释</th>
+              <th className="text-left py-3 px-3 font-medium text-gray-500 whitespace-nowrap">今日目标</th>
+              <th className="text-left py-3 px-3 font-medium text-gray-500 whitespace-nowrap">总目标</th>
+              <th className="text-left py-3 px-3 font-medium text-gray-500 whitespace-nowrap">加粉链接</th>
+              <th className="text-left py-3 px-3 font-medium text-gray-500 whitespace-nowrap">二维码</th>
+              <th className="text-left py-3 px-3 font-medium text-gray-500 whitespace-nowrap">最后活跃时间</th>
+              <th className="text-left py-3 px-3 font-medium text-gray-500 whitespace-nowrap">本次登录时间</th>
+              <th className="text-left py-3 px-3 font-medium text-gray-500 whitespace-nowrap">客户端版本号</th>
+              <th className="text-left py-3 px-3 font-medium text-gray-500 whitespace-nowrap">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map(account => (
+              <tr key={account.id} className="border-b border-gray-100 hover:bg-gray-50/50">
+                <td className="py-3 px-3">
+                  <input type="checkbox" checked={selectedIds.has(account.id)} onChange={() => toggleSelect(account.id)}
+                    className="w-3.5 h-3.5 rounded border-gray-300 accent-[#FF6B35]" />
+                </td>
+                <td className="py-3 px-3">
+                  <span className="text-gray-300 cursor-grab">⠿</span>
+                </td>
+                {/* 账号信息 */}
+                <td className="py-3 px-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-pink-500 flex items-center justify-center text-white text-xs font-medium flex-shrink-0">
+                      {account.name.charAt(0)}
+                    </div>
+                    <div>
+                      <div className="font-medium text-gray-800 text-xs">{account.name}</div>
+                      <div className="text-gray-400 flex items-center gap-1 text-xs">
+                        <Smartphone className="w-3 h-3" />{account.phone}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+                {/* 账号备注 */}
+                <td className="py-3 px-3 text-xs text-gray-400">{account.remark || '–'}</td>
+                {/* 在线状态 */}
+                <td className="py-3 px-3">
+                  <span className={cn(
+                    "px-2.5 py-0.5 rounded text-xs font-medium border",
+                    account.onlineStatus === 'online'
+                      ? "bg-green-50 text-green-600 border-green-200"
+                      : "bg-gray-50 text-gray-500 border-gray-200"
+                  )}>
+                    {account.onlineStatus === 'online' ? '在线' : '离线'}
+                  </span>
+                </td>
+                {/* 注释 */}
+                <td className="py-3 px-3">
+                  <div className="flex items-center gap-1">
+                    <span className="text-xs text-gray-400">{account.note || '-'}</span>
+                    <button className="text-gray-300 hover:text-[#FF6B35]"><Pencil className="w-3 h-3" /></button>
+                  </div>
+                </td>
+                {/* 今日目标 */}
+                <td className="py-3 px-3 text-xs text-gray-700 text-center">{account.targetToday}</td>
+                {/* 总目标 */}
+                <td className="py-3 px-3 text-xs text-gray-700 text-center">{account.targetTotal}</td>
+                {/* 加粉链接 */}
+                <td className="py-3 px-3">
+                  {account.addLink
+                    ? <a href="#" className="text-xs text-[#FF6B35] hover:underline break-all max-w-[120px] block">{account.addLink}</a>
+                    : <span className="text-gray-300 text-xs">–</span>}
+                </td>
+                {/* 二维码 */}
+                <td className="py-3 px-3">
+                  {account.qrCode
+                    ? <button className="text-xs text-[#FF6B35] hover:underline">查看</button>
+                    : <span className="text-gray-300 text-xs">–</span>}
+                </td>
+                {/* 最后活跃时间 */}
+                <td className="py-3 px-3 text-xs text-gray-500 whitespace-nowrap">{account.lastActiveAt}</td>
+                {/* 本次登录时间 */}
+                <td className="py-3 px-3 text-xs text-gray-500 whitespace-nowrap">{account.currentLoginAt}</td>
+                {/* 客户端版本号 */}
+                <td className="py-3 px-3 text-xs text-gray-500">{account.clientVersion}</td>
+                {/* 操作 */}
+                <td className="py-3 px-3">
+                  <div className="flex items-center gap-3">
+                    <button className="text-xs text-[#FF6B35] hover:underline whitespace-nowrap">查看线索</button>
+                    <button className="text-xs text-[#FF6B35] hover:underline whitespace-nowrap">登录日志</button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {/* 总计行 */}
+            <tr className="bg-gray-50 border-t border-gray-200 font-medium text-gray-600 text-xs">
+              <td colSpan={6} className="py-2.5 px-3">总计</td>
+              <td className="py-2.5 px-3 text-center">{filtered.reduce((s, a) => s + a.targetToday, 0)}</td>
+              <td className="py-2.5 px-3 text-center">{filtered.reduce((s, a) => s + a.targetTotal, 0)}</td>
+              <td colSpan={6}></td>
+            </tr>
+          </tbody>
+        </table>
+
+        {/* 分页 */}
+        <div className="flex items-center justify-end gap-2 px-6 py-3 border-t border-gray-100 text-xs text-gray-500">
+          <span>共 {filtered.length} 条</span>
+          <button className="w-6 h-6 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50">‹</button>
+          <button className="w-6 h-6 flex items-center justify-center rounded bg-[#FF6B35] text-white">1</button>
+          <button className="w-6 h-6 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50">›</button>
+          <select className="border border-gray-200 rounded px-2 py-0.5 bg-white focus:outline-none">
+            <option>10 条/页</option>
+            <option>20 条/页</option>
+            <option>50 条/页</option>
+          </select>
+          <span>前往</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// 工单列表视图（原 AdminTicketListPage 内容）
+const TicketListView: React.FC<{ onViewDetail: (t: PlatformTicket) => void }> = ({ onViewDetail }) => {
   const activationCodes = useStore((s) => s.activationCodes);
-  const [selectedGroup, setSelectedGroup] = useState('all');
+  const departments = useStore((s) => s.departments);
+  const [selectedDeptId, setSelectedDeptId] = useState<string | null>(null);
   const [platformFilter, setPlatformFilter] = useState<string>('all');
   const [codeFilter, setCodeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<PlatformTicketStatus | 'all'>('all');
@@ -3997,8 +4302,8 @@ const AdminTicketListPage: React.FC = () => {
 
   const filtered = useMemo(() => {
     let result = mockPlatformTickets;
-    if (selectedGroup !== 'all') {
-      result = result.filter(t => t.groupId === selectedGroup);
+    if (selectedDeptId) {
+      result = result.filter(t => t.groupId === selectedDeptId);
     }
     if (platformFilter !== 'all') {
       result = result.filter(t => t.platform === platformFilter);
@@ -4010,10 +4315,17 @@ const AdminTicketListPage: React.FC = () => {
       result = result.filter(t => t.status === statusFilter);
     }
     return result;
-  }, [selectedGroup, platformFilter, codeFilter, statusFilter]);
+  }, [selectedDeptId, platformFilter, codeFilter, statusFilter]);
 
   const totalOnline = filtered.reduce((s, t) => s + t.onlineConversations, 0);
   const totalConv = filtered.reduce((s, t) => s + t.totalConversations, 0);
+  const totalCompleted = filtered.reduce((s, t) => s + t.completedConversations, 0);
+  const totalTarget = filtered.reduce((s, t) => s + t.totalTarget, 0);
+  const totalTodayNewLeads = filtered.reduce((s, t) => s + t.todayNewLeads, 0);
+  const totalTodayRepeat = filtered.reduce((s, t) => s + t.todayRepeatLeads, 0);
+  const totalRepeat = filtered.reduce((s, t) => s + t.totalRepeatLeads, 0);
+  const totalTodayRemoved = filtered.reduce((s, t) => s + t.todayRemovedLeads, 0);
+  const totalRemoved = filtered.reduce((s, t) => s + t.totalRemovedLeads, 0);
 
   // 从 store 的激活码列表取值，而非工单数据
   const allCodes = useMemo(() => {
@@ -4069,21 +4381,43 @@ const AdminTicketListPage: React.FC = () => {
         onReset={handleReset}
       />
 
-      {/* 主体：左侧分组 + 右侧表格 */}
+      {/* 主体：左侧部门树 + 右侧表格 */}
       <div className="flex-1 flex min-h-0">
-        <TicketGroupSidebar
-          groups={mockTicketGroups}
-          selectedGroup={selectedGroup}
-          onSelect={setSelectedGroup}
-        />
+        <div className="w-56 flex-shrink-0 border-r border-gray-200 bg-white flex flex-col min-h-0">
+          <div className="px-4 py-3 border-b border-gray-100 flex-shrink-0">
+            <h4 className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+              <Building2 className="w-4 h-4 text-[#FF6B35]" />
+              部门结构
+            </h4>
+          </div>
+          <div className="flex-1 overflow-y-auto p-2">
+            {departments.map(dept => (
+              <TicketDeptNode
+                key={dept.id}
+                dept={dept}
+                level={0}
+                selectedId={selectedDeptId}
+                onSelect={setSelectedDeptId}
+              />
+            ))}
+          </div>
+        </div>
         <div className="flex-1 flex flex-col min-w-0">
           <TicketDataTable
             tickets={filtered}
             selectedIds={selectedIds}
             onToggleSelect={toggleSelect}
             onToggleAll={toggleAll}
+            onViewDetail={onViewDetail}
             totalOnline={totalOnline}
             totalConv={totalConv}
+            totalCompleted={totalCompleted}
+            totalTarget={totalTarget}
+            totalTodayNewLeads={totalTodayNewLeads}
+            totalTodayRepeat={totalTodayRepeat}
+            totalRepeat={totalRepeat}
+            totalTodayRemoved={totalTodayRemoved}
+            totalRemoved={totalRemoved}
           />
         </div>
       </div>
@@ -4119,7 +4453,7 @@ const TicketFilterBar: React.FC<{
   };
 
   const getStatusLabel = () => {
-    const statusMap = { all: '全部', normal: '正常', abnormal: '异常', offline: '离线' };
+    const statusMap = { all: '全部', normal: '正常', disabled: '禁用' };
     return statusMap[statusFilter] || '全部';
   };
 
@@ -4178,7 +4512,7 @@ const TicketFilterBar: React.FC<{
         </button>
         {showStatusDropdown && (
           <div className="absolute z-50 mt-1 top-full left-20 bg-white border border-gray-200 rounded-lg shadow-lg min-w-[100px]">
-            {[{ value: 'all', label: '全部' }, { value: 'normal', label: '正常' }, { value: 'abnormal', label: '异常' }, { value: 'offline', label: '离线' }].map(s => (
+            {[{ value: 'all', label: '全部' }, { value: 'normal', label: '正常' }, { value: 'disabled', label: '禁用' }].map(s => (
               <div key={s.value} onClick={() => { onStatusChange(s.value as any); setShowStatusDropdown(false); }} className={`px-3 py-2 text-sm cursor-pointer transition-colors ${statusFilter === s.value ? 'bg-[#FF6B35] text-white' : 'text-[#666] hover:bg-[#FFF7F3]'}`}>{s.label}</div>
             ))}
           </div>
@@ -4191,36 +4525,43 @@ const TicketFilterBar: React.FC<{
 };
 
 // 工单分组侧边栏
-const TicketGroupSidebar: React.FC<{
-  groups: TicketGroup[];
-  selectedGroup: string;
-  onSelect: (id: string) => void;
-}> = ({ groups, selectedGroup, onSelect }) => (
-  <div className="w-48 flex-shrink-0 border-r border-gray-200 bg-white overflow-y-auto">
-    <div className="px-4 py-3 border-b border-gray-100">
-      <h4 className="text-xs font-semibold text-gray-900 flex items-center gap-1.5">
-        <Filter className="w-3.5 h-3.5 text-gray-400" />
-        全部分组
-      </h4>
-    </div>
-    <div className="py-1">
-      {groups.map((g) => (
-        <button
-          key={g.id}
-          onClick={() => onSelect(g.id)}
-          className={cn(
-            "w-full text-left px-4 py-2.5 text-sm transition-colors",
-            selectedGroup === g.id
-              ? "text-[#FF6B35] bg-[#FF6B35]/5 font-medium"
-              : "text-gray-600 hover:bg-gray-50"
-          )}
-        >
-          {g.name}({g.count})
-        </button>
+// 工单页部门树节点
+const TicketDeptNode: React.FC<{
+  dept: Department;
+  level: number;
+  selectedId: string | null;
+  onSelect: (id: string | null) => void;
+}> = ({ dept, level, selectedId, onSelect }) => {
+  const [expanded, setExpanded] = useState(level < 2);
+  const hasChildren = dept.children && dept.children.length > 0;
+  const isSelected = selectedId === dept.id;
+  return (
+    <div>
+      <button
+        onClick={() => onSelect(isSelected ? null : dept.id)}
+        className={cn(
+          "w-full flex items-center gap-1.5 py-2 px-2 rounded-lg text-sm transition-colors",
+          isSelected ? "bg-[#FF6B35]/10 text-[#FF6B35] font-medium" : "text-gray-700 hover:bg-gray-100"
+        )}
+        style={{ paddingLeft: `${level * 16 + 8}px` }}
+      >
+        {hasChildren ? (
+          <span onClick={(e) => { e.stopPropagation(); setExpanded(!expanded); }} className="p-0.5 rounded hover:bg-gray-200 flex-shrink-0 cursor-pointer">
+            {expanded ? <ChevronDown className="w-3.5 h-3.5 text-gray-400" /> : <ChevronRight className="w-3.5 h-3.5 text-gray-400" />}
+          </span>
+        ) : <span className="w-4.5 flex-shrink-0" />}
+        <FolderTree className={cn("w-4 h-4 flex-shrink-0", isSelected ? "text-[#FF6B35]" : "text-gray-400")} />
+        <span className="truncate flex-1 text-left">{dept.name}</span>
+        <span className={cn("text-xs px-1.5 py-0.5 rounded-full flex-shrink-0", isSelected ? "bg-[#FF6B35]/20 text-[#FF6B35]" : "bg-gray-100 text-gray-500")}>
+          {dept.memberCount}
+        </span>
+      </button>
+      {hasChildren && expanded && dept.children!.map(child => (
+        <TicketDeptNode key={child.id} dept={child} level={level + 1} selectedId={selectedId} onSelect={onSelect} />
       ))}
     </div>
-  </div>
-);
+  );
+};
 
 // 工单数据表格
 const TicketDataTable: React.FC<{
@@ -4228,9 +4569,17 @@ const TicketDataTable: React.FC<{
   selectedIds: Set<string>;
   onToggleSelect: (id: string) => void;
   onToggleAll: () => void;
+  onViewDetail: (t: PlatformTicket) => void;
   totalOnline: number;
   totalConv: number;
-}> = ({ tickets, selectedIds, onToggleSelect, onToggleAll, totalOnline, totalConv }) => (
+  totalCompleted: number;
+  totalTarget: number;
+  totalTodayNewLeads: number;
+  totalTodayRepeat: number;
+  totalRepeat: number;
+  totalTodayRemoved: number;
+  totalRemoved: number;
+}> = ({ tickets, selectedIds, onToggleSelect, onToggleAll, onViewDetail, totalOnline, totalConv, totalCompleted, totalTarget, totalTodayNewLeads, totalTodayRepeat, totalRepeat, totalTodayRemoved, totalRemoved }) => (
   <div className="flex-1 overflow-auto">
     <table className="w-full">
       <thead className="sticky top-0 z-10">
@@ -4248,19 +4597,36 @@ const TicketDataTable: React.FC<{
           <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">激活码(备注)</th>
           <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">工单状态</th>
           <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">在线会话/总会话</th>
+          <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">已完成/总目标</th>
+          <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">当日新增线索</th>
+          <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">今日重复线索</th>
+          <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">累计重复线索</th>
+          <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">当日移除主号新增线索</th>
+          <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">累计移除主号新增线索</th>
+          <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">当日置零时间</th>
+          <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">工单重置时间</th>
           <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 whitespace-nowrap">操作</th>
         </tr>
       </thead>
-      <TicketTableRows tickets={tickets} selectedIds={selectedIds} onToggleSelect={onToggleSelect} />
+      <TicketTableRows tickets={tickets} selectedIds={selectedIds} onToggleSelect={onToggleSelect} onViewDetail={onViewDetail} />
     </table>
 
     {/* 总计行 */}
     {tickets.length > 0 && (
-      <div className="border-t border-gray-200 bg-gray-50/50 px-4 py-3 flex items-center">
-        <span className="text-sm text-gray-500 ml-[calc(2.5rem+1rem+1rem)]">总计</span>
-        <span className="text-sm font-medium text-gray-700 ml-auto mr-[calc(6rem)]">
-          {totalOnline}/{totalConv}
-        </span>
+      <div className="border-t border-gray-200 bg-gray-50/50 px-4 py-3 grid grid-cols-[2.5rem_1fr_80px_100px_100px_90px_90px_90px_130px_130px_100px_100px_80px] gap-0 text-sm text-gray-700">
+        <span />
+        <span className="px-4 text-gray-500">总计</span>
+        <span className="px-4" />
+        <span className="px-4">{totalOnline}/{totalConv}</span>
+        <span className="px-4">{totalCompleted}/{totalTarget}</span>
+        <span className="px-4 text-green-600">{totalTodayNewLeads}</span>
+        <span className="px-4 text-green-600">{totalTodayRepeat}</span>
+        <span className="px-4 text-green-600">{totalRepeat}</span>
+        <span className="px-4">{totalTodayRemoved}</span>
+        <span className="px-4">{totalRemoved}</span>
+        <span className="px-4" />
+        <span className="px-4" />
+        <span className="px-4" />
       </div>
     )}
 
@@ -4279,7 +4645,19 @@ const TicketTableRows: React.FC<{
   tickets: PlatformTicket[];
   selectedIds: Set<string>;
   onToggleSelect: (id: string) => void;
-}> = ({ tickets, selectedIds, onToggleSelect }) => (
+  onViewDetail: (t: PlatformTicket) => void;
+}> = ({ tickets, selectedIds, onToggleSelect, onViewDetail }) => {
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+  const menuItems = [
+    { label: '编辑工单' },
+    { label: '分享工单' },
+    { label: '分享记录' },
+    { label: '工单置零' },
+    { label: '重置工单', danger: true },
+  ];
+
+  return (
   <tbody>
     {tickets.map((ticket) => {
       const pc = platformConfigs.find(p => p.id === ticket.platform);
@@ -4309,9 +4687,14 @@ const TicketTableRows: React.FC<{
             )}
           </td>
           <td className="py-3 px-4">
-            <span className="text-sm text-[#FF6B35] cursor-pointer hover:underline">
-              {ticket.activationCode}({ticket.activationRemark})
-            </span>
+            <div className="flex items-center gap-1">
+              <span className="text-sm text-[#FF6B35] cursor-pointer hover:underline">
+                {ticket.activationCode}
+              </span>
+              {ticket.activationRemark && (
+                <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded whitespace-nowrap">{ticket.activationRemark}</span>
+              )}
+            </div>
           </td>
           <td className="py-3 px-4">
             <span className={cn("px-2 py-0.5 text-xs font-medium rounded border", sc.cls)}>
@@ -4321,20 +4704,69 @@ const TicketTableRows: React.FC<{
           <td className="py-3 px-4 text-sm text-gray-700">
             {ticket.onlineConversations}/{ticket.totalConversations}
           </td>
+          <td className="py-3 px-4 text-sm text-gray-700">
+            {ticket.completedConversations}/{ticket.totalTarget}
+          </td>
+          <td className="py-3 px-4 text-sm text-green-600 font-medium">
+            {ticket.todayNewLeads}
+          </td>
+          <td className="py-3 px-4 text-sm text-green-600 font-medium">
+            {ticket.todayRepeatLeads}
+          </td>
+          <td className="py-3 px-4 text-sm text-green-600 font-medium">
+            {ticket.totalRepeatLeads}
+          </td>
+          <td className="py-3 px-4 text-sm text-gray-700">
+            {ticket.todayRemovedLeads}
+          </td>
+          <td className="py-3 px-4 text-sm text-gray-700">
+            {ticket.totalRemovedLeads}
+          </td>
+          <td className="py-3 px-4 text-sm text-gray-700 whitespace-nowrap">
+            <span>{ticket.dailyResetTime}</span>
+            <button className="ml-1 text-gray-400 hover:text-[#FF6B35]">
+              <Pencil className="w-3 h-3 inline" />
+            </button>
+          </td>
+          <td className="py-3 px-4 text-sm text-gray-400 whitespace-nowrap">
+            {ticket.ticketResetTime || '-'}
+          </td>
           <td className="py-3 px-4">
             <div className="flex items-center gap-3">
-              <button className="text-xs text-[#FF6B35] hover:underline whitespace-nowrap">工单详情</button>
-              <button className="text-xs text-[#FF6B35] hover:underline whitespace-nowrap flex items-center gap-0.5">
-                更多
-                <ChevronDown className="w-3 h-3" />
-              </button>
+              <button onClick={() => onViewDetail(ticket)} className="text-xs text-[#FF6B35] hover:underline whitespace-nowrap">工单详情</button>
+              <div className="relative">
+                <button
+                  onClick={() => setOpenMenuId(openMenuId === ticket.id ? null : ticket.id)}
+                  className="text-xs text-[#FF6B35] hover:underline whitespace-nowrap flex items-center gap-0.5"
+                >
+                  更多
+                  <ChevronDown className="w-3 h-3" />
+                </button>
+                {openMenuId === ticket.id && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setOpenMenuId(null)} />
+                    <div className="absolute right-0 top-full mt-1 w-28 bg-white border border-gray-200 rounded-lg shadow-lg z-20 py-1">
+                      {menuItems.map(item => (
+                        <button
+                          key={item.label}
+                          onClick={() => setOpenMenuId(null)}
+                          className={`w-full text-left px-3 py-1.5 text-xs hover:bg-gray-50 transition-colors ${item.danger ? 'text-red-500' : 'text-gray-700'}`}
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </td>
         </tr>
       );
     })}
   </tbody>
-);
+  );
+};
 
 // ============ 内控报表页面 ============
 // 排行榜 mock 数据
